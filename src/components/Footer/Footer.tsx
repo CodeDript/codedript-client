@@ -1,128 +1,71 @@
-/**
- * Quick Wheel Vehicle Rental App Component
- * Component: Footer
- * Description: Website footer with links, contact info, and social media
- * Tech: React + TypeScript + CSS Modules
- * Behavior:
- * - Company information and links
- * - Contact details
- * - Social media links
- * - Copyright information
- */
-
-import { Link } from 'react-router-dom';
+import React from 'react';
 import styles from './Footer.module.css';
+import Facebook from '../../assets/images/facebook.png'; 
+import Instagram from '../../assets/images/instagram.png';
+import Twitter from '../../assets/images/twitter.png';
+import Linkedin from '../../assets/images/linkedin.png';
+import Quickwheel from '../../assets/images/QUICK-WHEEL.svg';
 
-const Footer = () => {
-  const currentYear = new Date().getFullYear();
-
+const Footer: React.FC = () => {
   return (
     <footer className={styles.footer}>
-      <div className={styles.container}>
-        {/* Main Footer Content */}
-        <div className={styles.content}>
-          {/* Company Info */}
-          <div className={styles.section}>
-            <div className={styles.logo}>
-              <span className={styles.logoIcon}>🚗</span>
-              <span className={styles.logoText}>Quick Wheel</span>
-            </div>
-            <p className={styles.description}>
-              Sri Lanka's premier vehicle rental platform. Find the perfect ride for every journey.
-            </p>
-            <div className={styles.social}>
-              <a href="#" className={styles.socialLink} aria-label="Facebook">
-                📘
-              </a>
-              <a href="#" className={styles.socialLink} aria-label="Twitter">
-                🐦
-              </a>
-              <a href="#" className={styles.socialLink} aria-label="Instagram">
-                📷
-              </a>
-              <a href="#" className={styles.socialLink} aria-label="LinkedIn">
-                💼
-              </a>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Quick Links</h3>
-            <ul className={styles.linkList}>
-              <li>
-                <Link to="/" className={styles.link}>Home</Link>
-              </li>
-              <li>
-                <Link to="/ads" className={styles.link}>Browse Vehicles</Link>
-              </li>
-              <li>
-                <Link to="/create-ad" className={styles.link}>List Your Vehicle</Link>
-              </li>
-              <li>
-                <Link to="/profile" className={styles.link}>My Account</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Vehicle Categories */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Vehicle Types</h3>
-            <ul className={styles.linkList}>
-              <li>
-                <span className={styles.link}>🚗 Cars</span>
-              </li>
-              <li>
-                <span className={styles.link}>🛴 Scooters</span>
-              </li>
-              <li>
-                <span className={styles.link}>🏍️ Motorcycles</span>
-              </li>
-              <li>
-                <span className={styles.link}>🚐 Vans</span>
-              </li>
-              <li>
-                <span className={styles.link}>🚚 Large Vehicles</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Contact Us</h3>
-            <div className={styles.contact}>
-              <div className={styles.contactItem}>
-                <span className={styles.contactIcon}>📞</span>
-                <span>+94 11 234 5678</span>
-              </div>
-              <div className={styles.contactItem}>
-                <span className={styles.contactIcon}>✉️</span>
-                <span>hello@quickwheel.lk</span>
-              </div>
-              <div className={styles.contactItem}>
-                <span className={styles.contactIcon}>📍</span>
-                <span>Colombo, Sri Lanka</span>
-              </div>
-              <div className={styles.contactItem}>
-                <span className={styles.contactIcon}>🕒</span>
-                <span>24/7 Support</span>
-              </div>
-            </div>
-          </div>
+      <div className={styles.footerContainer}>
+        <div className={styles.brandInfo}>
+          <img src={Quickwheel} alt="Quick Wheel Logo" className={styles.logoImage} />
+          {/* <p>Your trusted partner for quick, convenient, and affordable vehicle rentals. From scooters to cars, we've got you covered.</p> */}
         </div>
 
-        {/* Bottom Bar */}
-        <div className={styles.bottom}>
-          <div className={styles.bottomContent}>
-            <p className={styles.copyright}>
-              © {currentYear} Quick Wheel. All rights reserved.
-            </p>
-            <div className={styles.legalLinks}>
-              <a href="#" className={styles.legalLink}>Privacy Policy</a>
-              <a href="#" className={styles.legalLink}>Terms of Service</a>
-              <a href="#" className={styles.legalLink}>Cookie Policy</a>
-            </div>
+        <div className={styles.footerLinks}>
+          <div className={styles.linksColumn}>
+            <h4>More from Quick Wheel</h4>
+            <ul>
+              <li><a href="/rent-fast">Rent fast</a></li>
+              <li><a href="/membership">Membership</a></li>
+              <li><a href="/banner-ads">Banner Ads</a></li>
+              <li><a href="/boost-ad">Boost Ad</a></li>
+            </ul>
           </div>
+
+          <div className={styles.linksColumn}>
+            <h4>Help & support</h4>
+            <ul>
+              <li><a href="/faq">FAQ</a></li>
+              <li><a href="/stay-safe">Stay Safe</a></li>
+              <li><a href="/banner-ads">Banner Ads</a></li>
+              <li><a href="/connect-us">Connect Us</a></li>
+            </ul>
+          </div>
+
+          <div className={styles.linksColumn}>
+            <h4>About Quick Wheel</h4>
+            <ul>
+              <li><a href="/about">About Us</a></li>
+              <li><a href="/careers">Careers</a></li>
+              <li><a href="/terms">Terms and Condition</a></li>
+              <li><a href="/privacy">Privacy policy</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.footerMediaIcon}>
+        <a href="#" aria-label="Facebook">
+          <img src={Facebook} alt="Facebook" />
+        </a>
+        <a href="#" aria-label="Instagram">
+          <img src={Instagram} alt="Instagram" />
+        </a>
+        <a href="#" aria-label="Twitter">
+          <img src={Twitter} alt="Twitter" />
+        </a>
+        <a href="#" aria-label="LinkedIn">
+          <img src={Linkedin} alt="LinkedIn" />
+        </a>
+      </div>
+
+      <div className={styles.footerBottom}>
+        <div className={styles.footerBottomText}>
+          <p>© 2025 COREZERO. All Rights Reserved. | Ride Smart, Rent Easy</p>
         </div>
       </div>
     </footer>

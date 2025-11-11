@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import { useAds } from '../../contexts/AdsContext';
 import styles from './Hero.module.css';
+import searchIcon from '../../assets/images/iconsax-search.svg';
 
 const categories = ['All', 'Cars', 'Scooters', 'Motor Bicycle', 'Vans', 'Large Vehicles'];
 
@@ -45,7 +46,7 @@ const Hero = () => {
           {/* Search Bar */}
           <div className={styles.searchSection}>
             <div className={styles.searchBar}>
-              <div className={styles.searchIcon}>🔍</div>
+              <img src={searchIcon} alt="Search" className={styles.searchIcon} />
               <input
                 type="text"
                 placeholder="What are you looking for?"

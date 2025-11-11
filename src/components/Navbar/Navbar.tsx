@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Navbar.module.css';
+import QuickWheelLogo from '../../assets/images/quickWheelLogo.svg';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,7 +46,7 @@ const Navbar = () => {
       <div className={styles.container}>
         {/* Logo */}
         <Link to="/" className={styles.logo} onClick={closeMenus}>
-          <span className={styles.logoIcon}>🚗</span>
+          <img src={QuickWheelLogo} alt="Quick Wheel" className={styles.logoIcon} />
           <span className={styles.logoText}>Quick Wheel</span>
         </Link>
 
