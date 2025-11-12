@@ -1,31 +1,20 @@
-/**
- * Quick Wheel Vehicle Rental App
- * Main App Component
- * Description: Root component with providers, routing, and layout
- * Tech: React + TypeScript + CSS Modules + React Router
- */
+import React from 'react'
+import './App.css'
 
-import { Outlet } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { AdsProvider } from './contexts/AdsContext';
-import Navbar from './components/Navbar/Navbar';
-import Footer from './components/Footer/Footer';
-import "./App.css";
-
-function App() {
+export default function App() {
   return (
-    <AuthProvider>
-      <AdsProvider>
-        <div className="app">
-          <Navbar />
-          <main className="main-content">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-      </AdsProvider>
-    </AuthProvider>
-  );
-}
+    <div className="app">
+      <header className="app-header">
+        <h1>Code Dript</h1>
+      </header>
 
-export default App;
+      <main className="app-main">
+        <p>Welcome to the fresh Code Dript starter app.</p>
+      </main>
+
+      <footer className="app-footer">
+        <small>© {new Date().getFullYear()} Code Dript</small>
+      </footer>
+    </div>
+  )
+}
