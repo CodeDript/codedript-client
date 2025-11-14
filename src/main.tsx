@@ -1,10 +1,17 @@
-import { StrictMode } from 'react'
+import React from 'react'
 import { createRoot } from 'react-dom/client'
+import App from './App'
 import './index.css'
-import Router from './router/Router'
+import { initZoomControl } from './utils/helpers'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Router />
-  </StrictMode>,
+// Initialize zoom control
+initZoomControl();
+
+const container = document.getElementById('root')
+if (!container) throw new Error('Root element not found')
+
+createRoot(container).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 )

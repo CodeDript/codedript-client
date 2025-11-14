@@ -1,31 +1,17 @@
-/**
- * Quick Wheel Vehicle Rental App
- * Main App Component
- * Description: Root component with providers, routing, and layout
- * Tech: React + TypeScript + CSS Modules + React Router
- */
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/HomePage/Home.tsx';
+import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
+import './App.css';
 
-import { Outlet } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { AdsProvider } from './contexts/AdsContext';
-import Navbar from './components/Navbar/Navbar';
-import Footer from './components/Footer/Footer';
-import "./App.css";
-
-function App() {
+export default function App() {
   return (
-    <AuthProvider>
-      <AdsProvider>
-        <div className="app">
-          <Navbar />
-          <main className="main-content">
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
-      </AdsProvider>
-    </AuthProvider>
+    <Router>
+      <div className="app">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/coming-soon" element={<ComingSoon />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
-
-export default App;
