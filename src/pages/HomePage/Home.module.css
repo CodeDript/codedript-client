@@ -1,0 +1,45 @@
+.homePage {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.cardsSection {
+  padding: 5rem 2rem;
+ 
+}
+
+.cardsContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1a202c;
+  margin-bottom: 3rem;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  .cardsSection {
+    padding: 3rem 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .cardsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
