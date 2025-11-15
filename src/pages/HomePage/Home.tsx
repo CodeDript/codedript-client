@@ -5,14 +5,12 @@ import HeroTertiary from '../../components/hero/HeroTertiary';
 import CardOne from '../../components/card/CardOne';
 import CardTwo from '../../components/card/CardTwo';
 import CardThree from '../../components/card/CardThree';
-import Navbar from '../../components/navbar/Navbar';
 import Footer from '../../components/footer/Footer';
 import styles from './Home.module.css';
 
 const Home: React.FC = () => {
   return (
     <div className={styles.homePage}>
-      <Navbar />
       <HeroMain />
       <HeroSecondary />
       <HeroTertiary />
