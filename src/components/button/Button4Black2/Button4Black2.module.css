@@ -5,8 +5,8 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    width: 236px; 
-    height: 71px; 
+    width: 236px; /* slight increase */
+    height: 71px; /* 79 * 0.9 (10% smaller) */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -15,14 +15,7 @@
     overflow: visible;
 }
 
-.customButton:hover {
-    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.45));
-}
-
-.customButton:hover .buttonBase path {
-    fill: #ffffff !important;
-    fill-opacity: 1;
-}
+.customButton--noHover {}
 
 .customButton:active {
     transform: translateY(2);
@@ -53,7 +46,7 @@
 .buttonText {
     position: relative;
     z-index: 3;
-    color: #000000;
+    color: #ffffff;
     font-family: "Zen Dots", Helvetica, Arial, sans-serif;
     font-size: 18px;
    transform: translateY(-2px);
@@ -63,8 +56,8 @@
 }
 
 .textHover {
-    color: #000000;
-    text-shadow: 0 0 6px rgba(255,255,255,0.6);
+    color: #ffffff;
+    text-shadow: 0 0 6px rgba(255,255,255,0.25);
     transition: transform 0.12s linear, text-shadow 0.2s ease;
 }
 
@@ -75,28 +68,8 @@
     text-align: center;
 }
 
-/* Wide variant when text length exceeds threshold */
 .wide {
-    width: 340px; /* fallback static wide width if inline style not supported */
+    width: 306px; /* 340 * 0.9 */
 }
 
-.arrow {
-    position: relative;
-  transform: translateX(4px);
-  top: -2px;
-        font-size: 18px;
-    z-index: 3;
-    color: #000000;
-    transition: transform 0.2s ease, opacity 0.15s ease;
-}
-
-.customButton:hover .arrow {
-    transform: translateX(4px);
-    opacity: 0;
-}
-
-.arrowHidden {
-    display: none !important;
-    opacity: 0 !important;
-    transform: translateX(4px) !important;
-}
+/* arrow removed; no SVG arrow for this button */

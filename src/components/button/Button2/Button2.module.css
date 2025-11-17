@@ -5,8 +5,8 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    width: 236px; 
-    height: 71px; 
+    width: 236px; /* slight increase */
+    height: 71px; /* 79 * 0.9 -> 10% smaller */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -75,28 +75,8 @@
     text-align: center;
 }
 
-/* Wide variant when text length exceeds threshold */
 .wide {
-    width: 340px; /* fallback static wide width if inline style not supported */
+    width: 340px;
 }
 
-.arrow {
-    position: relative;
-  transform: translateX(4px);
-  top: -2px;
-        font-size: 18px;
-    z-index: 3;
-    color: #000000;
-    transition: transform 0.2s ease, opacity 0.15s ease;
-}
-
-.customButton:hover .arrow {
-    transform: translateX(4px);
-    opacity: 0;
-}
-
-.arrowHidden {
-    display: none !important;
-    opacity: 0 !important;
-    transform: translateX(4px) !important;
-}
+/* arrow removed; no SVG arrow for this button */

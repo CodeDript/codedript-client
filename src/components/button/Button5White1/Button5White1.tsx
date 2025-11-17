@@ -1,33 +1,50 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styles from './Button1.module.css';
+import styles from './Button5White1.module.css';
 
 interface ButtonProps {
     text?: string;
     onClick?: () => void;
     className?: string;
+    // optional target word to display during scramble (e.g. "CLICK" or "?")
+    target?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className }) => {
     const [displayText, setDisplayText] = useState<string>(text);
-    const [isHovering, setIsHovering] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
     const intervalRef = useRef<number | null>(null);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-    const targetText = " CLICK"; // final word on hover (uppercase for cyber look)
+    // final word used by the scramble (can be passed via `target` prop); default to `text`
+    const targetText =text;
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     useEffect(() => {
+        // observe the button and animate when it scrolls into view (or immediately if already visible)
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    startScramble();
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.25 });
+
+        if (buttonRef.current) obs.observe(buttonRef.current);
+
         return () => {
-            if (intervalRef.current) {
-                window.clearInterval(intervalRef.current);
-            }
+            obs.disconnect();
+            if (intervalRef.current) window.clearInterval(intervalRef.current);
         };
     }, []);
 
     const startScramble = () => {
         if (intervalRef.current) window.clearInterval(intervalRef.current);
+        setIsAnimating(true);
         let progress = 0; // progress 0..1
-        const steps = 12; // ticks to resolve
+        const steps = 24; // more ticks = slower reveal
         const interval = window.setInterval(() => {
+            // make slightly larger progress step to keep timing consistent
             progress += 1 / steps;
             const result = targetText
                 .split("")
@@ -44,6 +61,10 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
                 window.clearInterval(interval);
                 intervalRef.current = null;
                 setDisplayText(targetText);
+                // keep target visible longer then reset
+                window.setTimeout(() => {
+                    resetText();
+                }, 1400);
             }
         }, 45);
 
@@ -56,12 +77,11 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
             intervalRef.current = null;
         }
         setDisplayText(text);
+        setIsAnimating(false);
     };
     const isWide = displayText.length >= 10;
-
-    // compute a dynamic width increment for longer text (adjust per char)
     const baseWidth = 236; // px — small increase
-    const extraPerChar = 9; // keep per-char increment
+    const extraPerChar = 9;
     const minChars = 10;
     const computedWidth = isWide
         ? baseWidth + (displayText.length - minChars) * extraPerChar
@@ -69,25 +89,19 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
 
     return (
         <button
+            ref={buttonRef}
             className={`${styles.customButton} ${isWide ? styles.wide : ''} ${className || ''}`}
             style={{ width: `${computedWidth}px` }}
             onClick={onClick}
-            onMouseEnter={() => {
-                setIsHovering(true);
-                startScramble();
-            }}
-            onMouseLeave={() => {
-                setIsHovering(false);
-                resetText();
-            }}
+            /* hover triggers removed: animation runs on load/scroll only */
         >
             {/* Base background shape */}
-            <svg className={styles.buttonBase} width="100%" height="100%" viewBox="0 0 308 99" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                  <svg className={styles.buttonBase} width="100%" height="100%" viewBox="0 0 308 99" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                 <defs>
                     {/* gradient goes from dark gray at the left to white on the right (gives subtle contrast) */}
                     <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                        
-                        <stop offset="100%" stopColor="#cacacaff" stopOpacity="1" />
+                        <stop offset="100%" stopColor="#ffffffff" stopOpacity="1" />
                     </linearGradient>
                 </defs>
                 <mask id="path-1-inside-1_37_1629" fill="white">
@@ -97,12 +111,12 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
             </svg>
 
             {/* Inner border shape */}
-             <svg className={styles.buttonBorder} width="100%" height="100%" viewBox="0 0 308 99" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                <path d="M290.5 17.5V50.3174L257.038 81.5H20.7393L34.5459 66.6533L35.2158 65.9336V17.5H290.5Z" stroke="white" strokeOpacity="0.45" strokeWidth="5" shapeRendering="crispEdges"/>
+            <svg className={styles.buttonBorder} width="100%" height="100%" viewBox="0 0 308 99" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <path d="M290.5 17.5V50.3174L257.038 81.5H20.7393L34.5459 66.6533L35.2158 65.9336V17.5H290.5Z" stroke="white" strokeOpacity="1" strokeWidth="5" shapeRendering="crispEdges"/>
             </svg>
 
-            <span className={`${styles.buttonText} ${isHovering ? styles.textHover : ''} ${isHovering ? styles['textHover-center'] : ''}`}>{displayText}</span>
-                <span className={`${styles.arrow} ${isHovering ? styles.arrowHidden : ''}`} aria-hidden>→</span>
+            <span className={`${styles.buttonText} ${isAnimating ? styles.textHover : ''} ${isAnimating ? styles['textHover-center'] : ''}`}>{displayText}</span>
+                <span className={`${styles.arrow} ${isAnimating ? styles.arrowHidden : ''}`} aria-hidden>→</span>
         </button>
     );
 };
