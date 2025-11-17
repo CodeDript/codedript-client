@@ -16,7 +16,7 @@
 
 .pixoraIcon {
     background-color: transparent;
-    height: 50px;
+    height: 30px;
     left: 60px;
     object-fit: cover;
     position: relative;
@@ -140,4 +140,224 @@ margin-right: 80px;
     transition: box-shadow 0.3s, background 0.3s, color 0.3s;
     animation: navGlow 1s infinite alternate;
    
+}
+
+/* Burger Button */
+.burgerButton {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 10;
+    position: relative;
+    margin-right: 20px;
+}
+
+.burgerButton span {
+    width: 30px;
+    height: 3px;
+    background: #fff;
+    border-radius: 10px;
+    transition: all 0.3s linear;
+    position: relative;
+    transform-origin: 1px;
+}
+
+.burgerButton.burgerOpen span:first-child {
+    transform: rotate(45deg);
+}
+
+.burgerButton.burgerOpen span:nth-child(2) {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.burgerButton.burgerOpen span:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+.mobileProfileSection {
+    display: none;
+}
+
+.desktopProfileSection {
+    display: flex;
+}
+
+.mobileProfileItems {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobileProfileItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 16px;
+    color: #bebebe;
+    font-family: "Inter-Bold", Helvetica;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mobileProfileItem:hover {
+    background-color: #ffffff17;
+    color: #eeeeee;
+}
+
+.mobileIcon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.mobileIcon img {
+    width: 18px;
+    height: 18px;
+}
+
+.mobileProfileItem:hover .mobileIcon {
+    opacity: 0.9;
+}
+
+.mobileIconRed {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.mobileIconRed img {
+    width: 18px;
+    height: 18px;
+}
+
+.signOutButton {
+    color: #bebebe;
+    font-weight: 700;
+}
+
+.signOutButton:hover {
+    color: #ff3d4a !important;
+}
+
+.signOutButton:hover .mobileIconRed {
+    opacity: 0.9;
+}
+
+.signOutButton:hover .mobileIconRed img {
+    content: url('src/assets/DropdownIcon/sign out option (R).png');
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .NavBar {
+        padding: 0 20px;
+    }
+
+    .pixoraIcon {
+        left: 0;
+        height: 25px;
+    }
+
+    .burgerButton {
+        display: flex;
+    }
+
+    .desktopProfileSection {
+        display: none;
+    }
+
+    .mobileProfileSection {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .NavBarButtons {
+        position: fixed;
+        top: 80px;
+        right: -100%;
+        flex-direction: column;
+        background-color: #2e2e2eef;
+        backdrop-filter: blur(10px);
+        width: 70%;
+        max-width: 300px;
+        height: calc(100vh - 80px);
+        padding: 30px 20px;
+        gap: 20px;
+        transition: right 0.3s ease-in-out;
+        align-items: flex-start;
+        justify-content: flex-start;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+        overflow-y: auto;
+    }
+
+    .NavBarButtons.mobileMenuOpen {
+        right: 0;
+    }
+
+    .NavButton {
+        width: 100%;
+        text-align: left;
+        padding: 12px 0;
+        font-size: 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .mobileLoginButton {
+        margin-right: 0;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .profileContainer {
+        margin-right: 0;
+    }
+
+    .UserIcon {
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .NavBar {
+        padding: 0 30px;
+    }
+
+    .NavBarButtons {
+        gap: 20px;
+    }
+
+    .NavButton {
+        font-size: 14px;
+    }
+
+    .pixoraIcon {
+        left: 20px;
+    }
+
+    .UserIcon {
+        margin-right: 40px;
+    }
+
+    .loginButton {
+        margin-right: 40px;
+    }
 }
