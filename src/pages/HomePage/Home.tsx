@@ -1,7 +1,7 @@
 import React from 'react';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
-import HeroTertiary from '../../components/hero/HeroTertiary/HeroTertiary';
+import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 import CardOne from '../../components/card/CardOne';
 import CardTwo from '../../components/card/CardTwo';
 import CardThree from '../../components/card/CardThree';
@@ -11,6 +11,7 @@ import Button2 from '../../components/button/Button2/Button2';
 import Button3B from '../../components/button/Button3Black1/Button3Black1';
 import Button4B from '../../components/button/Button4Black2/Button4Black2';
 import Button5W from '../../components/button/Button5White1/Button5White1';
+import UserHero from '../../components/hero/UserHero/UserHero';
 import styles from './Home.module.css';
 
 const Home: React.FC = () => {
@@ -18,7 +19,8 @@ const Home: React.FC = () => {
     <div className={styles.homePage}>
       <HeroMain />
       <HeroSecondary />
-      <HeroTertiary />
+      <DeveloperHero />
+      <UserHero />
       
       <div className={styles.buttonSection}>
         <Button1 text="VIEW MORE" onClick={() => console.log('View more clicked')} />

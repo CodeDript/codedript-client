@@ -71,7 +71,7 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className}
         intervalRef.current = interval;
     };
 
-    const resetText = () => {
+   const resetText = () => {
         if (intervalRef.current) {
             window.clearInterval(intervalRef.current);
             intervalRef.current = null;
@@ -79,12 +79,12 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className}
         setDisplayText(text);
         setIsAnimating(false);
     };
-    const isWide = displayText.length >= 10;
+    const isWide = text.length >= 10;
     const baseWidth = 236; // px — small increase
     const extraPerChar = 9;
     const minChars = 10;
     const computedWidth = isWide
-        ? baseWidth + (displayText.length - minChars) * extraPerChar
+        ? baseWidth + (text.length - minChars) * extraPerChar
         : baseWidth;
 
     return (
@@ -116,7 +116,7 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className}
             </svg>
 
             <span className={`${styles.buttonText} ${isAnimating ? styles.textHover : ''} ${isAnimating ? styles['textHover-center'] : ''}`}>{displayText}</span>
-                <span className={`${styles.arrow} ${isAnimating ? styles.arrowHidden : ''}`} aria-hidden>→</span>
+              
         </button>
     );
 };

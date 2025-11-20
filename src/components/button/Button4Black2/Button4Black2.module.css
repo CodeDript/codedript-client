@@ -5,7 +5,7 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    width: 236px; /* slight increase */
+    width: 256px; /* slight increase */
     height: 71px; /* 79 * 0.9 (10% smaller) */
     display: inline-flex;
     align-items: center;
@@ -13,6 +13,7 @@
     transition: transform 0.2s ease, filter 0.2s ease;
     transition-property: transform, filter, width;
     overflow: visible;
+    
 }
 
 .customButton--noHover {}
@@ -49,9 +50,9 @@
     color: #ffffff;
     font-family: "Zen Dots", Helvetica, Arial, sans-serif;
     font-size: 18px;
-   transform: translateY(-2px);
+    transform: translateY(-2px);
     letter-spacing: 0.3px;
-    margin-right: 0;
+   
     white-space: nowrap;
 }
 
@@ -72,4 +73,4 @@
     width: 306px; /* 340 * 0.9 */
 }
 
-/* arrow removed; no SVG arrow for this button */
+

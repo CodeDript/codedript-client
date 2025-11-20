@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './HeroTertiary.module.css';
+import styles from './DeveloperHero.module.css';
 // heroGrid removed — not used in this variant
 import heroOutline from '../../../assets/svg/heroOutline.svg';
 import calenderIcon from '../../../assets/svg/calander.svg';
@@ -7,7 +7,7 @@ import hierarchyIcon from '../../../assets/svg/hierarchy.svg';
 import starIcon from '../../../assets/svg/starIcon.svg';
 import Button4Black2 from '../../button/Button4Black2/Button4Black2';
 
-const HeroTertiary: React.FC = () => {
+const DeveloperHero: React.FC = () => {
   return (
     <section className={styles.hero}>
       {/* <img src={heroGrid} alt="hero grid" className={styles.grid} /> */}
@@ -62,4 +62,4 @@ const HeroTertiary: React.FC = () => {
   );
 };
 
-export default HeroTertiary;
+export default DeveloperHero;

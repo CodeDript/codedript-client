@@ -50,7 +50,7 @@
   text-align: left;
   color: #0f172a;
   max-width: 1100px;
-  padding: 3.2rem 2.5rem 1.8rem 4.5rem;
+  padding: 0.2rem 3.5rem 1.8rem 8.5rem;
 }
 
 .overline {
@@ -75,11 +75,11 @@
 }
 
 .profileImage {
-  width: 164px; /* 20% larger */
-  height: 164px; /* 20% larger */
+ width: 200px; /* 20% larger */
+  height: 200px; /* 20% larger */
   border-radius: 50%;
   object-fit: cover;
-  border: 8px solid #cccccc;
+  border: 8px solid #adadad;
  
 }
 
@@ -112,7 +112,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: #4b5563;
+  color: #323942;
   font-family: 'Jura', sans-serif;
 }
 
@@ -122,8 +122,9 @@
 }
 
 .metaText {
-  font-size: 0.9rem;
-  color: #4b5563;
+  font-size: 1rem;
+  color: #2f3a40; /* stronger contrast */
+  font-weight: 600;
 }
 
 .title {
@@ -144,9 +145,9 @@
 
 .bio {
   font-family: 'Jura', sans-serif;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #6b7280;
+  font-size: 1.03rem; /* slightly larger */
+  line-height: 1.55;
+  color: #2f3a40; /* increased contrast */
   margin: 0.75rem 0 0 0;
   display: -webkit-box;
   -webkit-line-clamp: 2; /* show only two lines */
@@ -159,18 +160,37 @@
 
 .skills {
   display: flex;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  scale: 0.9;
+  margin-left: 8%;
+
+  
+  
+}
+.skillsBase {
+  display: flex;
+  flex-wrap: wrap;
+
+  margin-left: -15%; /* moved slightly right */
+  margin-top: 80px;  /* move up slightly */
+  background-color: #a3a3a3;
+  
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 0% 100%);
 }
 
 .skillTag {
-  background: #303030;
-  color: #ffffff;
-  padding: 0.5rem 1.25rem;
-  border-radius: 25px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  font-family: 'Jura', sans-serif;
+  display: inline-block;
+  
+  border-radius: 18px;
+  background: rgba(48,48,48,0.95);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.skillButton {
+ 
+  transform-origin: left center;
+  
 }
 
 @media (max-width: 768px) {
@@ -199,5 +219,23 @@
 
   .profileMeta {
     justify-content: center;
+  }
+
+  /* Responsive adjustments for the skills polygon */
+  .skills {
+    margin-left: 0;
+    gap: 0.5rem;
+    transform: none;
+  }
+
+  .skillsBase {
+    margin-left: 0; /* align with content */
+    margin-top: 12px;
+    clip-path: inset(0); /* remove angled polygon on small screens */
+    border-radius: 8px;
+  }
+
+  .skillButton {
+    transform: scale(0.78);
   }
 }

@@ -1,0 +1,241 @@
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: #ffffff;
+  overflow: hidden;
+  margin-top: 80px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.24);
+  z-index: 1;
+}
+
+.grid {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.outline {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 2;
+  transform: translateY(-50%) scale(0.97);
+  margin-right: -12px;
+}
+
+.content {
+  position: relative;
+  z-index: 3;
+  text-align: left;
+  color: #0f172a;
+  max-width: 1100px;
+  padding: 0.2rem 3.5rem 1.8rem 8.5rem;
+}
+
+.overline {
+  font-size: clamp(2rem, 3.2vw, 3rem);
+  font-weight: 500;
+  margin-bottom: 30px;
+  opacity: 1;
+  letter-spacing: 0.6px;
+  color: #111827;
+}
+
+.profileCard {
+ 
+
+}
+
+.profileHeader {
+  display: flex;
+  gap: 2.4rem; /* increased gap for larger avatar */
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.profileImage {
+  width: 200px; /* 20% larger */
+  height: 200px; /* 20% larger */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 8px solid #adadad;
+ 
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.profileName {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  max-width: 1600px; /* increased to 1600px */
+  width: min(1400px, 96vw);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 32px; /* slightly increased spacing */
+}
+
+.profileMeta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #323942;
+  font-family: 'Jura', sans-serif;
+}
+
+.metaIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.metaText {
+  font-size: 1rem;
+  color: #2f3a40; /* stronger contrast */
+  font-weight: 600;
+}
+
+.title {
+  font-family: 'Jura', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333435;
+  margin: 0.5rem 0;
+}
+
+.earnings {
+  font-family: 'zen dots', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #3d3d3d;
+  margin: 0.25rem 0 0.75rem 0;
+}
+
+.bio {
+  font-family: 'Jura', sans-serif;
+  font-size: 1.03rem; /* slightly larger */
+  line-height: 1.55;
+  color: #2f3a40; /* increased contrast */
+  margin: 0.75rem 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* show only two lines */
+  line-clamp: 2; /* standard property (fallback) */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(1.5em * 2); /* fallback for browsers without line-clamp */
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  scale: 0.9;
+  margin-left: 8%;
+
+  
+  
+}
+.skillsBase {
+  display: flex;
+  flex-wrap: wrap;
+
+  margin-left: -15%; /* moved slightly right */
+  margin-top: 80px;  /* move up slightly */
+  background-color: #a3a3a3;
+  
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 0% 100%);
+}
+
+.skillTag {
+  display: inline-block;
+  
+  border-radius: 18px;
+  background: rgba(48,48,48,0.95);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.skillButton {
+ 
+  transform-origin: left center;
+  
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 2.4rem 1.4rem 2rem 1.4rem;
+  }
+
+  .profileCard {
+    padding: 1.5rem;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profileImage {
+    width: 120px; /* 20% larger mobile size */
+    height: 120px; /* 20% larger mobile size */
+  }
+
+  .profileName {
+    font-size: 1.5rem;
+  }
+
+  .profileMeta {
+    justify-content: center;
+  }
+
+  /* Responsive adjustments for the skills polygon */
+  .skills {
+    margin-left: 0;
+    gap: 0.5rem;
+    transform: none;
+  }
+
+  .skillsBase {
+    margin-left: 0; /* align with content */
+    margin-top: 12px;
+    clip-path: inset(0); /* remove angled polygon on small screens */
+    border-radius: 8px;
+  }
+
+  .skillButton {
+    transform: scale(0.78);
+  }
+}
