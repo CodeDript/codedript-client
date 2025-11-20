@@ -1,4 +1,4 @@
-.auth-overlay {
+.authOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -18,26 +18,23 @@
   -ms-flex-pack: center;
   justify-content: center;
   z-index: 10000;
-
-position: fixed;
-
+  position: fixed;
 }
 
-.auth-modal {
+.authModal {
   background: transparent;
   padding: 0;
   width: 92%;
   max-width: 720px;
   position: relative;
   color: #e5e7eb;
-  
 }
 
-.close-btn {
+.closeBtn {
   position: absolute;
   top: 10px;
   right: 10px;
-  background:  #ffafaf;
+  background: #ffafaf;
   border: none;
   color: #ff0000;
   font-size: 28px;
@@ -45,22 +42,22 @@ position: fixed;
   height: 30px;
   z-index: 3;
   border-radius: 50px;
-  
 }
 
-/* Outer SVG frame */
-.form-outer {
+.formOuter {
   position: relative;
+  background-image: url('../../assets/Login/cardBackground.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
   background: #e8e8e8;
-  padding: 3.5rem  3rem 3.5rem 3rem;
+  padding: 3.5rem 3rem 3.5rem 3rem;
   min-height: 520px;
   border-radius: 35px;
-  border: 8px solid #303030; 
-  
+  border: 8px solid #303030;
 }
 
-/* Header section */
-.auth-header {
+.authHeader {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -76,93 +73,90 @@ position: fixed;
   align-items: flex-start;
   gap: 12px;
   margin: 0 1rem 1.8rem 1rem;
-
 }
 
-.header-left { 
+.headerLeft {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
-  gap: 16px; 
+  display: flex;
+  gap: 16px;
   -webkit-box-align: center;
   -webkit-align-items: center;
   -ms-flex-align: center;
-  align-items: center; 
-  
+  align-items: center;
 }
 
-.security-svg { 
-  width: 70px; 
-  height: 70px; 
-  opacity: 0.95; 
+.securitySvg {
+  width: 70px;
+  height: 70px;
+  opacity: 0.95;
   margin-left: -15px;
   margin-top: -25px;
-  
 }
-
-.form-title { 
-  
-  font-size: 1.8rem; 
-  font-weight: 700; 
-  margin: 0; 
-  color: #0f172a; 
+.outline {
+scale: 0.92;
+margin-top: -26px;
+left: 19%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+.formTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
   font-family: 'zen dots';
-  
 }
 
-.form-subtext { 
-  
-  font-size: 1.22rem; 
-  margin: 6px 0 0 0; 
-  color: #6b7280; 
-   font-family: 'jura';
-   margin-left: -10px;
-   margin-top: 0px;
-   margin-bottom: 20px;
-
-    
+.formSubtext {
+  font-size: 1.22rem;
+  margin: 6px 0 0 0;
+  color: #6b7280;
+  font-family: 'jura';
+  margin-left: -10px;
+  margin-top: 0px;
+  margin-bottom: 20px;
 }
 
-.auth-body { 
+.authBody {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
+  display: flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
-  flex-direction: column; 
+  flex-direction: column;
   gap: 18px;
-   
 }
 
-.card { 
-  background: #f2f2f2ff; 
-  border-radius:  0px 12px 12px 12px; 
- 
-  border: 2px solid #c1c1c1; 
-  padding: 0px; 
-  position: relative; 
-  margin-top: 20px ;
-  margin-bottom: 20px ;
-  
+.card {
+  background: #f2f2f2ff;
+  border-radius: 0px 12px 12px 12px;
+  border: 2px solid #c1c1c1;
+  padding: 0px;
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
-.card-badge { 
-  position: absolute; 
-  top: -50px; 
-  left:-2px; 
+.cardBadge {
+  position: absolute;
+  top: -50px;
+  left: -2px;
   background-image: url('../../assets/svg/hederswelletandemail.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   border: none;
-  padding: 14px 16px; 
+  padding: 14px 16px;
   border-radius: 0;
-  font-weight: 400; 
-  color: #ffffff; 
+  font-weight: 400;
+  color: #ffffff;
   font-size: 1rem;
   display: -webkit-box;
   display: -webkit-flex;
@@ -175,32 +169,31 @@ position: fixed;
   gap: 6px;
   width: 280px;
   height: 40px;
-  
 }
 
-.badge-icon {
+.badgeIcon {
   width: 14px;
   height: 14px;
   object-fit: contain;
 }
 
-.wallet-item { 
+.walletItem {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
+  display: flex;
   -webkit-box-align: center;
   -webkit-align-items: center;
   -ms-flex-align: center;
-  align-items: center; 
+  align-items: center;
   -webkit-box-pack: justify;
   -webkit-justify-content: space-between;
   -ms-flex-pack: justify;
   justify-content: space-between;
-  gap: 14px; 
+  gap: 14px;
 }
 
-.wallet-left {
+.walletLeft {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -214,11 +207,9 @@ position: fixed;
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  
- 
 }
 
-.wallet-right {
+.walletRight {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -229,50 +220,48 @@ position: fixed;
   align-items: center;
   gap: 18px;
   scale: 0.8;
-  
 }
 
-.mm-icon { 
-  width: 48px; 
-  height: 48px; 
-  object-fit: contain; 
-   padding: 20px 30px 20px 20px;
-   
+.mmIcon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  padding: 20px 30px 20px 20px;
 }
 
-.wallet-icon-right {
+.walletIconRight {
   width: 52px;
   height: 52px;
   object-fit: contain;
   opacity: 0.3;
 }
 
-.wallet-info { 
+.walletInfo {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
   -ms-flex: 1;
-  flex: 1; 
+  flex: 1;
 }
 
-.wallet-title { 
-  margin: 0; 
-  font-size: 1.25rem; 
-  font-weight: 700; 
-  color: #111827; 
+.walletTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
 }
 
-.wallet-sub { 
-  margin: 4px 0 0 0; 
-  color: #6b7280; 
+.walletSub {
+  margin: 4px 0 0 0;
+  color: #6b7280;
   font-size: 0.9rem;
-   font-family: 'jura'
+  font-family: 'jura';
 }
 
-.email-top { 
+.emailTop {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
+  display: flex;
   -webkit-box-pack: justify;
   -webkit-justify-content: space-between;
   -ms-flex-pack: justify;
@@ -280,11 +269,11 @@ position: fixed;
   -webkit-box-align: center;
   -webkit-align-items: center;
   -ms-flex-align: center;
-  align-items: center; 
-  margin-bottom: 12px; 
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.email-left {
+.emailLeft {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -298,149 +287,150 @@ position: fixed;
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  
 }
 
-.email-icon { 
+.emailIcon {
   padding: 10px 30px 10px 20px;
-  width: 54px; 
-  height: 64px; 
+  width: 54px;
+  height: 64px;
 }
 
-.email-icon-right {
+.emailIconRight {
   width: 42px;
-  
   height: 42px;
   object-fit: contain;
   opacity: 0.3;
 }
 
-.email-title { 
-  margin: 0; 
-  font-size: 1.1rem; 
-  font-weight: 700; 
+.emailTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #111827;
 }
 
-.email-sub { 
+.emailSub {
   font-family: 'jura';
-  margin: 2px 0 0 0; 
-  color: #6b7280; 
+  margin: 2px 0 0 0;
+  color: #6b7280;
   font-size: 0.9rem;
 }
 
-.email-form { 
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex; 
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column; 
-  gap: 12px; 
-}
-
-.email-input-row {
+.emailForm {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
   gap: 12px;
+}
+
+.emailInputRow {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 0px;
   -webkit-box-align: center;
   -webkit-align-items: center;
   -ms-flex-align: center;
   align-items: center;
 }
 
-.email-label {
+.emailLabel {
   font-size: 0.9rem;
   color: #111827;
   font-family: 'jura';
   font-weight: 500;
   margin-left: 20px;
+  margin-top: -10px;
+  margin-bottom: -15px;
 }
 
-.input-row { 
+.inputRow {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
+  display: flex;
   -webkit-box-align: center;
   -webkit-align-items: center;
   -ms-flex-align: center;
-  align-items: center; 
-  gap: 10px; 
-  background: #d8d8d8; 
- 
-
-  padding: 0.75rem 1rem; 
+  align-items: center;
+  gap: 10px;
+  background: #d8d8d8;
+  padding: 0.75rem 1rem;
   -webkit-box-flex: 1;
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
   margin-left: 20px;
-
 }
 
-.input-row input { 
+.inputRow input {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
   -ms-flex: 1;
-  flex: 1; 
-  background: transparent; 
-  border: none; 
-  outline: none; 
-  color: #111827; 
-  font-size: 0.95rem; 
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #111827;
+  font-size: 0.95rem;
 }
 
-.button-wrapper { 
+.buttonWrapper {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
-  display: flex; 
+  display: flex;
   -webkit-box-pack: end;
   -webkit-justify-content: flex-end;
   -ms-flex-pack: end;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   scale: 0.8;
 }
 
-.terms-text {
+.termsText {
   text-align: center;
   font-size: 0.8rem;
   color: #6b7280;
-  margin-top: 16px;
+  margin-top: 8px;
   font-family: 'jura';
+  margin-bottom: 40px;
 }
 
-.terms-text a {
+.termsText a {
   color: #2563eb;
   text-decoration: none;
 }
 
-.terms-text a:hover {
+.termsText a:hover {
   text-decoration: underline;
+}
+
+.outline {
+  position: absolute;
+  top: 50%;
+  right: -50px;
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Mobile Responsive */
 @media (max-width: 520px) {
-  .form-title { 
-    font-size: 1.6rem; 
+  .authModal {
+    transform: scale(0.85);
   }
-  
-  .card-badge { 
-    left: 12px; 
-    width: 120px; 
-  }
-  
-  .card { 
-    padding: 14px; 
-  }
-  
-  .form-outer {
-    padding: 3rem 1rem 2rem 1rem;
+
+  .outline {
+    transform: scale(0.85) translateY(-50%);
   }
 }

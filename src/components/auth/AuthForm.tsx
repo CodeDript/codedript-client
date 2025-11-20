@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import './AuthForm.css';
+import styles from './AuthForm.module.css';
 import { showAlert } from './Alert';
 import securityIcon from '../../assets/svg/iconsax-security.svg';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import metaMaskIcon from '../../assets/Login/MetaMask.svg';
 import emailIcon from '../../assets/Login/emailicon.svg';
+import heroOutline from '../../assets/Login/cardBackground.svg';
 
 interface AuthFormProps {
   onClose: () => void;
@@ -58,41 +59,41 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
   };
 
   return (
-    <div className="auth-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="form-outer">
-          <button className="close-btn" onClick={onClose}>×</button>
+    <div className={styles.authOverlay} onClick={onClose}>
+      <div className={styles.authModal} onClick={(e) => e.stopPropagation()}>
+        <img src={heroOutline} alt="decorative outline" className={styles.outline} />
+        
+        <div className={styles.formOuter}>
+          
+          <button className={styles.closeBtn} onClick={onClose}>×</button>
 
-          <div className="auth-header">
-            <div className="header-left">
-              <img src={securityIcon} alt="security" className="security-svg" />
+          <div className={styles.authHeader}>
+            <div className={styles.headerLeft}>
+              <img src={securityIcon} alt="security" className={styles.securitySvg} />
               <div>
-                <h1 className="form-title">Secure Access</h1>
-                
+                <h1 className={styles.formTitle}>Secure Access</h1>
               </div>
-              
             </div>
-            <p className="form-subtext">Connect your wallet or sign in with email to access CodeDript</p>
+            <p className={styles.formSubtext}>Connect your wallet or sign in with email to access CodeDript</p>
           </div>
 
-          <div className="auth-body">
+          <div className={styles.authBody}>
             {/* Wallet section */}
-            <div className="card wallet-card">
-              <div className="card-badge">
-               
+            <div className={styles.card}>
+              <div className={styles.cardBadge}>
                 Wallet
               </div>
-              <div className="card-inner">
-                <div className="wallet-item">
-                  <div className="wallet-left">
-                    <img src={metaMaskIcon} alt="MetaMask" className="mm-icon" />
-                    <div className="wallet-info">
-                      <h3 className="wallet-title">MetaMask</h3>
-                      <p className="wallet-sub">Connect using MetaMask browser extension</p>
+              
+              <div className={styles.cardInner}>
+                <div className={styles.walletItem}>
+                  <div className={styles.walletLeft}>
+                    <img src={metaMaskIcon} alt="MetaMask" className={styles.mmIcon} />
+                    <div className={styles.walletInfo}>
+                      <h3 className={styles.walletTitle}>MetaMask</h3>
+                      <p className={styles.walletSub}>Connect using MetaMask browser extension</p>
                     </div>
                   </div>
-                  <div className="wallet-right">
-                  
+                  <div className={styles.walletRight}>
                     <Button3B text={loading ? 'Connecting…' : 'Connect'} onClick={connectWallet} />
                   </div>
                 </div>
@@ -100,27 +101,25 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
             </div>
 
             {/* Email section */}
-            <div className="card email-card">
-              <div className="card-badge">
-           
+            <div className={styles.card}>
+              <div className={styles.cardBadge}>
                 Email
               </div>
-              <div className="card-inner">
-                <div className="email-top">
-                  <div className="email-left">
-                    <img src={emailIcon} alt="email" className="email-icon" />
-                    <div className="email-info">
-                      <h3 className="email-title">Email Access</h3>
-                      <p className="email-sub">Connect using Email</p>
+              <div className={styles.cardInner}>
+                <div className={styles.emailTop}>
+                  <div className={styles.emailLeft}>
+                    <img src={emailIcon} alt="email" className={styles.emailIcon} />
+                    <div className={styles.emailInfo}>
+                      <h3 className={styles.emailTitle}>Email Access</h3>
+                      <p className={styles.emailSub}>Connect using Email</p>
                     </div>
                   </div>
-                 
                 </div>
 
-                <form onSubmit={handleSubmit} className="email-form">
-                  <label htmlFor="email-input" className="email-label">Enter Email Address :</label>
-                  <div className="email-input-row">
-                    <div className="input-row email-input-row">
+                <form onSubmit={handleSubmit} className={styles.emailForm}>
+                  <label htmlFor="email-input" className={styles.emailLabel}>Enter Email Address :</label>
+                  <div className={styles.emailInputRow}>
+                    <div className={styles.inputRow}>
                       <input
                         id="email-input"
                         type="email"
@@ -130,7 +129,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
                         required
                       />
                     </div>
-                    <div className="button-wrapper">
+                    <div className={styles.buttonWrapper}>
                       <Button3B text={loading ? 'Loading…' : 'Connect'} onClick={handleEmailConnect} />
                     </div>
                   </div>
@@ -139,7 +138,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
             </div>
           </div>
 
-          <p className="terms-text">
+          <p className={styles.termsText}>
             By connecting, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
           </p>
         </div>
