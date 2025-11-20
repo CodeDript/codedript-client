@@ -3,9 +3,11 @@ import styles from './AuthForm.module.css';
 import { showAlert } from './Alert';
 import securityIcon from '../../assets/svg/iconsax-security.svg';
 import Button3B from '../button/Button3Black1/Button3Black1';
+import MetaMaskLogin from './MetaMaskLogin';
 import metaMaskIcon from '../../assets/Login/MetaMask.svg';
 import emailIcon from '../../assets/Login/emailicon.svg';
-import heroOutline from '../../assets/Login/cardBackground.svg';
+import heroOutlineup from '../../assets/Login/cardBackgroundup.svg';
+import heroOutlinedown from '../../assets/Login/cardBackgrounddown.svg';
 
 interface AuthFormProps {
   onClose: () => void;
@@ -48,22 +50,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
     }, 900);
   };
 
-  const connectWallet = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const token = 'wallet-' + Date.now();
-      onLoginSuccess(token);
-      showAlert('Wallet connected successfully!', 'success');
-      setLoading(false);
-    }, 800);
-  };
+  // Removed fallback connectWallet as MetaMaskLogin handles wallet flow
 
   return (
     <div className={styles.authOverlay} onClick={onClose}>
       <div className={styles.authModal} onClick={(e) => e.stopPropagation()}>
-        <img src={heroOutline} alt="decorative outline" className={styles.outline} />
-        
         <div className={styles.formOuter}>
+          {/* decorative outlines anchored to card */}
+          <img src={heroOutlineup} alt="decorative outline" className={`${styles.outline} ${styles.outlineTop}`} />
+          <img src={heroOutlinedown} alt="decorative outline" className={`${styles.outline} ${styles.outlineBottom}`} />
           
           <button className={styles.closeBtn} onClick={onClose}>×</button>
 
@@ -73,8 +68,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
               <div>
                 <h1 className={styles.formTitle}>Secure Access</h1>
               </div>
-            </div>
+            </div >
+             
             <p className={styles.formSubtext}>Connect your wallet or sign in with email to access CodeDript</p>
+            
           </div>
 
           <div className={styles.authBody}>
@@ -90,14 +87,40 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
                     <img src={metaMaskIcon} alt="MetaMask" className={styles.mmIcon} />
                     <div className={styles.walletInfo}>
                       <h3 className={styles.walletTitle}>MetaMask</h3>
-                      <p className={styles.walletSub}>Connect using MetaMask browser extension</p>
+                          <p className={styles.walletSub}>Connect using MetaMask</p>
+                          {/* Display MetaMask install notice inline under the wallet description */}
+                         
                     </div>
                   </div>
                   <div className={styles.walletRight}>
-                    <Button3B text={loading ? 'Connecting…' : 'Connect'} onClick={connectWallet} />
+                    {/* Replace simple connect button with MetaMask login component */}
+                    <MetaMaskLogin
+                      onLoginSuccess={() => {
+                      
+                        const token = 'wallet-' + Date.now();
+                        onLoginSuccess(token);
+                        showAlert('Wallet connected successfully!', 'success');
+                      }}
+                    />
+                    
                   </div>
+                  
                 </div>
+                      {!((window as any).ethereum && (window as any).ethereum.isMetaMask) && (
+                            <p className={styles.metaMaskNotice}>
+                              MetaMask not detected —{' '}
+                              <a
+                                href="https://metamask.io/download/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.metaMaskLink}
+                              >
+                                <strong>Install MetaMask</strong>
+                              </a>
+                            </p>
+                          )}
               </div>
+         
             </div>
 
             {/* Email section */}

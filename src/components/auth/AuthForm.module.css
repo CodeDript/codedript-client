@@ -17,7 +17,7 @@
   -webkit-justify-content: center;
   -ms-flex-pack: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 1000;
   position: fixed;
 }
 
@@ -55,6 +55,7 @@
   min-height: 520px;
   border-radius: 35px;
   border: 8px solid #303030;
+  z-index: 1; /* keep card content above decorative outlines */
 }
 
 .authHeader {
@@ -94,14 +95,11 @@
   margin-left: -15px;
   margin-top: -25px;
 }
-.outline {
-scale: 0.92;
-margin-top: -26px;
-left: 19%;
-  width: 100%;
-  height: 100%;
+.outline { /* default shared outline styles */
+  width: auto;
+  height: auto;
   object-fit: cover;
-  z-index: -1;
+  pointer-events: none;
 }
 .formTitle {
   font-size: 1.8rem;
@@ -113,8 +111,8 @@ left: 19%;
 
 .formSubtext {
   font-size: 1.22rem;
-  margin: 6px 0 0 0;
-  color: #6b7280;
+  
+  color: #3a3a3a;
   font-family: 'jura';
   margin-left: -10px;
   margin-top: 0px;
@@ -158,7 +156,7 @@ left: 19%;
   font-weight: 400;
   color: #ffffff;
   font-size: 1rem;
-  display: -webkit-box;
+  font-weight: 700; /* make link bolder */
   display: -webkit-flex;
   display: -ms-flexbox;
   display: flex;
@@ -255,6 +253,15 @@ left: 19%;
   color: #6b7280;
   font-size: 0.9rem;
   font-family: 'jura';
+}
+
+.metaMaskNotice {
+  color: #424242;
+  font-size: 0.9rem;
+  font-family: 500;
+  font-family: 'jura';
+  margin-top: 5px;
+  margin-left: 20px;
 }
 
 .emailTop {
@@ -412,18 +419,43 @@ left: 19%;
   text-decoration: underline;
 }
 
-.outline {
+.metaMaskLink {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 700; /* bold link */
+}
+
+.metaMaskLink:hover {
+  text-decoration: underline;
+}
+
+.outline { /* base for decorative outlines */
   position: absolute;
-  top: 50%;
-  right: -50px;
-  transform: translateY(-50%);
   width: auto;
   height: auto;
   opacity: 1;
   pointer-events: none;
-  z-index: 1;
+  z-index: -1; /* keep outline behind the modal content */
 }
 
+.outlineTop {
+  top: 0px; /* less protrusion for a smaller top outline */
+  left: 65%;
+  transform: translateX(-50%);
+  
+  max-width: 250px; /* smaller maximum width */
+}
+
+.outlineBottom {
+  bottom: -4px; /* move further out to make it more visible */
+  right: -4px; /* offset more to the right */
+ 
+  max-width: 500px; /* increase maximum width */
+}
+.textPlacement{
+margin-left: -20px;
+
+}
 /* Mobile Responsive */
 @media (max-width: 520px) {
   .authModal {
@@ -434,3 +466,4 @@ left: 19%;
     transform: scale(0.85) translateY(-50%);
   }
 }
+

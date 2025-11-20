@@ -1,0 +1,171 @@
+/* SponsorSection.module.css */
+
+.sponsorSection {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.headerText {
+  font-family: "Zen Dots", sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 40px;
+}
+
+.sponsorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  align-items: center;
+  justify-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sponsorItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  
+  border-radius: 12px;
+
+  
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 120px;
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+
+
+.sponsorImage {
+  max-width: 100%;
+  max-height: 80px;
+
+}
+
+.placeholderText {
+  grid-column: 1 / -1;
+  font-family: 'Jura', sans-serif;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .sponsorSection {
+    padding: 50px 20px;
+  }
+
+  .sponsorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sponsorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sponsorSection {
+    padding: 40px 15px;
+  }
+
+  .sponsorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+  }
+
+  .sponsorItem {
+    padding: 15px;
+    min-height: 100px;
+  }
+
+  .sponsorImage {
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sponsorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .sponsorItem {
+    padding: 12px;
+    min-height: 80px;
+  }
+
+  .sponsorImage {
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sponsorSection {
+    padding: 30px 10px;
+  }
+
+  .sponsorGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .sponsorItem {
+    padding: 10px;
+    min-height: 70px;
+  }
+
+  .sponsorImage {
+    max-height: 40px;
+  }
+}
+
+@media (max-width: 360px) {
+  .sponsorGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .sponsorItem {
+    padding: 8px;
+    min-height: 60px;
+  }
+
+  .sponsorImage {
+    max-height: 35px;
+  }
+}
+
+/* Logo Looping Animation */
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Add slight delay variations for each sponsor item */
+.sponsorItem:nth-child(1) { animation-delay: 0s; }
+.sponsorItem:nth-child(2) { animation-delay: 0.5s; }
+.sponsorItem:nth-child(3) { animation-delay: 1s; }
+.sponsorItem:nth-child(4) { animation-delay: 1.5s; }
+.sponsorItem:nth-child(5) { animation-delay: 2s; }
+.sponsorItem:nth-child(6) { animation-delay: 2.5s; }
+.sponsorItem:nth-child(7) { animation-delay: 3s; }
+.sponsorItem:nth-child(8) { animation-delay: 3.5s; }
