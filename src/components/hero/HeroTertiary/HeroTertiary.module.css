@@ -1,15 +1,13 @@
 .hero {
   position: relative;
   width: 100%;
-  height: 500px;
+  min-height: 520px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: #ffffff;
   overflow: hidden;
+  margin-top: 80px;
 }
 
 .overlay {
@@ -18,65 +16,188 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.24);
   z-index: 1;
+}
+
+.grid {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.outline {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 2;
+  transform: translateY(-50%) scale(0.97);
+  margin-right: -12px;
 }
 
 .content {
   position: relative;
-  z-index: 2;
-  text-align: center;
-  color: #ffffff;
-  max-width: 700px;
-  padding: 2rem;
+  z-index: 3;
+  text-align: left;
+  color: #0f172a;
+  max-width: 1100px;
+  padding: 3.2rem 2.5rem 1.8rem 4.5rem;
 }
 
-.headline {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+.overline {
+  font-size: clamp(2rem, 3.2vw, 3rem);
+  font-weight: 500;
+  margin-bottom: 30px;
+  opacity: 1;
+  letter-spacing: 0.6px;
+  color: #111827;
 }
 
-.subtext {
-  font-size: 1.25rem;
-  font-weight: 300;
-  margin-bottom: 2rem;
-  line-height: 1.6;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+.profileCard {
+ 
+
 }
 
-.cta {
-  padding: 0.875rem 2.5rem;
-  font-size: 1.125rem;
+.profileHeader {
+  display: flex;
+  gap: 2.4rem; /* increased gap for larger avatar */
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.profileImage {
+  width: 164px; /* 20% larger */
+  height: 164px; /* 20% larger */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 8px solid #cccccc;
+ 
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.profileName {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 2rem;
   font-weight: 600;
-  color: #00f2fe;
-  background: #ffffff;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  margin: 0 0 0.5rem 0;
+  max-width: 1600px; /* increased to 1600px */
+  width: min(1400px, 96vw);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 32px; /* slightly increased spacing */
 }
 
-.cta:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  background: #f7fafc;
+.profileMeta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #4b5563;
+  font-family: 'Jura', sans-serif;
+}
+
+.metaIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.metaText {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.title {
+  font-family: 'Jura', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333435;
+  margin: 0.5rem 0;
+}
+
+.earnings {
+  font-family: 'zen dots', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #3d3d3d;
+  margin: 0.25rem 0 0.75rem 0;
+}
+
+.bio {
+  font-family: 'Jura', sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #6b7280;
+  margin: 0.75rem 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* show only two lines */
+  line-clamp: 2; /* standard property (fallback) */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(1.5em * 2); /* fallback for browsers without line-clamp */
+}
+
+.skills {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.skillTag {
+  background: #303030;
+  color: #ffffff;
+  padding: 0.5rem 1.25rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'Jura', sans-serif;
 }
 
 @media (max-width: 768px) {
-  .headline {
-    font-size: 2rem;
+  .content {
+    padding: 2.4rem 1.4rem 2rem 1.4rem;
   }
-  
-  .subtext {
-    font-size: 1rem;
+
+  .profileCard {
+    padding: 1.5rem;
   }
-  
-  .cta {
-    font-size: 1rem;
-    padding: 0.75rem 2rem;
+
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profileImage {
+    width: 120px; /* 20% larger mobile size */
+    height: 120px; /* 20% larger mobile size */
+  }
+
+  .profileName {
+    font-size: 1.5rem;
+  }
+
+  .profileMeta {
+    justify-content: center;
   }
 }
