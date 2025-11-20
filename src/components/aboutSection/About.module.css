@@ -1,0 +1,229 @@
+.grayBackground {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
+    height: 80%;
+    background: linear-gradient(180deg, #242424 0%);
+    opacity:1;
+    z-index: 0;
+    pointer-events: none;
+}
+.aboutContainer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 120px 40px;
+    background-color: #020202;
+    overflow: hidden; /* Prevents SVGs from causing scrollbars */
+    animation: fadeIn 1.2s ease-out forwards;
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.aboutContainer.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.backgroundSvg {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 1;
+}
+
+.backgroundSvg1 {
+    top: 45%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    max-width: 1920px;
+    height: 832px;
+    z-index: 3;
+    animation: subtleMoveRight 12s ease-in-out infinite;
+}
+
+.backgroundSvg2 {
+    position: absolute;        /* or fixed, depending on where you want it */
+    top: 50%;
+    left: 0;                   /* make it start at left edge */
+    transform: translateY(-50%);
+    width: 100vw;              /* full viewport width */
+    height: auto;              /* maintain aspect ratio */
+    opacity: 1;
+    animation: subtleMoveLeft2 13s ease-in-out infinite;
+    max-width: none;           /* ensure it doesn't stop scaling */
+}
+.contentContainer {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.title {
+    color: #FFF;
+    font-family: "Zen Dots", sans-serif;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.description {
+    color: #afafaf;
+    text-align: center;
+    font-family: "Jura", sans-serif;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.7;
+    white-space: pre-line;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 900px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 920px) {
+
+     .grayBackground {
+        position: absolute;
+        top: 5%;
+        left: 0;
+        width: 100%;
+        height: 95%;
+        background: linear-gradient(180deg, #242424 0%);
+        opacity: 1;
+        z-index: 0;
+        pointer-events: none;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 95%, 0 95%);
+      
+    }
+
+    .aboutContainer {
+        padding: 80px 30px;
+    }
+    
+    .contentContainer {
+        gap: 25px;
+        padding: 0 15px;
+    }
+    
+    .title {
+        font-size: 36px;
+    }
+    
+    .description {
+        font-size: 18px;
+        line-height: 1.6;
+        max-width: 100%;
+    }
+    
+    .backgroundSvg1,
+    .backgroundSvg2 {
+        width: 150%;
+        opacity: 0.7;
+    }
+
+    .backgroundSvg1 {
+        right: -25%;
+    }
+
+    .backgroundSvg2 {
+        left: -25%;
+    }
+}
+
+@media (max-width: 480px) {
+    .grayBackground {
+        position: absolute;
+        top: 5%;
+        left: 0;
+        width: 100%;
+        height: 95%;
+        background: linear-gradient(180deg, #242424 0%);
+        opacity: 1;
+        z-index: 0;
+        pointer-events: none;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 95%, 0 95%);
+      
+    }
+    
+    .aboutContainer {
+        padding: 60px 20px;
+    }
+    
+    .contentContainer {
+        gap: 20px;
+        padding: 0 10px;
+    }
+ 
+    .title {
+        font-size: 28px;
+    }
+    
+    .description {
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .backgroundSvg1,
+    .backgroundSvg2 {
+        width: 180%;
+        opacity: 0.5;
+    }
+
+    .backgroundSvg1 {
+        right: -40%;
+    }
+
+    .backgroundSvg2 {
+        left: -40%;
+    }
+}
+
+@keyframes subtleMoveRight {
+    0% {
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-48%) translateX(40px) scale(1.02);
+    }
+    100% {
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+}
+
+@keyframes subtleMoveRight2 {
+    0% {
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-48%) translateX(-20px) scale(1.1);
+    }
+    100% {
+        transform: translateY(-50%) translateX(0) scale(1);
+    }
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
