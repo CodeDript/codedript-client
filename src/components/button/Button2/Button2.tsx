@@ -57,12 +57,12 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
         }
         setDisplayText(text);
     };
-    const isWide = displayText.length >= 10;
+    const isWide = text.length >= 10;
     const baseWidth = 236; // px — small increase
     const extraPerChar = 9;
     const minChars = 10;
     const computedWidth = isWide
-        ? baseWidth + (displayText.length - minChars) * extraPerChar
+        ? baseWidth + (text.length - minChars) * extraPerChar
         : baseWidth;
 
     return (

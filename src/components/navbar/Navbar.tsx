@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styles from "./NavBar.module.css";
 import UserIconDropdown from '../dropedown/UserIcondd';
 import { useNavigate, useLocation } from "react-router-dom";
+import Button2 from '../../components/button/Button2/Button2';
 
 type NavBarProps = {
     isLoggedIn: boolean;
@@ -69,6 +70,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
                 {/* Mobile Profile Section */}
                 <div className={styles.mobileProfileSection}>
                     {!isLoggedIn ? (
+                        
                         <button className={`${styles.loginButton} ${styles.mobileLoginButton}`} onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>
                             <div className={styles.textWrapper}>Login</div>
                         </button>
@@ -102,9 +104,9 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
             {/* Desktop Profile Section */}
             <div className={styles.desktopProfileSection}>
                 {!isLoggedIn ? (
-                    <button className={styles.loginButton} onClick={onLoginClick}>
-                        <div className={styles.textWrapper}>Login</div>
-                    </button>
+                    <div className={styles.buttonSection}>
+                   <Button2 text="Connect Wallet" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }} />
+                    </div>
                 ) : (
                     <div className={styles.profileContainer}>
                         <button className={styles.profileButton} onClick={handleDropDownClick}>
