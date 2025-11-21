@@ -1,32 +1,31 @@
-import React, { useRef } from "react";
+import React from "react";
 import styles from "./HeaderText.module.css";
-import VariableProximity from '../TextAnimations/VariableProximity';
+import Shuffle from '../TextAnimations/Shuffle/Shuffle';
+
+
 
 interface HeaderTextProps {
   text: string;
-  subtitle?: string;
   className?: string;
 }
 
-const HeaderText: React.FC<HeaderTextProps> = ({ text, subtitle, className = "" }) => {
-  const containerRef = useRef<HTMLElement>(null!);
-
+const HeaderText: React.FC<HeaderTextProps> = ({ text, className = "" }) => {
   return (
     <div className={`${styles.headerContainer} ${className}`}>
-      <div ref={containerRef as React.RefObject<HTMLDivElement>} style={{ position: 'relative' }}>
-        <VariableProximity
-          label={text}
-          className={styles.headerText}
-          fromFontVariationSettings="'wght' 400, 'opsz' 9"
-          toFontVariationSettings="'wght' 1000, 'opsz' 40"
-          containerRef={containerRef}
-          radius={100}
-          falloff='linear'
-        />
-      </div>
-      {subtitle && (
-        <p className={styles.subtitleText}>{subtitle}</p>
-      )}
+      <Shuffle
+        text={text}
+        className={styles.headerText}
+         shuffleDirection="right"
+  duration={0.35}
+  animationMode="evenodd"
+  shuffleTimes={1}
+  ease="power3.out"
+  stagger={0.03}
+  threshold={0.1}
+  triggerOnce={true}
+  triggerOnHover={true}
+  respectReducedMotion={true}
+      />
     </div>
   );
 };
