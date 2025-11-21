@@ -5,6 +5,7 @@ import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 
 import HomeGameCard from '../../components/HomeGameCard/HomeGameCard';
 import Footer from '../../components/footer/Footer';
+import WorkFlow from '../../components/work flow/WorkFlow';
 import Button1 from '../../components/button/Button1/Button1';
 import Button2 from '../../components/button/Button2/Button2';
 import Button3B from '../../components/button/Button3Black1/Button3Black1';
@@ -73,6 +74,9 @@ const Home: React.FC = () => {
         </div>
       </section>
       
+      {/* Workflow Section */}
+      <WorkFlow />
+
       <About />
       <SponsorSection sponsors={sponsors} />
       <Footer />
