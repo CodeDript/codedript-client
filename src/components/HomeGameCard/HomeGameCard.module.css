@@ -1,7 +1,8 @@
 .homeGameCardContainer {
   position: relative;
-  width: 420px;
-  height: 460px;
+  width: 375px;
+  height: 430px;
+  height: 420px;
   flex-shrink: 0;
   border-radius: 40px;
   border: 7px solid #313131;
@@ -9,6 +10,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: url('../../assets/svg/cardbase.svg') no-repeat center center;
+  background-size: cover;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -107,11 +110,12 @@
 
 .textContent {
   position: relative;
-  padding: 39px 16px;
+  padding: 0px 16px;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-top: -10px;
 }
 
 .cardTitle {
@@ -120,11 +124,11 @@
   flex-shrink: 0;
   color: #212121;
   font-family: "Zen Dots", sans-serif;
-  font-size: 15px;
+  font-size: 18px;
   font-style: normal;
   font-weight: 400;
   line-height: 1.2;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   margin-left: 10px;
 
 }
