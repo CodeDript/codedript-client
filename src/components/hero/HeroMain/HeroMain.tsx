@@ -21,7 +21,7 @@ const HeroMain: React.FC = () => {
       <img src={logo} alt="decorative outline" className={styles.decorativeOutline} />
        <img src={partical2} alt="decorative outline" className={styles.decorativeOutlinep2} />
        <img src={partical2} alt="decorative outline" className={styles.decorativeOutlinep3} />
-      <img src={dript} alt="decorative outline" className={styles.decorativeOutline} />
+      <img src={dript} alt="decorative outline" className={styles.decorativeOutline5} />
        <img src={partical} alt="decorative outline" className={styles.decorativeOutlinep1} />
        <img src={blackbar} alt="decorative outline" className={styles.decorativeOutline4} />
       <div className={styles.heroContent}>

@@ -1,3 +1,25 @@
+/* Centered row for Button5W group */
+.centerButtonRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0;
+}
+/* Grid for GigCards: 2 columns, responsive */
+.gigCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-top: 32px;
+}
+
+@media (max-width: 900px) {
+  .gigCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
 .homePage {
   width: 100%;
   min-height: 100vh;
