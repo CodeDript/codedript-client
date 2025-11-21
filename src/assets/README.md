@@ -1,15 +1,69 @@
-# src/assets
+# Assets Folder
 
-## Purpose
+This folder contains all static assets for the Code Dript application.
 
-Static resources used by the app: images, fonts, icons, and other media. This folder is for files imported by components and bundled by the build system.
+## Structure
 
-## Conventions
+```
+assets/
+├── images/         → Application images and photos
+├── icons/          → SVG icons and icon sets
+├── fonts/          → Custom font files
+└── README.md       → This file
+```
 
-- Organize by type or feature (e.g., `images/`, `icons/`, `fonts/`).
-- Prefer descriptive file names and keep optimized/production-ready assets here.
-- If you need helper modules for asset handling (e.g., an index that exports many icons), place them in `src/assets/index.ts`.
+## Usage
 
-## Notes
+### Importing Images
 
-Avoid committing large raw media files when possible; prefer optimized and web-friendly formats. If large assets are required, consider hosting on a CDN or using Git LFS.
+```typescript
+import logoImage from '../assets/images/logo.png';
+
+// In component
+<img src={logoImage} alt="Code Dript Logo" />
+```
+
+### Background Images in CSS Modules
+
+```css
+.hero {
+  background-image: url('../../assets/images/hero-bg.jpg');
+}
+```
+
+## Recommended Asset Formats
+
+- **Images**: PNG, JPG, WebP
+- **Icons**: SVG (preferred), PNG
+- **Fonts**: WOFF2, WOFF, TTF
+
+## Optimization Tips
+
+1. Compress images before adding them
+2. Use WebP format for better performance
+3. Use SVG for icons when possible
+4. Include 1x, 2x, and 3x versions for responsive images
+
+## Adding Hero Background Images
+
+To add custom background images to hero sections:
+
+1. Place images in `assets/images/`
+2. Update the hero component CSS module:
+
+```css
+.hero {
+  background-image: url('../../assets/images/your-hero-bg.jpg');
+}
+```
+
+## Example Hero Background Usage
+
+```typescript
+// In HeroMain.module.css
+.hero {
+  background-image: url('../../assets/images/hero-main-bg.jpg');
+  /* or use gradients as currently implemented */
+  background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+```

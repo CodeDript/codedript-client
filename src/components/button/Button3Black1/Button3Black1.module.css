@@ -1,0 +1,99 @@
+.customButton {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    width: 236px; /* slight increase */
+    height: 71px; /* 79 * 0.9 -> 10% smaller */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    transition-property: transform, filter, width;
+    overflow: visible;
+}
+
+.customButton:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+}
+
+.customButton:hover .buttonBase path {
+    fill: #1a1a1a !important;
+    fill-opacity: 1;
+}
+
+.customButton:active {
+    transform: translateY(2);
+    filter: none;
+}
+
+.buttonBase {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.buttonBorder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.buttonText {
+    position: relative;
+    z-index: 3;
+    color: #ffffff;
+    font-family: "Zen Dots", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+   transform: translateY(-2px);
+    letter-spacing: 0.3px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+.textHover {
+    color: #ffffff;
+   
+    transition: transform 0.12s linear, text-shadow 0.2s ease;
+}
+
+/* Center the word while hover-induced scrambler is active */
+.textHover-center {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+}
+
+/* Wide variant when text length exceeds threshold */
+.wide {
+    width: 340px; /* fallback static wide width if inline style not supported */
+}
+
+.arrow {
+    position: relative;
+  transform: translateX(4px);
+  top: -2px;
+    font-size: 20px;
+    z-index: 3;
+    color: #ffffff;
+    transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+
+
+.arrowHidden {
+    display: none !important;
+    opacity: 0 !important;
+    transform: translateX(4px) !important;
+}

@@ -1,0 +1,106 @@
+.homePage {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.buttonSection {
+  display:inline-table;
+ 
+
+  justify-content: center;
+  align-items: center;
+  padding:3rem 0rem 3rem 0rem;
+  margin: 0;
+}
+
+.cardsSection {
+  padding: 5rem 2rem;
+ 
+}
+
+.cardsContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1a202c;
+  margin-bottom: 3rem;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 3rem;
+  align-items: stretch;
+}
+
+/* Game Cards Section */
+.gameCardsSection {
+  padding: 5rem 0;
+  background: transparent;
+}
+
+.gameCardsContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 10%; /* 10% margin on left and right */
+}
+
+.gameCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  justify-items: center;
+  margin-top: 3rem;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1400px) {
+  .gameCardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .gameCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .gameCardsContainer {
+    padding: 0 5%; /* Reduce margin on smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .cardsSection {
+    padding: 3rem 1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .cardsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .gameCardsSection {
+    padding: 3rem 0;
+  }
+  
+  .gameCardsContainer {
+    padding: 0 5%;
+  }
+  
+  .gameCardsGrid {
+    gap: 1.5rem;
+  }
+}

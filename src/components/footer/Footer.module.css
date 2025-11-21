@@ -1,0 +1,194 @@
+@import url('https://fonts.googleapis.com/css2?family=Jura:wght@300..700&display=swap');
+
+.footer {
+    width: 100%;
+    background-color: #202020;
+    color: #ffffff;
+    padding: 3rem 0 2rem 0;
+    font-family: 'Jura', sans-serif;
+    font-weight: 400;
+    font-size: var(--font-size-s);
+    position: relative;
+    z-index: 2;
+    margin-top: 80px;
+}
+
+
+.footer-container {
+    width: 100%;
+    max-width: 1600px;
+    margin:10px auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 0 2rem;
+    box-sizing: border-box;
+}
+
+.brand-info {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 2rem;
+    margin-top: 30px;
+}
+
+.brand-info img {
+    opacity: 0.9;
+   width: 90%;
+   height: auto;
+    margin-bottom: 0.1rem;
+}
+
+.brand-info p {
+    color: #919191;
+    font-family: 'Jura', sans-serif;
+    font-weight: 400;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 2;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.links-column {
+    min-width: 150px;
+    margin-bottom: 2rem;
+}
+
+.links-column h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #bbbbbb;
+    font-family: 'Jura', sans-serif;
+    font-weight: 600;
+}
+
+.links-column ul {
+    list-style: none;
+    padding: 0;
+    font-family: 'Jura', sans-serif;
+    font-weight: 600;
+}
+
+.links-column li {
+    margin-bottom: 0.3rem;
+    font-family: 'Jura', sans-serif;
+    font-weight: 600;
+}
+
+.links-column a {
+    color: #868686;
+    text-decoration: none;
+    transition: color 0.3s, transform 0.3s;
+    font-family: 'Jura', sans-serif;
+    font-weight: 100;
+
+}
+
+.links-column a:hover {
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+.footer-media-icon {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid #333;
+    width: 100%;
+}
+
+.footer-media-icon a {
+    display: inline-block;
+    margin: 0 5px;
+}
+
+.footer-media-icon a img {
+    width: 30px;
+    height: auto;
+    transition: transform 0.3s;
+}
+
+.footer-media-icon a:hover img {
+    transform: scale(1.2);
+}
+
+.footer-bottom {
+    text-align: center;
+    color: #b3b3b3;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.footer-bottom-text {
+    background-color: rgba(20, 20, 20, 0.63);
+    padding: 0.5rem;
+    font-family: 'Jura', sans-serif;
+    font-weight: 300;
+}
+
+
+
+/* Desktop Large Screens (1024px+) */
+@media (min-width: 1024px) {
+    .footer-container {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    .footer-links {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+/* Tablets: 1024px - 768px */
+@media (max-width: 1023px) and (min-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    .footer-links {
+        flex-direction: column;
+        align-items: center;
+    }
+    .links-column {
+        width: 80%;
+        margin-bottom: 1.5rem;
+    }
+     .brand-info img {
+        width: 60%;
+    }
+}
+
+/* Mobile: 767px - 320px */
+@media (max-width: 767px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0 1rem;
+        gap: 1rem;
+    }
+    .footer-links {
+        flex-direction: column;
+        align-items: center;
+    }
+    .links-column {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .brand-info img {
+        width: 60%;
+    }
+    .footer-media-icon a img {
+        width: 25px;
+    }
+    .footer-bottom-text {
+        font-size: 0.8rem;
+    }
+}

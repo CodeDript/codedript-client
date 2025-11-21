@@ -1,0 +1,109 @@
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2b2b2b;
+  
+}
+
+::-webkit-scrollbar-thumb {
+  background: #979797;
+ 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e2e2e2;
+}
+
+/* Print styles */
+@media print {
+  .app {
+    min-height: auto;
+  }
+  
+  nav, footer {
+    display: none;
+  }
+}
+
+
+
+
+@font-face {
+    font-family: 'Jersey';
+    src: url('./assets/Fonts/Jersey10-Regular.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('./assets/Fonts/Inter_28pt-Regular.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter-Bold';
+    src: url('./assets/Fonts/Inter_28pt-Bold.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter-ExtraLight';
+    src: url('./assets/Fonts/Inter_28pt-ExtraLight.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter-Black';
+    src: url('./assets/Fonts/Inter_28pt-Black.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Zen Dots';
+    src: url('./assets/Fonts/ZenDots-Regular.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Jura';
+    src: url('./assets/Fonts/Jura-VariableFont_wght.ttf') format('truetype');
+    font-display: swap;
+    font-style: normal;
+}
+
+
+:root {
+    --black: #000000;
+    --white: #ffffff80;
+    --white-2: #ffffff99;
+    --white-3: #ffffff;
+    --white-4: #ffffffb2;
+
+    --font-size-l: 32px;
+    --font-size-m: 24px;
+    --font-size-s: 16px;
+    --font-size-xl: 36px;
+    --font-size-xxl: 40px;
+    --font-size-xxxl: 64px;
+    --font-size-xxxxl: 150px;
+    
+}
+
+body {
+    background-color: rgb(0, 0, 0);
+    overflow-x: hidden;
+}
+
+/* Make Zen Dots the default brand/display font across the app — fallback to Inter */
+body, .app, #root {
+  font-family: 'Zen Dots', 'Inter', Helvetica, Arial, sans-serif;
+}
