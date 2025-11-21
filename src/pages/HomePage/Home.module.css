@@ -34,8 +34,47 @@
 .cardsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 3rem;
   align-items: stretch;
+}
+
+/* Game Cards Section */
+.gameCardsSection {
+  padding: 5rem 0;
+  background: transparent;
+}
+
+.gameCardsContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 10%; /* 10% margin on left and right */
+}
+
+.gameCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  justify-items: center;
+  margin-top: 3rem;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1400px) {
+  .gameCardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .gameCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .gameCardsContainer {
+    padding: 0 5%; /* Reduce margin on smaller screens */
+  }
 }
 
 @media (max-width: 768px) {
@@ -50,6 +89,18 @@
   
   .cardsGrid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .gameCardsSection {
+    padding: 3rem 0;
+  }
+  
+  .gameCardsContainer {
+    padding: 0 5%;
+  }
+  
+  .gameCardsGrid {
     gap: 1.5rem;
   }
 }

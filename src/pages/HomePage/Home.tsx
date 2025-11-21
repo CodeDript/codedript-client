@@ -2,9 +2,7 @@ import React from 'react';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
-import CardOne from '../../components/card/CardOne';
-import CardTwo from '../../components/card/CardTwo';
-import CardThree from '../../components/card/CardThree';
+
 import HomeGameCard from '../../components/HomeGameCard/HomeGameCard';
 import Footer from '../../components/footer/Footer';
 import Button1 from '../../components/button/Button1/Button1';
@@ -57,19 +55,26 @@ const Home: React.FC = () => {
         <div className={styles.cardsContainer}>
           <h2 className={styles.sectionTitle}>Why Choose Code Dript?</h2>
           <div className={styles.cardsGrid}>
-            <CardOne />
-            <CardTwo />
-            <CardThree />
+            <HomeGameCard gameId={1} />
+            <HomeGameCard gameId={2} />
+            <HomeGameCard gameId={3} />
+            <HomeGameCard gameId={4} />
+            <HomeGameCard gameId={5} />
+            <HomeGameCard gameId={6} />
           </div>
         </div>
       </section>
       
-      <HomeGameCard />
+      {/* Game Cards Section */}
+      <section className={styles.gameCardsSection}>
+        <div className={styles.gameCardsContainer}>
+          <h2 className={styles.sectionTitle}>Platform Features</h2>
+       
+        </div>
+      </section>
       
       <About />
-      
       <SponsorSection sponsors={sponsors} />
-      
       <Footer />
     </div>
   );
