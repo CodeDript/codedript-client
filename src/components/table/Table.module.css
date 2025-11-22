@@ -1,0 +1,131 @@
+.tableWrapper {
+  width: 100%;
+  min-height: 200px;
+  background: url('../../assets/tableBackground.png') no-repeat center center/cover;
+  border-radius: 16px;
+  overflow: hidden;
+  /* More styles to be added for table layout */
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  padding: 0;
+  font-family: 'Jura', 'Zen Dots', Arial, sans-serif;
+  background-color: #eaeaea;
+}
+
+.headerRow {
+  background: #d3d3d3;
+  text-align: center;
+  padding: 18px 0 12px 0;
+  font-family: 'Zen Dots', Arial, sans-serif;
+  font-size: 20px;
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+.headerTitle {
+  color: #fff;
+  font-size: 20px;
+  font-family: 'Zen Dots', Arial, sans-serif;
+  letter-spacing: 1px;
+}
+.body {
+  background: transparent;
+  padding: 0 0 10px 0;
+}
+.row {
+  display: flex;
+  align-items: flex-start;
+  background: rgba(255,255,255,0.85);
+  border-bottom: 1px solid #d3d3d3;
+  padding: 0 18px;
+  min-height: 64px;
+  font-size: 15px;
+  position: relative;
+}
+.row:last-child {
+  border-bottom: none;
+}
+.orderCell {
+  min-width: 70px;
+  max-width: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Zen Dots', Arial, sans-serif;
+  font-size: 22px;
+  color: #b7b7b7;
+  opacity: 0.8;
+  padding-top: 12px;
+}
+.orderNumber {
+  font-family: 'Zen Dots', Arial, sans-serif;
+  font-size: 22px;
+  color: #b7b7b7;
+  opacity: 0.8;
+}
+.titleCell {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 0 0 12px;
+}
+.titleMain {
+  font-family: 'Zen Dots', Arial, sans-serif;
+  font-size: 17px;
+  color: #222;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.reviewer {
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.userIcon {
+  font-size: 14px;
+  margin-right: 2px;
+}
+.ratingCell {
+  min-width: 110px;
+  max-width: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+}
+.stars {
+  display: flex;
+  gap: 1px;
+}
+.starFilled {
+  color: #ffb400;
+  font-size: 18px;
+  margin-right: 1px;
+}
+.starEmpty {
+  color: #e0e0e0;
+  font-size: 18px;
+  margin-right: 1px;
+}
+.dateCell {
+  min-width: 160px;
+  max-width: 160px;
+  font-size: 13px;
+  color: #888;
+  padding-top: 10px;
+  font-family: 'Jura', Arial, sans-serif;
+}
+.reviewCell {
+  flex: 2.5;
+  font-size: 13px;
+  color: #555;
+  padding: 10px 0 0 18px;
+  font-family: 'Jura', Arial, sans-serif;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

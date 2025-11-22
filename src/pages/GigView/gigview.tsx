@@ -6,6 +6,7 @@ import HeaderText from '../../components/HeaderText/HeaderText';
 
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
+import Table from '../../components/table/Table';
 
 interface GigData {
   title?: string;
@@ -43,6 +44,10 @@ const GigView: React.FC = () => {
         <div className={styles.titleSection}>
         <h1>{gigData.title || 'Gig Title'}</h1>
         </div>
+              {/* Customer Reviews Table Section */}
+              <div style={{ margin: '2rem 0' }}>
+                <Table />
+              </div>
         <h2>About this gig</h2>
 
         <p className={styles.description}>{gigData.description || 'Gig description'}</p>
@@ -84,8 +89,9 @@ const GigView: React.FC = () => {
           buttonLabel="Buy & Escrow"
         />
       </div>
+        <Table />
       </div>
-    
+  
     </div>
   );
 };
