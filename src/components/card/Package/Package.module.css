@@ -1,0 +1,395 @@
+ .packageCardContainer {
+  position: relative;
+  width: 375px;
+  height: 400px;
+ 
+  flex-shrink: 0;
+  border-radius: 40px;
+  border: 7px solid #313131;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+ 
+  background-size: cover;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: aliceblue;
+}
+
+ .packageCardContainer:hover {
+  animation: gentlePop 1.5s ease-in-out infinite;
+}
+
+ .packageCardContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-25deg) translateX(-250%);
+  transition: transform 1s ease;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.homeGameCardContainer:hover::after {
+  transform: skewX(-25deg) translateX(250%);
+}
+
+@keyframes gentlePop {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+  75% {
+    transform: scale(1.015);
+  }
+}
+
+.backgroundBorder {
+  position: absolute;
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: 423.13px;
+  height: 639px;
+  max-width: 100%;
+  max-height: 101%;
+  flex-shrink: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+
+.cardImageSvg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin-top: -50px;
+}
+
+.cardContent {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  height: 255px;
+  flex-shrink: 0;
+  z-index: 2;
+  overflow: visible;
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  line-height: 1.2;
+  
+}
+
+.contentBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  transform: scaleX(1.2);
+  transform-origin: left center;
+}
+
+.textContent {
+  position: relative;
+  padding: 0px 26px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: -150px;
+}
+
+.cardTitle {
+  width: auto;
+  max-width: 350px;
+  flex-shrink: 0;
+  color: #212121;
+  font-family: "Zen Dots", sans-serif;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  margin-top: 25px;
+
+
+}
+
+.cardDescription {
+  width: auto;
+  max-width: 400px;
+  flex-shrink: 0;
+  color: #505050;
+  font-family: "Jura", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  margin: 0;
+  margin-left:10px;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  
+  
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 1200px) {
+  .packageCardContainer {
+    width: 399px;
+    height: 437px;
+    border-radius: 38px;
+    border: 7px solid #313131;
+  }
+
+  .backgroundBorder {
+    width: 402px;
+    height: 607px;
+  }
+
+  .cardContent {
+    height: 242px;
+  }
+
+  .cardTitle {
+    font-size: 14px;
+    max-width: 333px;
+    margin-bottom: 8px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 13px;
+    max-width: 380px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 38px 15px;
+  }
+}
+
+@media (max-width: 920px) {
+  .packageCardContainer {
+    width: 357px;
+    height: 391px;
+    border-radius: 34px;
+    border: 6px solid #313131;
+  }
+
+  .backgroundBorder {
+    width: 360px;
+    height: 543px;
+  }
+
+  .cardContent {
+    width: 100%;
+    height: 217px;
+  }
+
+  .cardTitle {
+    font-size: 13px;
+    max-width: 298px;
+    margin-bottom: 7px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 12px;
+    max-width: 340px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 36px 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .packageCardContainer {
+    width: 315px;
+    height: 345px;
+    border-radius: 30px;
+    border: 5px solid #313131;
+  }
+
+  .backgroundBorder {
+    width: 317px;
+    height: 479px;
+  }
+
+  .cardContent {
+    width: 100%;
+    height: 191px;
+  }
+
+  .cardTitle {
+    font-size: 11px;
+    max-width: 263px;
+    margin-bottom: 6px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 11px;
+    max-width: 300px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 33px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .packageCardContainer {
+    width: 273px;
+    height: 299px;
+    border-radius: 26px;
+    border: 5px solid #313131;
+  }
+
+  .backgroundBorder {
+    width: 275px;
+    height: 415px;
+  }
+
+  .cardContent {
+    width: 100%;
+    height: 166px;
+    bottom: -3px;
+  }
+
+  .cardTitle {
+    font-size: 10px;
+    max-width: 228px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 10px;
+    max-width: 260px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 31px 10px;
+  }
+
+  .contentBackground {
+    transform: scaleX(1.15);
+  }
+}
+
+@media (max-width: 480px) {
+  .packageCardContainer {
+    width: 231px;
+    height: 253px;
+    border: 4px solid #313131;
+    border-radius: 22px;
+  }
+
+  .backgroundBorder {
+    width: 233px;
+    height: 351px;
+    left: 55%;
+  }
+
+  .cardContent {
+    width: 100%;
+    height: 140px;
+    bottom: -2px;
+  }
+
+  .cardTitle {
+    font-size: 8px;
+    max-width: 193px;
+    margin-bottom: 4px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 9px;
+    max-width: 220px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 29px 9px;
+  }
+
+  .contentBackground {
+    transform: scaleX(1.1);
+  }
+}
+
+@media (max-width: 360px) {
+  .packageCardContainer {
+    width: 189px;
+    height: 207px;
+    border-radius: 18px;
+    border: 3px solid #313131;
+  }
+
+  .backgroundBorder {
+    width: 190px;
+    height: 288px;
+  }
+
+  .cardContent {
+    width: 100%;
+    height: 115px;
+    bottom: -1px;
+  }
+
+  .cardTitle {
+    font-size: 7px;
+    max-width: 158px;
+    margin-bottom: 4px;
+    margin-left: 10px;
+  }
+
+  .cardDescription {
+    font-size: 7px;
+    max-width: 180px;
+    line-height: 1;
+    margin-left: 10px;
+  }
+
+  .textContent {
+    padding: 26px 7px;
+  }
+
+  .contentBackground {
+    transform: scaleX(1.05);
+  }
+}
+.buttonAlign{
+ margin-top: -20px;
+ scale: 0.8;
+ margin-right: -50px;
+}

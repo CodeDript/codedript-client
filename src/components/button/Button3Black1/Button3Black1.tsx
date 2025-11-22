@@ -23,6 +23,7 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
         };
     }, []);
 
+
     const startScramble = () => {
         if (intervalRef.current) window.clearInterval(intervalRef.current);
         let progress = 0; // progress 0..1
@@ -57,15 +58,14 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
         }
         setDisplayText(text);
     };
-    const isWide = displayText.length >= 10;
-
-    // compute a dynamic width increment for longer text (adjust per char)
-    const baseWidth = 236; // px — small increase
+    const isWide = text.length >= 10;
+    const baseWidth = 270; // px — small increase
     const extraPerChar = 9;
     const minChars = 10;
     const computedWidth = isWide
-        ? baseWidth + (displayText.length - minChars) * extraPerChar
+        ? baseWidth + (text.length - minChars) * extraPerChar
         : baseWidth;
+
 
     return (
         <button
