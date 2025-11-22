@@ -7,48 +7,7 @@ import RecycleIcon from '../../../assets/svg/recycle.svg';
 
 // Mock data for games
 export const mockGames = [
-  {
-    id: 1,
-    name: 'Blockchain Security',
-    description: 'Smart contracts ensure payments are secure and transparent with immutable transaction records.',
-    image: 'https://via.placeholder.com/300x200?text=Blockchain+Security',
-    route: '/features/blockchain-security'
-  },
-  {
-    id: 2,
-    name: 'IPFS File Storage',
-    description: 'Decentralized file storage keeps your documents secure and accessible from anywhere.',
-    image: 'https://via.placeholder.com/300x200?text=IPFS+Storage',
-    route: '/features/ipfs-storage'
-  },
-  {
-    id: 3,
-    name: 'Escrow Protection',
-    description: 'Automated escrow system protects both parties until milestones are completed.',
-    image: 'https://via.placeholder.com/300x200?text=Escrow+Protection',
-    route: '/features/escrow-protection'
-  },
-  {
-    id: 4,
-    name: 'Multi-party Contracts',
-    description: 'Support for complex agreements with multiple stakeholders and approval workflows.',
-    image: 'https://via.placeholder.com/300x200?text=Multi-party+Contracts',
-    route: '/features/multi-party-contracts'
-  },
-  {
-    id: 5,
-    name: 'Zero Knowledge Verification',
-    description: 'Verify identities and deliverables without exposing sensitive information.',
-    image: 'https://via.placeholder.com/300x200?text=Zero+Knowledge',
-    route: '/features/zero-knowledge'
-  },
-  {
-    id: 6,
-    name: 'Instant Payments',
-    description: 'Release payments instantly when work is approved, with transparent fee structure.',
-    image: 'https://via.placeholder.com/300x200?text=Instant+Payments',
-    route: '/features/instant-payments'
-  }
+ 
 ];
 
 interface PackageCardProps {
@@ -79,17 +38,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
     route: '/game/default'
   });
 
-  useEffect(() => {
-    const game = mockGames.find(g => g.id === gameId);
-    if (game) {
-      setGameData({
-        name: game.name,
-        description: typeof game.description === 'string' ? game.description : 'Experience this exciting game.',
-        image: game.image,
-        route: game.route
-      });
-    }
-  }, [gameId]);
+ 
 
   const handleCardClick = () => {
     navigate(gameData.route);
@@ -135,14 +84,13 @@ const PackageCard: React.FC<PackageCardProps> = ({
               </li>
             ))}
           </ul>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-            <div className={styles.buttonAlign} style={{ marginBottom: 30 }}>
-              <Button3Black1 text={buttonLabel} onClick={() => {}} />
-            </div>
+          <div className={styles.buttonAlign2}>
+             <div className={styles.buttonAlign}>
+            <Button3Black1 text={buttonLabel} onClick={() => {}} />
           </div>
         </div>
       </div>
-
+</div>
       {/* Card Image */}
       <div className={styles.cardImage}>
         <img src={gameData.image} alt={gameData.name} className={styles.cardImageSvg} />

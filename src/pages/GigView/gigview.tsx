@@ -58,7 +58,7 @@ const GigView: React.FC = () => {
       <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', margin: '3rem 0' }}>
         <PackageCard
           title="Basic"
-          description={["Static analysis", "Basic manual review", "Summary report", "Email support", "Community access"]}
+          description={["Static analysis", "Basic manual review", "Summary report"]}
           gameId={1}
           price="5300 ETH"
           delivery="14 Days"
@@ -67,7 +67,7 @@ const GigView: React.FC = () => {
         />
         <PackageCard
           title="Standard"
-          description={["Static analysis", "Basic manual review", "Summary report", "Source file", "Priority support"]}
+          description={["Static analysis", "Basic manual review", "Summary report", "Source file"]}
           gameId={2}
           price="7000 ETH"
           delivery="10 Days"

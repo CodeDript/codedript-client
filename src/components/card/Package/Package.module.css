@@ -15,6 +15,7 @@
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   background-color: aliceblue;
+  
 }
 
  .packageCardContainer:hover {
@@ -102,6 +103,7 @@
   z-index: 1;
   transform: scaleX(1.2);
   transform-origin: left center;
+  
 }
 
 .textContent {
@@ -388,8 +390,19 @@
     transform: scaleX(1.05);
   }
 }
-.buttonAlign{
- margin-top: -20px;
- scale: 0.8;
- margin-right: -50px;
+.buttonAlign {
+  
+  
+}
+.buttonAlign2 {
+  position: absolute;
+ 
+
+  flex-direction: row;
+  align-items: flex-end;
+  scale: 0.8;
+  margin-top: 290px;
+  margin-left: 90px;
+  z-index: 3;
+  
 }
