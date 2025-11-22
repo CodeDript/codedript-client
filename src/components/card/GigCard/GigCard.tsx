@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './GigCard.module.css';
 import starIcon from '../../../assets/svg/starIcon.svg';
 import userImageDefault from '../../../assets/Navimage/sia croven.jpg';
+import { useNavigate } from 'react-router-dom';
 interface GigCardProps {
   id?: number;
   title?: string;
@@ -30,6 +31,11 @@ const GigCard: React.FC<GigCardProps> = ({
   skills = ["Node.js", "React", "Java"],
   gigImage = "https://via.placeholder.com/300x200"
 }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/gigview', { state: { title, description, rating, reviewCount, userImage, userName, userRole, price, currency, skills, gigImage } });
+  };
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -46,7 +52,7 @@ const GigCard: React.FC<GigCardProps> = ({
   };
 
   return (
-    <div className={styles.gigCardContainer}>
+    <div className={styles.gigCardContainer} onClick={handleClick} style={{ cursor: 'pointer' }}>
       {/* Background SVG Border */}
       <svg className={styles.backgroundBorder} xmlns="http://www.w3.org/2000/svg" width="424" height="639" viewBox="0 0 424 639" fill="none" preserveAspectRatio="none">
         <mask id="path-1-inside-1_29_465" fill="white">

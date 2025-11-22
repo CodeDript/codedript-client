@@ -4,7 +4,7 @@ import imgProfile from '../../assets/Navimage/sia croven.jpg';
 import fallbackImg from '../../assets/Navimage/no_user.jpg';
 import { useNavigate } from "react-router-dom";
 
-const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void }> = ({ onClose, onLogout }) => {
+const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; userRole: string }> = ({ onClose, onLogout, userRole }) => {
     const [isHiding, setIsHiding] = useState(false);
     const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void }> 
                 <button
                     className={styles.dropdownItem}
                     onClick={() => {
-                        navigate("/userAccount");
+                        navigate(userRole === 'developer' ? '/developer' : '/client');
                         onClose();
                     }}
                 >

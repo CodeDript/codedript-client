@@ -59,7 +59,10 @@ const Home: React.FC = () => {
       {/* Cards Section */}
       <section className={styles.cardsSection}>
         <div className={styles.cardsContainer}>
-          <h2 className={styles.sectionTitle}>Why Choose Code Dript?</h2>
+         
+         
+         <HeaderText text="Built for Modern Freelancers" subHeader="Eliminate payment disputes, reduce fees, and build trust with blockchain-powered 
+agreements " />   
           <div className={styles.cardsGrid}>
             <HomeGameCard gameId={1} />
             <HomeGameCard gameId={2} />
@@ -76,8 +79,8 @@ const Home: React.FC = () => {
       {/* Game Cards Section */}
       <section className={styles.gameCardsSection}>
         <div className={styles.gameCardsContainer}>
-          <h2 className={styles.sectionTitle}>Platform Features</h2>
-          <HeaderText text="Platform Features11" /> 
+         
+          <HeaderText text="How CodeDript Works" subHeader="Simple steps to secure agreements " /> 
           <div className={styles.gigCardsGrid}>
             <GigCard 
               title="Mobile App Developer"
@@ -135,11 +138,12 @@ const Home: React.FC = () => {
         </div>
       </section>
       {/* Workflow Section */}
-       <h2 className={styles.sectionTitle}>Platform Features</h2>
+      
+         <HeaderText text="Trusted by Freelancers Worldwide" subHeader=" " />   
       <WorkFlow />
 
       <About />
-      <SponsorSection sponsors={sponsors} />
+      <SponsorSection sponsors={sponsors} />      
       <Footer />
     </div>
   );
