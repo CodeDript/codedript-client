@@ -1,8 +1,5 @@
 import React from "react";
-import styles from "./HeaderText.module.css";
-import Shuffle from '../TextAnimations/Shuffle/Shuffle';
-
-
+import './HeaderText.css';
 
 interface HeaderTextProps {
   text: string;
@@ -12,22 +9,9 @@ interface HeaderTextProps {
 
 const HeaderText: React.FC<HeaderTextProps> = ({ text, subHeader, className = "" }) => {
   return (
-    <div className={`${styles.headerContainer} ${className}`}>
-      <Shuffle
-        text={text}
-        className={styles.headerText}
-         shuffleDirection="right"
-  duration={0.35}
-  animationMode="evenodd"
-  shuffleTimes={8}
-  ease="back.out(1.7)"
-  stagger={0.1}
-  threshold={0.1}
-  triggerOnce={true}
-  triggerOnHover={true}
-  respectReducedMotion={true}
-      />
-      {subHeader && <p className={styles.subtitleText}>{subHeader}</p>}
+    <div className={`headerContainer ${className}`}>
+      <h1 className="headerText">{text}</h1>
+      {subHeader && <p className="subtitleText">{subHeader}</p>}
     </div>
   );
 };
