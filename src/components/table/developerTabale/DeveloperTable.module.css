@@ -18,11 +18,11 @@
 
   background-repeat: no-repeat;
   background-position: left top;
-  background-size: 110% auto;
+  background-size: 100% auto;
   border-radius: 16px;
  margin-left: -20px;
 
-  padding: 0;
+ 
   font-family: 'Jura', 'Zen Dots', Arial, sans-serif;
  
 }
@@ -31,29 +31,30 @@
   display: flex;
   gap: 12px;
   padding: 12px;
-  background: rgba(0,0,0,0.04);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   align-items: center;
 }
 .tabButton {
   border: none;
   background: transparent;
-  color: #999;
+  color: #ffffff;
   padding: 10px 14px;
   border-radius: 8px;
   font-family: 'Zen Dots', Arial, sans-serif;
   cursor: pointer;
+  font-size: 18px;
+  
 }
 .tabActive {
   background: rgba(0,0,0,0.08);
-  color: #111;
-  font-weight: 700;
+  color: #444444;
+  font-weight: 200;
 }
 
 .body {
-  padding: 10px 6px 14px 6px;
-  margin-top: 8px;
-  max-height: 360px;
+  padding:  0px; 
+  max-height: 340px;
   overflow-y: auto;
 }
 
@@ -77,22 +78,24 @@
   padding: 12px 16px;
   gap: 12px;
 }
-.row + .row { margin-top: 6px; }
+.row + .row { margin-top: 2px; }
 
 .orderCell { min-width: 66px; text-align: center; color: #a9a9a9; font-family: 'Zen Dots'; }
 .titleCell { flex: 1; }
-.titleMain { font-weight: 700; font-size: 16px; color: #222; }
-.reviewer { font-size: 13px; color: #9a9a9a; margin-top: 4px; }
+.titleMain { font-weight: 100; font-size: 18px; color: #222;font-family: 'Zen Dots'; }
+.reviewer { font-size: 18px; color: #9a9a9a; margin-top: 4px; }
 .dateCell { min-width: 160px; color: #888; text-align: center; }
 .statusCell { min-width: 120px; display:flex; justify-content:center; }
-.pill { padding: 6px 10px; border-radius: 999px; font-size: 13px; }
-.pill-active { background: #dff7e6; color: #14974a; }
-.pill-pending { background: #fff2db; color: #b27b2a; }
-.pill-ongoing { background: #e7f0ff; color: #2e69b7; }
-.pill-incoming { background: #f0f7ff; color: #2e6b9b; }
-.pill-paid { background: #eef9f7; color: #1a8b72; }
-.amountCell { min-width: 170px; font-family: 'Zen Dots'; font-size: 22px; text-align: right; }
+.pill { padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 700;}
+.pill-active { background: #c0f7d1; color: #14974a; }
+.pill-pending { background: #f8ddae; color: #b27b2a; }
+.pill-ongoing { background: #cbddfd; color: #2e69b7; }
+.pill-incoming { background: #c8e0fc; color: #2e6b9b; }
+.pill-paid { background: #bef8ee; color: #1a8b72; }
+.amountCell { min-width: 170px; font-family: 'Zen Dots'; font-size: 28px; text-align: right; font-weight: 500;}
 
 /* scrollbar */
 .body::-webkit-scrollbar { width: 10px; }
-.body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
+.body::-webkit-scrollbar-track { background: transparent; }
+.body::-webkit-scrollbar-thumb { background: rgba(68, 68, 68, 0.12); border-radius: 6px; }
+.body::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.18); }
