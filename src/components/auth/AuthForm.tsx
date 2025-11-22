@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styles from './AuthForm.module.css';
 import { showAlert } from './Alert';
+import { useAuth } from '../../context/AuthContext';
 import securityIcon from '../../assets/svg/iconsax-security.svg';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import MetaMaskLogin from './MetaMaskLogin';
@@ -11,46 +12,37 @@ import heroOutlinedown from '../../assets/Login/cardBackgrounddown.svg';
 
 interface AuthFormProps {
   onClose: () => void;
-  onLoginSuccess: (token: string) => void;
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        const token = 'email-' + Date.now();
-        onLoginSuccess(token);
-        showAlert('Email connected successfully!', 'success');
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      showAlert('Authentication failed', 'error');
-      setLoading(false);
-    }
-  };
 
   const handleEmailConnect = () => {
     if (!email) {
       showAlert('Please enter an email address', 'error');
       return;
     }
+
     setLoading(true);
+
+    // Store email in localStorage
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('isLoggedIn', 'true');
+    
+    showAlert('Email connected successfully!', 'success');
+    
+    // Close modal after short delay
     setTimeout(() => {
-      const token = 'email-' + Date.now();
-      onLoginSuccess(token);
-      showAlert('Email connected successfully!', 'success');
+      onClose();
       setLoading(false);
-    }, 900);
+    }, 1000);
   };
 
-  // Removed fallback connectWallet as MetaMaskLogin handles wallet flow
+  const handleWalletSuccess = () => {
+    // Wallet login handled by MetaMaskLogin component
+    // Modal will be closed by the component after successful login
+  };
 
   return (
     <div className={styles.authOverlay} onClick={onClose}>
@@ -87,40 +79,32 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
                     <img src={metaMaskIcon} alt="MetaMask" className={styles.mmIcon} />
                     <div className={styles.walletInfo}>
                       <h3 className={styles.walletTitle}>MetaMask</h3>
-                          <p className={styles.walletSub}>Connect using MetaMask</p>
-                          {/* Display MetaMask install notice inline under the wallet description */}
-                         
+                      <p className={styles.walletSub}>Connect using MetaMask</p>
                     </div>
                   </div>
                   <div className={styles.walletRight}>
-                    {/* Replace simple connect button with MetaMask login component */}
+                    {/* MetaMask login component with context integration */}
                     <MetaMaskLogin
-                      onLoginSuccess={() => {
-                      
-                        const token = 'wallet-' + Date.now();
-                        onLoginSuccess(token);
-                        showAlert('Wallet connected successfully!', 'success');
-                      }}
+                      onLoginSuccess={handleWalletSuccess}
+                      onClose={onClose}
                     />
-                    
                   </div>
                   
                 </div>
-                      {!((window as any).ethereum && (window as any).ethereum.isMetaMask) && (
-                            <p className={styles.metaMaskNotice}>
-                              MetaMask not detected —{' '}
-                              <a
-                                href="https://metamask.io/download/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.metaMaskLink}
-                              >
-                                <strong>Install MetaMask</strong>
-                              </a>
-                            </p>
-                          )}
+                {!((window as any).ethereum && (window as any).ethereum.isMetaMask) && (
+                  <p className={styles.metaMaskNotice}>
+                    MetaMask not detected —{' '}
+                    <a
+                      href="https://metamask.io/download/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.metaMaskLink}
+                    >
+                      <strong>Install MetaMask</strong>
+                    </a>
+                  </p>
+                )}
               </div>
-         
             </div>
 
             {/* Email section */}
@@ -139,7 +123,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className={styles.emailForm}>
+                <div className={styles.emailForm}>
                   <label htmlFor="email-input" className={styles.emailLabel}>Enter Email Address :</label>
                   <div className={styles.emailInputRow}>
                     <div className={styles.inputRow}>
@@ -153,10 +137,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose, onLoginSuccess }) => {
                       />
                     </div>
                     <div className={styles.buttonWrapper}>
-                      <Button3B text={loading ? 'Loading…' : 'Connect'} onClick={handleEmailConnect} />
+                      <Button3B 
+                        text={loading ? 'Connecting…' : 'Connect'} 
+                        onClick={handleEmailConnect}
+                      />
                     </div>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>

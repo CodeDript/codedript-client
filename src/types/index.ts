@@ -1,20 +1,128 @@
-// User types
+// ============================================
+// USER TYPES
+// ============================================
 export interface User {
-  id: string;
+  _id: string;
+  email: string;
   walletAddress: string;
-  username?: string;
-  email?: string;
-  createdAt: Date;
+  role: 'client' | 'developer' | 'both';
+  profile: {
+    name?: string;
+    bio?: string;
+    skills?: string[];
+    portfolio?: string;
+    avatar?: string;
+    location?: string;
+    hourlyRate?: number;
+  };
+  reputation: {
+    rating: number;
+    reviewCount: number;
+  };
+  statistics: {
+    gigsPosted: number;
+    agreementsCreated: number;
+    agreementsCompleted: number;
+    totalEarned: number;
+    totalSpent: number;
+  };
+  isActive: boolean;
+  isVerified: boolean;
+  lastLogin?: string;
+  firstLogin?: string;
+  loginCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Wallet types
+// ============================================
+// GIG TYPES
+// ============================================
+export interface Package {
+  _id?: string;
+  title: string;
+  description: string[];
+  price: number;
+  currency: string;
+  deliveryTime: number;
+  revisions: number;
+}
+
+export interface Gig {
+  _id: string;
+  title: string;
+  description: string;
+  developer: {
+    _id: string;
+    profile: {
+      name: string;
+      avatar?: string;
+    };
+    walletAddress: string;
+  };
+  packages: Package[];
+  category: string;
+  skills: string[];
+  rating: number;
+  reviewCount: number;
+  status: 'active' | 'paused' | 'closed';
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// AGREEMENT TYPES
+// ============================================
+export interface Agreement {
+  _id: string;
+  client: string | User;
+  developer: string | User;
+  gig?: string | Gig;
+  title: string;
+  description: string;
+  totalValue: number;
+  currency: string;
+  status: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled' | 'disputed';
+  startDate: string;
+  endDate: string;
+  blockchainId?: number;
+  documentCid?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// MILESTONE TYPES
+// ============================================
+export interface Milestone {
+  _id: string;
+  agreement: string | Agreement;
+  title: string;
+  description: string;
+  value: number;
+  currency: string;
+  dueDate: string;
+  status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
+  submissionUrl?: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
+// WALLET TYPES
+// ============================================
 export interface Wallet {
   address: string;
   balance: string;
   network: string;
 }
 
-// Transaction types
+// ============================================
+// TRANSACTION TYPES
+// ============================================
 export interface Transaction {
   hash: string;
   from: string;
@@ -27,7 +135,9 @@ export interface Transaction {
   blockNumber?: number;
 }
 
-// Smart Contract types
+// ============================================
+// SMART CONTRACT TYPES
+// ============================================
 export interface Contract {
   address: string;
   abi: any[];
@@ -35,7 +145,9 @@ export interface Contract {
   symbol?: string;
 }
 
-// Network types
+// ============================================
+// NETWORK TYPES
+// ============================================
 export interface Network {
   chainId: number;
   name: string;
@@ -43,11 +155,24 @@ export interface Network {
   blockExplorer?: string;
 }
 
-// API Response types
+// ============================================
+// API RESPONSE TYPES
+// ============================================
 export interface ApiResponse<T = any> {
   success: boolean;
-  data?: T;
-  error?: string;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
   message?: string;
 }
 
