@@ -173,8 +173,6 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
     pages: number;
   };
 }
-  message?: string;
-}
 
 // Component Props types
 export interface CardProps {
