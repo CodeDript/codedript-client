@@ -77,14 +77,15 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className}
             intervalRef.current = null;
         }
         setDisplayText(text);
-        setIsAnimating(false);
     };
-    const isWide = text.length >= 10;
+    const isWide = displayText.length >= 10;
+
+    // compute a dynamic width increment for longer text (adjust per char)
     const baseWidth = 236; // px — small increase
-    const extraPerChar = 9;
-    const minChars = 10;
+    const extraPerChar = 9; // keep per-char increment
+    const minChars = 5;
     const computedWidth = isWide
-        ? baseWidth + (text.length - minChars) * extraPerChar
+        ? baseWidth + (displayText.length - minChars) * extraPerChar
         : baseWidth;
 
     return (

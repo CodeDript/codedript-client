@@ -1,0 +1,48 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  min-height: 100vh;
+  
+}
+
+.descriptionSection {
+  width: 100%;
+  padding-left: 10%;
+  padding-right: 10%;
+  text-align: left;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.descriptionSection h2 {
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.description {
+  text-align: left;
+  color: #ffffff;
+}
+
+.detailsSection {
+  width: 100%;
+  padding-left: 10%;
+  padding-right: 10%;
+  text-align: left;
+  
+}
+
+.detailsSection h2 {
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.details {
+  color: #ffffff;
+}
+
+.details p {
+  margin-bottom: 8px;
+}

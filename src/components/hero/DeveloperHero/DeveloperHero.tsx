@@ -7,7 +7,25 @@ import hierarchyIcon from '../../../assets/svg/hierarchy.svg';
 import starIcon from '../../../assets/svg/starIcon.svg';
 import Button4Black2 from '../../button/Button4Black2/Button4Black2';
 
-const DeveloperHero: React.FC = () => {
+interface DeveloperHeroProps {
+  userName?: string;
+  userImage?: string;
+  rating?: number;
+  reviewCount?: number;
+  userRole?: string;
+  skills?: string[];
+  bio?: string;
+}
+
+const DeveloperHero: React.FC<DeveloperHeroProps> = ({
+  userName = 'Sia Croven',
+  userImage = 'https://i.pravatar.cc/150?img=47',
+  rating = 4.9,
+  reviewCount = 127,
+  userRole = 'Freelance Developer',
+  skills = ['React', 'Smart Contract', 'Node.js', 'TypeScript'],
+  bio = 'Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development. Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development. Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development.'
+}) => {
   return (
     <section className={styles.hero}>
       {/* <img src={heroGrid} alt="hero grid" className={styles.grid} /> */}
@@ -19,16 +37,16 @@ const DeveloperHero: React.FC = () => {
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
             <img 
-              src="https://i.pravatar.cc/150?img=47" 
+              src={userImage} 
               alt="Developer profile" 
               className={styles.profileImage}
             />
             <div className={styles.profileInfo}>
-              <h2 className={styles.profileName}>Sia Croven</h2>
+              <h2 className={styles.profileName}>{userName}</h2>
               <div className={styles.profileMeta}>
                 <div className={styles.metaItem}>
                   <img src={starIcon} alt="rating" className={styles.metaIcon} />
-                  <span className={styles.metaText}>4.9 (127 reviews)</span>
+                  <span className={styles.metaText}>{rating} ({reviewCount} reviews)</span>
                 </div>
                 <div className={styles.metaItem}>
                   <img src={hierarchyIcon} alt="level" className={styles.metaIcon} />
@@ -39,10 +57,10 @@ const DeveloperHero: React.FC = () => {
                   <span className={styles.metaText}>Member since Jan 2025</span>
                 </div>
               </div>
-              <p className={styles.title}>Freelance Developer</p>
+              <p className={styles.title}>{userRole}</p>
               <p className={styles.earnings}>233...e998</p>
               <p className={styles.bio}>
-                Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development. Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development. Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development.
+                {bio}
               </p>
             </div>
           </div>
@@ -51,10 +69,9 @@ const DeveloperHero: React.FC = () => {
         </div>
          <div className={styles.skillsBase}>
              <div className={styles.skills}>
-            <Button4Black2 text="React" className={styles.skillButton} />
-            <Button4Black2 text="Smart Contract" className={styles.skillButton} />
-            <Button4Black2 text="Node.js" className={styles.skillButton} />
-            <Button4Black2 text="TypeScript" className={styles.skillButton} />
+            {skills.map((skill, index) => (
+              <Button4Black2 key={index} text={skill} className={styles.skillButton} />
+            ))}
           </div>
       </div>
       </div>
