@@ -64,30 +64,33 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [loading, setLoading] = useState(false);
 
   // Simulate a fetch for each tab (allows wiring developerId later)
+  // prevent stale fetches overwriting UI — use a request token
+  const requestRef = React.useRef(0);
   React.useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
+    const reqId = ++requestRef.current;
+    setLoading(true);
+
+    (async () => {
       // simulate network latency
       await new Promise((r) => setTimeout(r, 220));
-      if (cancelled) return;
-
-      // If developerId is provided, filter to simulate per-developer data
       const data = sampleData[activeTab] || [];
+
       if (developerId) {
-        // simple deterministic filter using developerId hash -> keep some items
         const seed = developerId.split('').reduce((s, ch) => s + ch.charCodeAt(0), 0);
-        const filtered = data.filter((_, i) => ((i + seed) % 2) === 0);
+        const filtered = data.filter((_: DevRow, i: number) => ((i + seed) % 2) === 0);
+        // only update if this is the latest request
+        if (requestRef.current !== reqId) return;
         setRows(filtered.length ? filtered : data.slice(0, 5));
       } else {
+        if (requestRef.current !== reqId) return;
         setRows(data);
       }
 
+      if (requestRef.current !== reqId) return;
       setLoading(false);
-    }
+    })();
 
-    load();
-    return () => { cancelled = true; };
+    return () => { /* next call will bump requestRef.current */ };
   }, [activeTab, developerId]);
 
   // NOTE: Replace the sampleData usage with real API calls when ready.

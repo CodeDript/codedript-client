@@ -8,6 +8,8 @@ import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
 import DeveloperTable from '../../components/table/developerTabale/DeveloperTable';
+import UserTable from '../../components/table/userTabale/UserTable';
+
 interface GigData {
   title?: string;
   description?: string;
@@ -89,6 +91,7 @@ const GigView: React.FC = () => {
           buttonLabel="Buy & Escrow"
         />
       </div>
+      <UserTable/>
         <DeveloperTable />
         <Table />
       </div>
