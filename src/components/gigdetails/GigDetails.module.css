@@ -1,0 +1,164 @@
+.title {
+  font-size: 4.6rem;
+  font-weight: 100;
+  color: #1a1a1a;
+  margin-bottom: 0.7rem;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  letter-spacing: -1px;
+}
+.card {
+  background: #fff;
+  border-radius:0 20px 20px 0;
+ 
+  padding: 2.5rem 2rem 6.5rem 2rem;
+  width: 100%;
+  margin: 4rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: relative;
+}
+/* Decorative SVG in bottom left */
+.cornerSvg {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 540px;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+
+.subheading {
+  font-size: 1.5rem;
+  color: #666;
+  font-weight: 100;
+  margin-bottom: 1.2rem;
+}
+
+
+.imageScrollWrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1840px; /* 3*600px + 2*1.2rem gap */
+  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.scrollBtn {
+  background: linear-gradient( #d4d4d4 100%);
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 52px;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
+
+  position: relative;
+  z-index: 2;
+}
+.scrollBtn:hover, .scrollBtn:focus {
+  background: linear-gradient(135deg, #bebebe 60%);
+ 
+}
+.scrollBtn svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.imageRow {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+  max-width: 1840px; /* 3*600px + 2*1.2rem gap */
+  min-width: 0;
+  padding-bottom: 0.5rem;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+}
+.imageRow::-webkit-scrollbar {
+  display: none;
+}
+
+.imagePlaceholder {
+  min-width: 300px;
+  max-width: 380px;
+  height: 250px;
+  width:380px;
+  background: #f3f3f3;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  flex-shrink: 0;
+}
+
+.imageIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 1.15rem;
+  color: #444;
+  font-weight: 500;
+  font-family: 'Jura', 'Inter', 'Segoe UI', Arial, sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.input {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: #f3f3f3;
+  font-size: 1.08rem;
+  font-family: 'Jura', 'Inter', 'Segoe UI', Arial, sans-serif;
+  font-weight: 400;
+  color: #222;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  letter-spacing: 0.2px;
+}
+
+.input:focus {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 1.2rem 0.5rem;
+    max-width: 98vw;
+  }
+  .imageRow {
+    gap: 0.5rem;
+  }
+  .imagePlaceholder {
+    width: 60px;
+    height: 60px;
+  }
+}

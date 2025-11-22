@@ -6,6 +6,21 @@
   min-height: 100vh;
   
 }
+.container2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 70%;
+  margin-left: -5%;
+  
+}
+.titleSection{
+    margin-top: 50px;
+    margin-bottom: 20px;
+    padding: 1px;
+    font-weight: 100; 
+}
 
 .descriptionSection {
   width: 100%;
@@ -14,16 +29,22 @@
   text-align: left;
   margin-bottom: 20px;
   color: #ffffff;
+  
+  
 }
 
 .descriptionSection h2 {
   margin-bottom: 10px;
   color: #ffffff;
+ font-weight: 100; 
+  
 }
 
 .description {
   text-align: left;
   color: #ffffff;
+  font-family: 'jura';
+  font-size: 18px;
 }
 
 .detailsSection {
@@ -37,6 +58,7 @@
 .detailsSection h2 {
   margin-bottom: 10px;
   color: #ffffff;
+  font-weight: 100; 
 }
 
 .details {
