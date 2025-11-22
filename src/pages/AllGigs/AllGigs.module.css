@@ -11,8 +11,8 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 32px;
- 
-  scale: 0.85;
+  margin-top: -80px;
+  scale: 0.8;
 }
 
 @media (max-width: 900px) {

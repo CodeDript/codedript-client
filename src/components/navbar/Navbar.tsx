@@ -8,10 +8,11 @@ type NavBarProps = {
     isLoggedIn: boolean;
     onLoginClick: () => void;
     onLogout: () => void;
+    userRole: string;
 };
 
 
-function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
+function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeButton, setActiveButton] = useState<string>("");
@@ -20,7 +21,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
 
     const navButtons = [
         { label: "Home", path: "/" },
-        { label: "Marketplace", path: "/marketplace" },
+        { label: "Marketplace", path: "/all-gigs" },
         { label: "Live Auctions", path: "/liveauctions" },
         { label: "Digital Arts", path: "/digitalarts" },
         { label: "Photographs", path: "/photographs" },
@@ -76,7 +77,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
                         </button>
                     ) : (
                         <div className={styles.mobileProfileItems}>
-                            <div className={styles.mobileProfileItem} onClick={() => { navigate("/userAccount"); setIsMobileMenuOpen(false); }}>
+                            <div className={styles.mobileProfileItem} onClick={() => { navigate(userRole === 'developer' ? '/developer' : '/client'); setIsMobileMenuOpen(false); }}>
                                 <span className={styles.mobileIcon}><img src="src/assets/DropdownIcon/user.png" alt="user" /></span>
                                 Your Profile
                             </div>
@@ -113,7 +114,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout }: NavBarProps) {
                         <img src="src/assets/Navimage/User icon.png" className={styles.UserIcon} alt="Profile" />
                         </button>
                         {isDropdownOpen && (
-                            <UserIconDropdown onClose={handleDropdownClose} onLogout={onLogout} />
+                            <UserIconDropdown onClose={handleDropdownClose} onLogout={onLogout} userRole={userRole} />
                         )}
                     </div>
                 )}

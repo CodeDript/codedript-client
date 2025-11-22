@@ -1,0 +1,150 @@
+
+.workflowSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+ 
+  
+}
+
+.workflowContainer {
+  margin-top: -200px;
+  width: 100%;
+  max-width: 1600px;
+  padding: 0 15%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3rem 3rem;
+  position: relative;
+  min-height: 1400px;
+}
+
+.stepWrapper {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  z-index: 3;
+}
+
+/* Vertical offsets for steps */
+.step1 {
+  transform: translateY(0%);
+}
+.step2 {
+  transform: translateY(35%);
+}
+
+.step3 {
+  transform: translateY(-30%);
+}
+
+.step4 {
+  transform: translateY(5%);
+}
+
+.numberImage {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.8));
+}
+
+.stepContent {
+  color: #fff;
+  max-width: 420px;
+}
+
+.stepTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.stepDesc {
+  font-size: 0.92rem;
+  color: #c5c5c5;
+  line-height: 1.5;
+}
+
+/* Position connector lines - 2 right lines and 1 left line */
+.lineRight1, .lineLeft, .lineRight2 {
+  position: absolute;
+  width: 30%;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+}
+
+/* Right line connecting step 1 to step 2 */
+.lineRight1 {
+  top: 20%;
+  left: calc(60% + 100px);
+  transform: translateX(-50%);
+}
+
+/* Left line connecting step 2 to step 3 */
+.lineLeft {
+  top: 38%;
+  left: calc(38% - 100px);
+  transform: translateX(-50%);
+}
+
+/* Right line connecting step 3 to step 4 */
+.lineRight2 {
+  top: 58%;
+  left: calc(60% + 100px);
+  transform: translateX(-50%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .workflowContainer {
+    gap: 3rem 2rem;
+    min-height: 600px;
+  }
+  
+  .numberImage {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .stepContent {
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 900px) {
+  .workflowContainer {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 3rem;
+    padding: 0 8%;
+  }
+  
+  .step2, .step3, .step4 {
+    transform: translateY(0);
+  }
+  
+  .lineRight1, .lineLeft, .lineRight2 {
+    display: none;
+  }
+  
+  .numberImage {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .stepWrapper {
+    gap: 1.5rem;
+  }
+  
+  .stepContent {
+    max-width: 100%;
+  }
+}
