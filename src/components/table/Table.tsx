@@ -43,6 +43,30 @@ const reviews = [
     rating: 5,
     review: 'Fast turnaround and clear milestone tracking. We paid in stablecoin which saved on FX fees. Would appreciate more ...'
   },
+   {
+    order: '0127',
+    title: 'Website Redesign Project',
+    reviewer: 'Maria Lopez',
+    date: 'Jan 01, 2024',
+    rating: 5,
+    review: 'The freelancer delivered a working prototype within the agreed milestones — funds were released automatically.'
+  },
+  {
+    order: '0129',
+    title: 'UX / UI Design',
+    reviewer: 'Ahmed Al-Suqedi',
+    date: 'Jan 01, 2024',
+    rating: 3,
+    review: 'Conceptually strong but the talent pool for our niche was shallow. We ended up re-posting the job multiple times...'
+  },
+  {
+    order: '0130',
+    title: 'Backend API Integration',
+    reviewer: 'Chloe Martin',
+    date: 'Feb 02, 2024',
+    rating: 5,
+    review: 'Fast turnaround and clear milestone tracking. We paid in stablecoin which saved on FX fees. Would appreciate more ...'
+  },
 ];
 
 const renderStars = (count: number) => (
@@ -55,6 +79,7 @@ const renderStars = (count: number) => (
 
 const Table: React.FC = () => {
   return (
+    <div className={styles.tableWrapper1}>
     <div className={styles.tableWrapper}>
       <div className={styles.headerRow}>
         <span className={styles.headerTitle}>Customer reviews</span>
@@ -75,6 +100,7 @@ const Table: React.FC = () => {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };

@@ -46,7 +46,7 @@ const GigView: React.FC = () => {
         </div>
               {/* Customer Reviews Table Section */}
               <div style={{ margin: '2rem 0' }}>
-                <Table />
+               
               </div>
         <h2>About this gig</h2>
 
