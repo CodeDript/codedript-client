@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/HomePage/Home.tsx';
 import AllGigs from './pages/AllGigs/AllGigs.tsx';
@@ -17,6 +17,7 @@ import AuthForm from './components/auth/AuthForm';
 
 function AppContent() {
   const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const handleLoginClick = () => setIsAuthOpen(true);
@@ -24,10 +25,11 @@ function AppContent() {
   const handleLogout = () => {
     logout();
     setIsAuthOpen(false);
+    navigate('/');
   };
 
   return (
-    <Router>
+    <>
       <NavBar
         isLoggedIn={isAuthenticated}
         onLoginClick={handleLoginClick}
@@ -44,20 +46,22 @@ function AppContent() {
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/client" element={<Client />} />
           <Route path="/developer" element={<Developer />} />
-          <Route path="/gigview" element={<GigView />} />
+          <Route path="/gigview/:id" element={<GigView />} />
           <Route path="/contract-processing" element={<ContractProcessing />} />
           <Route path="/create-contract" element={<PageCotractD />} />
         </Routes>
       </div>
       <Alert />
-    </Router>
+    </>
   );
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
   );
 }

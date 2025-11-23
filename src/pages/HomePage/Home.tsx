@@ -109,23 +109,32 @@ agreements " />
             ) : error ? (
               <p>Error loading gigs. Please try again later.</p>
             ) : featuredGigs.length > 0 ? (
-              featuredGigs.map((gig) => (
-                <GigCard 
-                  key={gig._id}
-                  gigId={gig._id}
-                  title={gig.title}
-                  description={gig.description}
-                  rating={gig.rating.average}
-                  reviewCount={gig.rating.count}
-                  userImage={gig.developer.profile.avatar}
-                  userName={gig.developer.profile.name || 'Anonymous'}
-                  userRole="Freelance Developer"
-                  price={gig.pricing.amount}
-                  currency={gig.pricing.currency}
-                  skills={gig.developer.profile.skills?.slice(0, 3) || []}
-                  gigImage={gig.images[0]?.url || "https://via.placeholder.com/700x300"}
-                />
-              ))
+              featuredGigs.map((gig) => {
+                // Defensive checks: developer or profile may be null
+                const dev = gig.developer || { profile: {}, reputation: { rating: 0, reviewCount: 0 } };
+                const profile = dev.profile || {};
+                const reputation = dev.reputation || { rating: 0, reviewCount: 0 };
+                const avatar = profile.avatar || undefined;
+                const gigImage = (gig.images && gig.images[0] && gig.images[0].url) || undefined;
+
+                return (
+                  <GigCard 
+                    key={gig._id}
+                    gigId={gig._id}
+                    title={gig.title || 'Untitled Gig'}
+                    description={gig.description || 'No description available'}
+                    rating={reputation.rating ?? gig.rating?.average ?? 0}
+                    reviewCount={reputation.reviewCount ?? gig.rating?.count ?? 0}
+                    userImage={avatar}
+                    userName={profile.name || 'Anonymous'}
+                    userRole="Freelance Developer"
+                    price={gig.pricing?.amount ?? 0}
+                    currency={gig.pricing?.currency ?? 'USD'}
+                    skills={Array.isArray(profile.skills) ? profile.skills.slice(0, 3) : []}
+                    gigImage={gigImage}
+                  />
+                );
+              })
             ) : (
               <p>No gigs available at the moment.</p>
             )}
