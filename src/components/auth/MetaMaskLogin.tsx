@@ -1,166 +1,81 @@
 import { useState } from 'react';
-import { BrowserProvider, JsonRpcSigner } from 'ethers';
+import { useNavigate } from 'react-router-dom';
 import authStyles from './AuthForm.module.css';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import { showAlert } from './Alert';
+import { useAuth } from '../../context/AuthContext';
 
 interface MetaMaskLoginProps {
-  onLoginSuccess?: (walletAddress: string, signature: string) => void;
+  onLoginSuccess?: () => void;
+  onClose?: () => void;
 }
 
-const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess }) => {
-  const [walletAddress, setWalletAddress] = useState<string>('');
+const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
+  const { loginWithWallet, user, clearError } = useAuth();
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [isSigning, setIsSigning] = useState<boolean>(false);
-  // We show all states via toast alerts only
+  const navigate = useNavigate();
 
-  // Check if MetaMask is installed
-  const isMetaMaskInstalled = (): boolean => {
-    const { ethereum } = window as any;
-    return Boolean(ethereum && ethereum.isMetaMask);
-  };
-
-  // Connect to MetaMask wallet
-  const connectWallet = async () => {
-    if (!isMetaMaskInstalled()) {
-      const msg = 'MetaMask is not installed. Please install MetaMask extension.';
-      showAlert(msg, 'error');
-      return;
-    }
-
+  // Connect wallet and login
+  const handleConnect = async () => {
     setIsConnecting(true);
+    clearError();
 
     try {
-      const { ethereum } = window as any;
+      await loginWithWallet();
+      showAlert('Login successful!', 'success');
       
-      // Request wallet accounts
-      const accounts = await ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-
-      if (accounts.length > 0) {
-        setWalletAddress(accounts[0]);
-        console.log('Connected wallet:', accounts[0]);
-        showAlert('Wallet connected successfully!', 'success');
+      // Call success callback if provided
+      if (onLoginSuccess) {
+        onLoginSuccess();
       }
+
+      // Close modal after short delay
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        }
+
+        // Route based on user role
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          const role = userData.role || 'client';
+          
+          // Route to appropriate dashboard
+          if (role === 'developer') {
+            navigate('/developer');
+          } else if (role === 'client') {
+            navigate('/client');
+          } else {
+            // Default to client dashboard
+            navigate('/client');
+          }
+        }
+      }, 1500);
     } catch (err: any) {
-      console.error('Error connecting to MetaMask:', err);
+      console.error('Login error:', err);
       showAlert(err.message || 'Failed to connect wallet', 'error');
+      // clear context error so it doesn't linger
+      clearError();
     } finally {
       setIsConnecting(false);
     }
   };
 
-  // Login with signature
-  const loginWithSignature = async () => {
-    if (!walletAddress) {
-      showAlert('Please connect your wallet first', 'error');
-      return;
-    }
-
-    setIsSigning(true);
-
-    try {
-      const { ethereum } = window as any;
-      
-      // Create provider and signer using ethers v6
-      const provider = new BrowserProvider(ethereum);
-      const signer: JsonRpcSigner = await provider.getSigner();
-
-      // Create message with timestamp
-      const message = `Login to MyWebsite at ${new Date().toISOString()}`;
-
-      // Sign the message
-      const signature = await signer.signMessage(message);
-
-      console.log('Signature:', signature);
-
-      // Send to backend for verification
-      const response = await fetch('/api/verify-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress,
-          message,
-          signature,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        showAlert('Login successful!', 'success');
-        console.log('Backend response:', data);
-        
-        // Call success callback if provided
-        if (onLoginSuccess) {
-          onLoginSuccess(walletAddress, signature);
-        }
-      } else {
-        const errorData = await response.json();
-        showAlert(errorData.message || 'Login verification failed', 'error');
-      }
-    } catch (err: any) {
-      console.error('Error signing message:', err);
-      
-      // Handle user rejection
-      if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
-        showAlert('Signature request was rejected', 'error');
-      } else {
-        showAlert(err.message || 'Failed to sign message', 'error');
-      }
-    } finally {
-      setIsSigning(false);
-    }
-  };
-
-  // Disconnect wallet
-  const disconnectWallet = () => {
-    setWalletAddress('');
-    showAlert('Wallet disconnected', 'success');
-  };
+  // Show error from context if any
+  // Don't automatically show context error on every render here to avoid duplicate alerts.
+  // Errors are handled in the connect flow's catch block below.
 
   return (
     <div className={authStyles.metaMaskContainer}>
-     
-
-      {!walletAddress && (
-        <Button3B
-          text={isConnecting ? 'Connecting...' : 'Connect'}
-          onClick={connectWallet}
-          className={isConnecting ? authStyles.metaMaskButtonDisabled : ''}
-        />
-      )}
-
-      {/* Wallet connected */}
-      {walletAddress && (
-        <div className={authStyles.metaMaskWalletInfo}>
-          <div className={authStyles.metaMaskAddressContainer}>
-            <strong>Connected Wallet:</strong>
-            <code className={authStyles.metaMaskAddress}>{walletAddress}</code>
-          </div>
-
-          
-            <Button3B
-              text={isSigning ? 'Signing...' : 'Login with Signature'}
-              onClick={loginWithSignature}
-              className={isSigning ? authStyles.metaMaskButtonDisabled : ''}
-            />
-
-            <Button3B
-              text={'Disconnect'}
-              onClick={disconnectWallet}
-              className={`${authStyles.metaMaskSecondaryButton} ${isSigning ? authStyles.metaMaskButtonDisabled : ''}`}
-            />
-          </div>
-        
-      )}
-
+      <Button3B
+        text={isConnecting ? 'Connecting...' : 'Connect'}
+        onClick={handleConnect}
+        className={isConnecting ? authStyles.metaMaskButtonDisabled : ''}
+      />
     </div>
   );
 };
 
-
-
 export default MetaMaskLogin;
+

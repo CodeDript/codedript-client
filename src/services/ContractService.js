@@ -157,27 +157,33 @@ async function writeToContract(functionName, args, valueEth = "0") {
  * Connect wallet - always show MetaMask account selector
  */
 export async function connectWallet() {
-  // First, request accounts directly from MetaMask to trigger the popup
-  if (typeof window.ethereum !== 'undefined') {
-    try {
-      // This will always show the MetaMask account selector
-      await window.ethereum.request({ 
-        method: 'wallet_requestPermissions',
-        params: [{ eth_accounts: {} }]
-      });
-    } catch (err) {
-      console.log('Permission request cancelled or failed:', err);
+  // Ensure MetaMask is available
+  if (typeof window.ethereum === 'undefined') {
+    throw new Error('MetaMask is not installed');
+  }
+
+  // Request permissions first — if user rejects, stop and surface a clear error
+  try {
+    await window.ethereum.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
+  } catch (err) {
+    // User cancelled or denied the permission request. Do not continue to wallet.connect()
+    console.log('Permission request cancelled or failed:', err);
+    throw new Error('MetaMask permission request was cancelled');
+  }
+
+  // Disconnect existing wallet session if present (safe-guard)
+  try {
+    const existing = typeof wallet.getAccount === 'function' ? await wallet.getAccount() : null;
+    if (existing) {
+      await wallet.disconnect();
     }
+  } catch (e) {
+    // ignore disconnect errors
+    console.warn('Error checking existing wallet session:', e);
   }
-  
-  // Disconnect first to ensure fresh connection
-  if (wallet.getAccount()) {
-    await wallet.disconnect();
-  }
-  
-  // Connect to MetaMask
+
+  // Connect to MetaMask (this will open the MetaMask connect popup if needed)
   const account = await wallet.connect({ client });
-  
   return account;
 }
 
