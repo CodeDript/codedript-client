@@ -4,7 +4,7 @@ import starIcon from '../../../assets/svg/starIcon.svg';
 import userImageDefault from '../../../assets/Navimage/sia croven.jpg';
 import { useNavigate } from 'react-router-dom';
 interface GigCardProps {
-  id?: number;
+  gigId?: string;
   title?: string;
   description?: string;
   rating?: number;
@@ -19,6 +19,7 @@ interface GigCardProps {
 }
 
 const GigCard: React.FC<GigCardProps> = ({
+  gigId,
   title = "Mobile App Developer",
   description = "Smart contracts ensure payments are secure and transparent with immutable transaction records. Smart contracts ensure payments are secure and transparent.",
   rating = 4,
@@ -34,7 +35,9 @@ const GigCard: React.FC<GigCardProps> = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/gigview', { state: { title, description, rating, reviewCount, userImage, userName, userRole, price, currency, skills, gigImage } });
+    if (gigId) {
+      navigate(`/gigview/${gigId}`);
+    }
   };
   const renderStars = () => {
     const stars = [];

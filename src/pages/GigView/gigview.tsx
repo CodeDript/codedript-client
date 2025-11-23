@@ -1,50 +1,68 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './gigview.module.css';
-import { useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 import HeaderText from '../../components/HeaderText/HeaderText';
-
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
 import DeveloperTable from '../../components/table/developerTabale/DeveloperTable';
 import UserTable from '../../components/table/userTabale/UserTable';
-
-interface GigData {
-  title?: string;
-  description?: string;
-  rating?: number;
-  reviewCount?: number;
-  userImage?: string;
-  userName?: string;
-  userRole?: string;
-  price?: number;
-  currency?: string;
-  skills?: string[];
-  gigImage?: string;
-}
+import { GigService, type Gig } from '../../api/gigService';
 
 const GigView: React.FC = () => {
-  const location = useLocation();
-  const gigData: GigData = location.state as GigData || {};
+  const { id } = useParams<{ id: string }>();
+  const [gig, setGig] = useState<Gig | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGig = async () => {
+      if (!id) return;
+      
+      try {
+        setIsLoading(true);
+        const gigData = await GigService.getGigById(id);
+        setGig(gigData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch gig:', err);
+        setError('Failed to load gig details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGig();
+  }, [id]);
+
+  if (isLoading) {
+    return <div className={styles.container}><p>Loading gig details...</p></div>;
+  }
+
+  if (error || !gig) {
+    return <div className={styles.container}><p>{error || 'Gig not found'}</p></div>;
+  }
 
   return (
     <div className={styles.container}>
          
       <DeveloperHero 
-        userName={gigData.userName}
-        userImage={gigData.userImage}
-        rating={gigData.rating}
-        reviewCount={gigData.reviewCount}
-        userRole={gigData.userRole}
-        skills={gigData.skills}
-        bio={gigData.description}
+        userName={gig.developer.profile.name || 'Anonymous'}
+        userImage={gig.developer.profile.avatar}
+        rating={gig.developer.reputation.rating}
+        reviewCount={gig.developer.reputation.reviewCount}
+        userRole="Freelance Developer"
+        skills={gig.developer.profile.skills}
+        bio={gig.developer.profile.bio || gig.description}
+        memberSince={gig.developer.createdAt}
+        walletAddress={gig.developer.walletAddress}
       />
       <div className={styles.container2}>
        
       <div className={styles.descriptionSection}>
         <div className={styles.titleSection}>
-        <h1>{gigData.title || 'Gig Title'}</h1>
+        <h1>{gig.title}</h1>
         </div>
               {/* Customer Reviews Table Section */}
               <div style={{ margin: '2rem 0' }}>
@@ -52,7 +70,7 @@ const GigView: React.FC = () => {
               </div>
         <h2>About this gig</h2>
 
-        <p className={styles.description}>{gigData.description || 'Gig description'}</p>
+        <p className={styles.description}>{gig.description}</p>
       </div>
       <div className={styles.detailsSection}>
         <h2>Gig Details</h2>
