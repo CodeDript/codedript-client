@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './pageCotractD.module.css';
 import authStyles from '../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../assets/Login/cardBackgroundup.svg';
@@ -39,6 +39,10 @@ const PageCotractD: React.FC = () => {
 
   // Files & terms
   const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
+  // uploaded files
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  // payment confirmation (developer accepted contract)
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   const { state: routeState } = useLocation();
 
@@ -51,8 +55,48 @@ const PageCotractD: React.FC = () => {
     }
   }, [routeState]);
 
+  const navigate = useNavigate();
+
   const next = () => setStep((s) => Math.min(5, s + 1));
   const prev = () => setStep((s) => Math.max(1, s - 1));
+
+  const navigateBack = () => {
+    // go back to previous page (likely the gig / package card)
+    navigate(-1);
+  };
+
+  const handleCreateContract = () => {
+    // assemble payload (placeholder - replace with real API call)
+    const payload = {
+      title,
+      description,
+      developerId,
+      clientName,
+      clientEmail,
+      clientWallet,
+      value,
+      currency,
+      deadline,
+      milestones,
+      filesNote,
+      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+    };
+
+    console.log('Create contract payload', payload);
+    // TODO: call real api to create contract
+
+    // advance the flow to the Payment Terms step (step 4)
+    setStep(4);
+  };
+
+  // handlers used by UI of the action buttons
+  const leftButtonText = step === 1 ? '← Previous' : '← Previous';
+  const leftHandler = step === 1 ? navigateBack : prev;
+
+  const rightIsCreate = step === 3; // files & terms
+  const rightIsDisabled = step === 4 && !paymentConfirmed; // payment step locked until confirm
+  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : next);
+  const rightText = rightIsCreate ? 'Create Contract' : (step < 5 ? 'Next' : 'Finish');
 
   return (
     <div className={styles.container}>
@@ -129,7 +173,7 @@ const PageCotractD: React.FC = () => {
               />
             )}
             {step === 3 && (
-              <FilesTermsStep filesNote={filesNote} setFilesNote={setFilesNote} />
+              <FilesTermsStep filesNote={filesNote} setFilesNote={setFilesNote} files={uploadedFiles} setFiles={setUploadedFiles} />
             )}
             {step === 4 && (
               <PaymentStep
@@ -141,6 +185,8 @@ const PageCotractD: React.FC = () => {
                 setDeadline={setDeadline}
                 milestones={milestones}
                 setMilestones={setMilestones}
+                paymentConfirmed={paymentConfirmed}
+                setPaymentConfirmed={setPaymentConfirmed}
               />
             )}
             
@@ -159,8 +205,10 @@ const PageCotractD: React.FC = () => {
               />
             )}
             <div className={styles.actions}>
-              <div className={styles.leftBtn}><Button2 text="← Previous" onClick={prev} /></div>
-              <div className={styles.rightBtn}><Button3Black1 text={step<5 ? 'Next ' : 'Finish'} onClick={next} /></div>
+              <div className={styles.leftBtn}><Button2 text={leftButtonText} onClick={() => leftHandler()} /></div>
+              <div className={styles.rightBtn} style={{ opacity: rightIsDisabled ? 0.7 : 1 }} aria-disabled={rightIsDisabled}>
+                <Button3Black1 text={rightText} onClick={() => rightHandler()} />
+              </div>
             </div>
 
      

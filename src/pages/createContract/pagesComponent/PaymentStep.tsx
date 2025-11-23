@@ -12,9 +12,11 @@ type Props = {
   setDeadline: (v: string) => void;
   milestones: Milestone[];
   setMilestones: (m: Milestone[]) => void;
+  paymentConfirmed: boolean;
+  setPaymentConfirmed: (b: boolean) => void;
 };
 
-const PaymentStep: React.FC<Props> = ({ value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones }) => {
+const PaymentStep: React.FC<Props> = ({ value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed }) => {
   const updateMilestone = (idx: number, field: 'title'|'amount', v: string) => {
     const next = milestones.map((m,i)=> i===idx ? {...m, [field]: v} : m);
     setMilestones(next);
@@ -59,6 +61,11 @@ const PaymentStep: React.FC<Props> = ({ value, setValue, currency, setCurrency, 
           <div style={{marginTop:12}}>
             <button onClick={addMilestone} style={{padding:'8px 12px', borderRadius:8}}>Add milestone</button>
           </div>
+        </div>
+
+        <div style={{marginTop:16, display:'flex', gap:8, alignItems:'center'}}>
+          <input id="confirmDev" type="checkbox" checked={paymentConfirmed} onChange={(e)=> setPaymentConfirmed(e.target.checked)} />
+          <label htmlFor="confirmDev" style={{fontFamily:'Jura'}}>I confirm the developer and accept these payment terms</label>
         </div>
       </div>
     </>
