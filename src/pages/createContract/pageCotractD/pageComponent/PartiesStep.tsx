@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../pageCotractD/pageCotractD.module.css';
+import styles from '../pageCotractD.module.css';
 
 type Props = {
   clientName: string;

@@ -8,6 +8,7 @@ import GigView from './pages/GigView/gigview.tsx';
 // ContractProcessing was moved into components/ContractPages — update import path
 import ContractProcessing from './components/ContractPages/contractprocessing.tsx';
 import PageCotractD from './pages/createContract/pageCotractD/pageCotractD.tsx';
+import ContractView from './pages/createContract/pageCotractD/contractView/contractView';
 import Client from './pages/User/client/client.tsx';
 import Developer from './pages/User/developer/developer.tsx';
 import './App.css';
@@ -47,6 +48,7 @@ function AppContent() {
           <Route path="/gigview" element={<GigView />} />
           <Route path="/contract-processing" element={<ContractProcessing />} />
           <Route path="/create-contract" element={<PageCotractD />} />
+          <Route path="/create-contract/rules" element={<ContractView />} />
         </Routes>
       </div>
       <Alert />

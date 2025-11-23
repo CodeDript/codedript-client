@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from '../pageCotractD/pageCotractD.module.css';
-import uploadIcon from '../../../assets/contractSvg/file uploard.svg';
+import styles from '../pageCotractD.module.css';
+import uploadIcon from '../../../../assets/contractSvg/file uploard.svg';
 
 type Props = {
   filesNote: string;
