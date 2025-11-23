@@ -47,6 +47,7 @@ const AllGigs: React.FC = () => {
               gigs.map((gig) => (
                 <GigCard 
                   key={gig._id}
+                  gigId={gig._id}
                   title={gig.title}
                   description={gig.description}
                   rating={gig.rating.average}
@@ -56,7 +57,7 @@ const AllGigs: React.FC = () => {
                   userRole="Freelance Developer"
                   price={gig.pricing.amount}
                   currency={gig.pricing.currency}
-                  skills={gig.skills.slice(0, 3)}
+                  skills={gig.developer.profile.skills?.slice(0, 3) || []}
                   gigImage={gig.images[0]?.url || "https://via.placeholder.com/700x300"}
                 />
               ))

@@ -41,7 +41,7 @@ function AppContent() {
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="/client" element={<Client />} />
           <Route path="/developer" element={<Developer />} />
-          <Route path="/gigview" element={<GigView />} />
+          <Route path="/gigview/:id" element={<GigView />} />
         </Routes>
       </div>
       <Alert />

@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import styles from './UserIcondd.module.css';
-import imgProfile from '../../assets/Navimage/sia croven.jpg';
 import fallbackImg from '../../assets/Navimage/no_user.jpg';
+import userIcon from '../../assets/DropdownIcon/user.png';
+import nftIcon from '../../assets/DropdownIcon/nft icon.png';
+import cartIcon from '../../assets/DropdownIcon/cart .png';
+import dashboardIcon from '../../assets/DropdownIcon/application.png';
+import signOutIcon from '../../assets/DropdownIcon/sign out option.png';
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../context/AuthContext';
 
 const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; userRole: string }> = ({ onClose, onLogout, userRole }) => {
     const [isHiding, setIsHiding] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const handleClose = () => {
         setIsHiding(true);
@@ -27,13 +33,15 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
     return (
         <div className={`${styles.dropdownMenu} ${isHiding ? styles.fadeOut : styles.fadeIn}`}>
             <div className={styles.userProfile}>
-                <img
-                    src={imgProfile}
-                    alt="preview"
-                    className={styles.profileImage}
-                    onError={(e) => { e.currentTarget.src = fallbackImg; }}
-                />
-                <p className={styles.dropdownToggle}>sia croven</p>
+                {user?.profile?.avatar ? (
+                    <img
+                        src={user.profile.avatar}
+                        alt={user.profile.name || 'profile'}
+                        className={styles.profileImage}
+                        onError={(e) => { e.currentTarget.src = fallbackImg; }}
+                    />
+                ) : null}
+                <p className={styles.dropdownToggle}>{user?.profile?.name || user?.email || 'Anonymous'}</p>
             </div>
 
             <div className={styles.dropdownSection}>
@@ -44,27 +52,27 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
                         onClose();
                     }}
                 >
-                    <span className={styles.grayIcon}><img src="src/assets/DropdownIcon/user.png" alt="user" /></span> Your profile
+                    <span className={styles.grayIcon}><img src={userIcon} alt="user" /></span> Your profile
                 </button>
 
                 <button className={styles.dropdownItem}>
-                    <span className={styles.grayIcon}><img src="src/assets/DropdownIcon/nft icon.png" alt="preview" /></span> Your NFTs
+                    <span className={styles.grayIcon}><img src={nftIcon} alt="preview" /></span> Your NFTs
                 </button>
 
                 <button className={styles.dropdownItem}>
-                    <span className={styles.grayIcon}><img src="src/assets/DropdownIcon/cart .png" alt="shopping cart" /></span> You Bought
+                    <span className={styles.grayIcon}><img src={cartIcon} alt="shopping cart" /></span> You Bought
                 </button>
             </div>
 
             <div className={styles.dropdownSection}>
                 <button className={styles.dropdownItem}   onClick={() => {handleClose(); navigate('/dashboard');}}>
-                    <span className={styles.grayIcon}><img src="src/assets/DropdownIcon/application.png" alt="preview" /></span> Dashboard
+                    <span className={styles.grayIcon}><img src={dashboardIcon} alt="preview" /></span> Dashboard
                 </button>
             </div>
 
             <div className={styles.dropdownSection}>
                 <button className={styles.dropdownButton} onClick={onLogout}>
-                    <span className={styles.redIcon}><img src="src/assets/DropdownIcon/sign out option.png" alt="sign out" /></span> Sign out
+                    <span className={styles.redIcon}><img src={signOutIcon} alt="sign out" /></span> Sign out
                 </button>
             </div>
         </div>

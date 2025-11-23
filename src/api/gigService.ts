@@ -7,6 +7,8 @@ import type { PaginatedResponse } from '../types';
 export interface GigDeveloper {
   _id: string;
   email: string;
+  walletAddress?: string;
+  createdAt?: string;
   profile: {
     name?: string;
     avatar?: string;
@@ -26,7 +28,6 @@ export interface Gig {
   description: string;
   category: string;
   subcategory?: string;
-  skills: string[];
   pricing: {
     type: 'fixed' | 'hourly';
     amount: number;

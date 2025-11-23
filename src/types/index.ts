@@ -60,7 +60,6 @@ export interface Gig {
   description: string;
   category: string;
   subcategory?: string;
-  skills: string[];
   pricing: {
     type: 'fixed' | 'hourly';
     amount: number;
