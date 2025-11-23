@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import styles from './pageCotractD.module.css';
-import authStyles from '../../../components/auth/AuthForm.module.css';
-import heroOutlineup from '../../../assets/Login/cardBackgroundup.svg';
-import heroOutlinedown from '../../../assets/Login/cardBackgrounddown.svg';
-import securityIcon from '../../../assets/svg/iconsax-security.svg';
-import Button2 from '../../../components/button/Button2/Button2';
-import Button3Black1 from '../../../components/button/Button3Black1/Button3Black1';
-import DetailsStep from './pageComponent/DetailsStep';
-import PartiesStep from './pageComponent/PartiesStep';
-import PaymentStep from './pageComponent/PaymentStep';
-import FilesTermsStep from './pageComponent/FilesTermsStep';
-import ReviewStep from './pageComponent/ReviewStep';
-import projectIcon from '../../../assets/contractSvg/project details.svg';
-import partiesIcon from '../../../assets/contractSvg/parties.svg';
-import paymentIcon from '../../../assets/contractSvg/paymentTerms.svg';
-import filesIcon from '../../../assets/contractSvg/files & terms.svg';
-import reviewIcon from '../../../assets/contractSvg/Review.svg';
+import styles from './contractsViewBase.module.css';
+import authStyles from '../../../../components/auth/AuthForm.module.css';
+import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
+import heroOutlinedown from '../../../../assets/Login/cardBackgrounddown.svg';
+
+import DetailsStep from '../pageComponent/DetailsStep';
+import PartiesStep from '../pageComponent/PartiesStep';
+import FilesTermsStep from '../pageComponent/FilesTermsStep';
+import PaymentStep from '../pageComponent/PaymentStep';
+import ReviewStep from '../pageComponent/ReviewStep';
+// icons removed for contractView (project details and step icons)
+import Rulrs from './Rulrs';
+import Button2 from '../../../../components/button/Button2/Button2';
+import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 
 const PageCotractD: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -44,7 +41,8 @@ const PageCotractD: React.FC = () => {
   // payment confirmation (developer accepted contract)
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
-  const { state: routeState } = useLocation();
+  const location = useLocation();
+  const { state: routeState } = location;
 
   useEffect(() => {
     if (routeState) {
@@ -89,34 +87,13 @@ const PageCotractD: React.FC = () => {
     setStep(4);
   };
 
-  const handleFinish = () => {
-    // assemble payload similar to create (send to rules view for review/confirmation)
-    const payload = {
-      title,
-      description,
-      developerId,
-      clientName,
-      clientEmail,
-      clientWallet,
-      value,
-      currency,
-      deadline,
-      milestones,
-      filesNote,
-      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
-    };
-    // navigate to the contract rules page inside contractView
-    navigate('/create-contract/rules', { state: payload });
-  };
-
   // handlers used by UI of the action buttons
   const leftButtonText = step === 1 ? '← Previous' : '← Previous';
   const leftHandler = step === 1 ? navigateBack : prev;
 
   const rightIsCreate = step === 3; // files & terms
   const rightIsDisabled = step === 4 && paymentConfirmed; // payment step locked until confirm
-  // when on the final review step (5), finish should navigate to rules page
-  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : (step === 5 ? handleFinish : next));
+  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : next);
   const rightText = rightIsCreate ? 'Create Contract' : (step < 5 ? 'Next' : 'Finish');
 
   return (
@@ -127,42 +104,20 @@ const PageCotractD: React.FC = () => {
           <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
           <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
 
-          <div className={authStyles.authHeader}>
-            <div className={authStyles.headerLeft}>
-              <img src={securityIcon} alt="security" className={authStyles.securitySvg} />
-              <div>
-                <h1 className={authStyles.formTitle}>Contract Processing</h1>
-              </div>
+          <div className={styles.contractHeader}>
+            <div>
+              <div className={styles.contractLabel}>Contract</div>
+              <h2 className={styles.contractTitle}>{title}</h2>
+              <div className={styles.contractSub}>with {clientName}</div>
             </div>
-            <p className={authStyles.formSubtext}>Discuss project requirements with developers for seamless execution</p>
+            <div className={styles.contractMeta}>
+              <div className={styles.statusBadge}>Active</div>
+              <div className={styles.createdDate}>Created Jan 01, 2024</div>
+            </div>
           </div>
 
           <div className={authStyles.authBody}>
-            <nav className={styles.stepsBar} aria-hidden>
-          <div className={styles.stepIcons}>
-            <div className={`${styles.stepItem} ${step===1?styles.active:''}`}>
-              <img src={projectIcon} alt="Project details" className={styles.stepIconImg} />
-              Project Details
-            </div>
-            <div className={`${styles.stepItem} ${step===2?styles.active:''}`}>
-              <img src={partiesIcon} alt="Parties" className={styles.stepIconImg} />
-              Parties
-            </div>
-            <div className={`${styles.stepItem} ${step===3?styles.active:''}`}>
-              <img src={filesIcon} alt="Files and terms" className={styles.stepIconImg} />
-              Files & Terms
-            </div>
-            <div className={`${styles.stepItem} ${step===4?styles.active:''}`}>
-              <img src={paymentIcon} alt="processing state" className={styles.stepIconImg} />
-              processing state
-            </div>
-            <div className={`${styles.stepItem} ${step===5?styles.active:''}`}>
-              <img src={reviewIcon} alt="Review" className={styles.stepIconImg} />
-              Review
-            </div>
-          </div>
-          <div className={styles.progress}><div style={{width: `${((step-1)/4)*100}%`}} className={styles.progressFill}></div></div>
-        </nav>
+            {/* step icons removed for contractView (simplified view) */}
 
         <section className={styles.cardArea}>
           {/* decorative card badge (re-using auth form badge styles) */}
@@ -170,6 +125,17 @@ const PageCotractD: React.FC = () => {
           <div className={authStyles.cardBadge} aria-hidden>Create Project</div>
           
           <div className={styles.cardBody}>
+            {location.pathname && location.pathname.endsWith('/rules') ? (
+              <Rulrs
+                title={title}
+                setTitle={setTitle}
+                description={description}
+                setDescription={setDescription}
+                developerId={developerId}
+                setDeveloperId={setDeveloperId}
+              />
+            ) : (
+              <>            
             {step === 1 && (
               <DetailsStep
                 title={title}
@@ -236,6 +202,8 @@ const PageCotractD: React.FC = () => {
                 <Button3Black1 text={rightText} onClick={() => rightHandler()} />
               </div>
             </div>
+            </>
+            )}
 
      
           </div>
