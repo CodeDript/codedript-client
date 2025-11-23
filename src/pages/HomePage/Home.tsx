@@ -1,5 +1,4 @@
-import siaCrovenImg from '../../assets/Navimage/sia croven.jpg';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
@@ -20,16 +19,39 @@ import sponsored1 from '../../assets/Sponsors/Sponsered_1.png';
 import sponsored2 from '../../assets/Sponsors/Sponsored_2.png';
 import sponsored3 from '../../assets/Sponsors/Sponsored_3.png';
 import sponsored4 from '../../assets/Sponsors/Sponsored_4.png';
+import { GigService, type Gig } from '../../api/gigService';
 
 import styles from './Home.module.css';
 
 const Home: React.FC = () => {
+  const [featuredGigs, setFeaturedGigs] = useState<Gig[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const sponsors = [
     { image: sponsored1, name: 'Sponsor 1' },
     { image: sponsored2, name: 'Sponsor 2' },
     { image: sponsored3, name: 'Sponsor 3' },
     { image: sponsored4, name: 'Sponsor 4' },
   ];
+
+  useEffect(() => {
+    const fetchFeaturedGigs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await GigService.getFeaturedGigs(4);
+        setFeaturedGigs(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch featured gigs:', err);
+        setError('Failed to load gigs');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedGigs();
+  }, []);
 
   return (
     <div className={styles.homePage}>
@@ -82,58 +104,30 @@ agreements " />
          
           <HeaderText text="How CodeDript Works" subHeader="Simple steps to secure agreements " /> 
           <div className={styles.gigCardsGrid}>
-            <GigCard 
-              title="Mobile App Developer"
-              description="Smart contracts ensure payments are secure and transparent with immutable transaction records. I will develop your mobile application with the latest technologies."
-              rating={4}
-              reviewCount={127}
-              userImage={siaCrovenImg}
-              userName="Sia Croven"
-              userRole="Freelance Developer"
-              price={2000}
-              currency="ETH"
-              skills={["Node.js", "React", "Java"]}
-              gigImage="https://via.placeholder.com/700x300"
-            />
-            <GigCard 
-              title="Mobile App Developer"
-              description="Smart contracts ensure payments are secure and transparent with immutable transaction records. I will develop your mobile application with the latest technologies."
-              rating={4}
-              reviewCount={127}
-              userImage={siaCrovenImg}
-              userName="Sia Croven"
-              userRole="Freelance Developer"
-              price={2000}
-              currency="ETH"
-              skills={["Node.js", "React", "Java"]}
-              gigImage="https://via.placeholder.com/700x300"
-            />
-            <GigCard 
-              title="Mobile App Developer"
-              description="Smart contracts ensure payments are secure and transparent with immutable transaction records. I will develop your mobile application with the latest technologies."
-              rating={4}
-              reviewCount={127}
-              userImage={siaCrovenImg}
-              userName="Sia Croven"
-              userRole="Freelance Developer"
-              price={2000}
-              currency="ETH"
-              skills={["Node.js", "React", "Java"]}
-              gigImage="https://via.placeholder.com/700x300"
-            />
-            <GigCard 
-              title="Mobile App Developer"
-              description="Smart contracts ensure payments are secure and transparent with immutable transaction records. I will develop your mobile application with the latest technologies."
-              rating={4}
-              reviewCount={127}
-              userImage={siaCrovenImg}
-              userName="Sia Croven"
-              userRole="Freelance Developer"
-              price={2000}
-              currency="ETH"
-              skills={["Node.js", "React", "Java"]}
-              gigImage="https://via.placeholder.com/700x300"
-            />
+            {isLoading ? (
+              <p>Loading featured gigs...</p>
+            ) : error ? (
+              <p>Error loading gigs. Please try again later.</p>
+            ) : featuredGigs.length > 0 ? (
+              featuredGigs.map((gig) => (
+                <GigCard 
+                  key={gig._id}
+                  title={gig.title}
+                  description={gig.description}
+                  rating={gig.rating.average}
+                  reviewCount={gig.rating.count}
+                  userImage={gig.developer.profile.avatar}
+                  userName={gig.developer.profile.name || 'Anonymous'}
+                  userRole="Freelance Developer"
+                  price={gig.pricing.amount}
+                  currency={gig.pricing.currency}
+                  skills={gig.skills.slice(0, 3)}
+                  gigImage={gig.images[0]?.url || "https://via.placeholder.com/700x300"}
+                />
+              ))
+            ) : (
+              <p>No gigs available at the moment.</p>
+            )}
           </div>
         </div>
       </section>
