@@ -1,0 +1,201 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+  min-height: 80vh;
+  background: transparent;
+  margin-top: 60px;
+}
+
+.inner {
+  width: 100%;
+  max-width: 1180px;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.title {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 36px;
+  margin: 0 0 8px 0;
+  color: #111;
+}
+
+.sub {
+  font-family: 'Jura', sans-serif;
+  color: #666;
+  margin: 0 0 18px 0;
+}
+
+.stepsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.stepIcons {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.stepIconImg {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  opacity: 0.98;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.stepItem { display:flex; align-items:center; gap:8px; }
+
+.stepItem {
+  background: #efefef;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-family: 'Jura', sans-serif;
+  color: #444;
+  font-weight: 700;
+  min-width: 150px;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.stepItem.active { background: #00000031; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+/* when a step is active, make its SVG icon appear white */
+.stepItem.active .stepIconImg {
+  /* turn dark strokes to white; works for most monochrome SVGs imported as images */
+  filter: brightness(0) invert(1) saturate(0%);
+  opacity: 1;
+}
+
+.progress {
+  height: 16px;
+  background: #dcdcdc;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progressFill { height: 100%; background: #4a4a4a; width: 0%; transition: width 250ms ease; border-radius: 12px;}
+
+.cardArea {
+  background: #f6f6f6;
+  border-radius: 0px 10px 10px 10px;
+  padding: 28px ;
+  position: relative; 
+   border: 2px solid #d0d0d0; 
+   margin-top: 30PX;
+   margin-bottom: 60PX;
+}
+
+.cardHeader {
+  font-family: 'Zen Dots', sans-serif;
+  background: rgba(0,0,0,0.05);
+  padding: 8px 14px;
+  border-radius: 6px;
+  width: 200px;
+  margin-bottom: 12px;
+}
+.step {
+  font-family: 'Jura', sans-serif;
+  color: #ffffff;
+  margin-bottom: 12px;
+  background-color: #c5c5c5;
+  border-radius: 20px;
+  padding: 5px 15px 5px 15px;
+  max-width: 100px;
+  min-width: 50px;
+  margin-top: -5px;
+}
+
+.cardBody { background: #ffffff00; border-radius: 6px; padding: 8px; }
+
+.sectionTitle { font-family: 'Zen Dots', sans-serif; margin: 1px 0 12px 0; color: #222; }
+
+
+.formRow { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.formRow label { font-size: 1.2rem; color: #4b5563; font-family: 'Jura', sans-serif;font-weight: 500; }
+.formRow input, .formRow textarea { padding: 12px;font-size: 1rem; border: 1px solid #d0d0d000; background: #e7e7e7; outline: none; font-family: 'Jura', sans-serif; }
+
+.actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.leftBtn, .rightBtn { display: flex; align-items: center; }
+.leftBtn { margin-right: auto; }
+.cardArea2{margin-top: 40PX;}
+
+/* upload box styles */
+.uploadBox {
+  border: 2px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 28px;
+  text-align: center;
+}
+.uploadIcon { width: 78px; height: 78px; object-fit: contain; color: #4a4a4a; }
+.uploadTitle { font-family: 'Jura', sans-serif; font-weight: 700; margin-top: 8px; }
+.uploadSubtext { font-family: 'Jura', sans-serif; color: #777; margin-top: 6px; }
+
+/* label that appears above upload box */
+.uploadLabel { font-family: 'Jura', sans-serif; font-weight: 700; color: #111; display:block; margin-bottom:8px; }
+
+/* Review area typography */
+.reviewBox {
+  border: 1px solid #e6e6e6;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-family: 'Jura', sans-serif; /* ensure Jura for review content */
+  color: #222;
+}
+
+.reviewHeading {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.reviewRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  color: #444;
+}
+
+.reviewKey { font-weight: 100; font-size: 1rem; }
+
+.reviewValue { color: #333; }
+
+/* larger value for name / wallet (28px) */
+.reviewValueLarge { font-size: 18px; font-family: 'Jura', sans-serif; color: #222;font-weight: 700; }
+
+/* milestone price (gray) */
+.milestonePrice { color: #888888; font-family: 'Jura', sans-serif; font-size: 16px; }
+
+/* total price (darker gray) */
+.totalPrice { color: #333333; font-family: 'Zen Dots', sans-serif; font-size: 16px; font-weight: 100; }
+
+/* slightly tighter line height for project details */
+.reviewBox { line-height: 1.2; }
+
+/* Title using Jura and bolded (used for headings outside cards) */
+.juraTitle {
+  font-family: 'Jura', sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: #747474;
+  margin: 6px 0 10px 0;
+}
+@media (max-width: 760px) {
+  .inner { padding: 0 12px; }
+  .title { font-size: 26px; }
+  .media { height: 220px; }
+}
