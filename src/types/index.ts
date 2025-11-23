@@ -38,6 +38,58 @@ export interface User {
 // ============================================
 // GIG TYPES
 // ============================================
+export interface GigDeveloper {
+  _id: string;
+  email: string;
+  profile: {
+    name?: string;
+    avatar?: string;
+    bio?: string;
+    skills?: string[];
+  };
+  reputation: {
+    rating: number;
+    reviewCount: number;
+  };
+}
+
+export interface Gig {
+  _id: string;
+  developer: GigDeveloper;
+  title: string;
+  description: string;
+  category: string;
+  subcategory?: string;
+  pricing: {
+    type: 'fixed' | 'hourly';
+    amount: number;
+    currency: 'ETH' | 'USD';
+  };
+  deliveryTime: number;
+  revisions: number;
+  images: Array<{
+    url: string;
+    publicId?: string;
+  }>;
+  tags: string[];
+  status: 'draft' | 'active' | 'paused' | 'inactive';
+  statistics: {
+    views: number;
+    inquiries: number;
+    ordersInProgress: number;
+    ordersCompleted: number;
+  };
+  rating: {
+    average: number;
+    count: number;
+  };
+  isActive: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Legacy interface for backward compatibility
 export interface Package {
   _id?: string;
   title: string;
@@ -46,29 +98,6 @@ export interface Package {
   currency: string;
   deliveryTime: number;
   revisions: number;
-}
-
-export interface Gig {
-  _id: string;
-  title: string;
-  description: string;
-  developer: {
-    _id: string;
-    profile: {
-      name: string;
-      avatar?: string;
-    };
-    walletAddress: string;
-  };
-  packages: Package[];
-  category: string;
-  skills: string[];
-  rating: number;
-  reviewCount: number;
-  status: 'active' | 'paused' | 'closed';
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 // ============================================
@@ -170,7 +199,9 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
   };
 }
 
