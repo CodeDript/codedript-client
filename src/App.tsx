@@ -7,7 +7,7 @@ import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
 import GigView from './pages/GigView/gigview.tsx';
 // ContractProcessing was moved into components/ContractPages — update import path
 import ContractProcessing from './components/ContractPages/contractprocessing.tsx';
-import PageCotractD from './pages/createContract/poageParties/pageCotractD.tsx';
+import PageCotractD from './pages/createContract/pageCotractD/pageCotractD.tsx';
 import Client from './pages/User/client/client.tsx';
 import Developer from './pages/User/developer/developer.tsx';
 import './App.css';
