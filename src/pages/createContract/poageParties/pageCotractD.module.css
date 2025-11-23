@@ -1,0 +1,97 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+  min-height: 80vh;
+  background: transparent;
+}
+
+.inner {
+  width: 100%;
+  max-width: 1180px;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.title {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 36px;
+  margin: 0 0 8px 0;
+  color: #111;
+}
+
+.sub {
+  font-family: 'Jura', sans-serif;
+  color: #666;
+  margin: 0 0 18px 0;
+}
+
+.stepsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.stepIcons {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.stepItem {
+  background: #eee;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'Jura', sans-serif;
+  color: #444;
+  font-weight: 600;
+}
+
+.stepItem.active { background: #222; color: #fff; }
+
+.progress {
+  height: 6px;
+  background: #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressFill { height: 100%; background: #222; width: 0%; transition: width 250ms ease; }
+
+.cardArea {
+  background: #f6f6f6;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 22px;
+}
+
+.cardHeader {
+  font-family: 'Zen Dots', sans-serif;
+  background: rgba(0,0,0,0.05);
+  padding: 8px 14px;
+  border-radius: 6px;
+  width: 200px;
+  margin-bottom: 12px;
+}
+
+.cardBody { background: #fff; border-radius: 6px; padding: 18px; border: 1px solid #e6e6e6; }
+
+.sectionTitle { font-family: 'Zen Dots', sans-serif; margin: 0 0 12px 0; color: #222; }
+
+.formRow { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.formRow label { font-size: 0.9rem; color: #4b5563; font-family: 'Jura', sans-serif; }
+.formRow input, .formRow textarea { padding: 12px; border-radius: 6px; border: 1px solid #d0d0d0; background: #f9fafb; outline: none; font-family: 'Jura', sans-serif; }
+
+.actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.leftBtn, .rightBtn { display: flex; align-items: center; }
+.leftBtn { margin-right: auto; }
+
+@media (max-width: 760px) {
+  .inner { padding: 0 12px; }
+  .title { font-size: 26px; }
+  .media { height: 220px; }
+}
