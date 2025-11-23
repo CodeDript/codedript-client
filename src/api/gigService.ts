@@ -23,11 +23,21 @@ export interface GigDeveloper {
 
 export interface Gig {
   _id: string;
+  gigId?: number;
   developer: GigDeveloper;
   title: string;
   description: string;
   category: string;
   subcategory?: string;
+  packages?: Array<{
+    name: 'Basic' | 'Standard' | 'Premium';
+    description: string[];
+    price: number;
+    currency: 'ETH' | 'USD';
+    deliveryTime: number;
+    revisions: number;
+    features?: string[];
+  }>;
   pricing: {
     type: 'fixed' | 'hourly';
     amount: number;
@@ -64,6 +74,8 @@ export interface GigFilters {
   skills?: string;
   deliveryTime?: number;
   status?: string;
+  developer?: string;
+  includeInactive?: boolean;
   sortBy?: 'createdAt' | 'rating' | 'views';
   sortOrder?: 'asc' | 'desc';
   page?: number;
@@ -82,6 +94,7 @@ export class GigService {
     
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
+        // boolean includeInactive should be serialized to string
         queryParams.append(key, value.toString());
       }
     });

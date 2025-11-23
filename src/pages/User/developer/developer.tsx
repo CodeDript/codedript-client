@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './developer.module.css';
 import DeveloperHero from '../../../components/hero/DeveloperHero/DeveloperHero';
+import DeveloperTable from '../../../components/table/developerTabale/DeveloperTable';
 import { useAuth } from '../../../context/AuthContext';
 
 const Developer: React.FC = () => {
@@ -27,6 +28,12 @@ const Developer: React.FC = () => {
         memberSince={user.createdAt}
         walletAddress={user.walletAddress}
       />
+      
+      {/* Developer Dashboard Section */}
+      <div style={{ margin: '3rem auto', maxWidth: '1200px', padding: '0 2rem' }}>
+        <h2>Developer Dashboard</h2>
+        <DeveloperTable developerId={user._id} />
+      </div>
     </div>
   );
 };

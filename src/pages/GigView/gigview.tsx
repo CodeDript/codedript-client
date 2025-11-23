@@ -6,8 +6,6 @@ import HeaderText from '../../components/HeaderText/HeaderText';
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
-import DeveloperTable from '../../components/table/developerTabale/DeveloperTable';
-import UserTable from '../../components/table/userTabale/UserTable';
 import { GigService, type Gig } from '../../api/gigService';
 
 const GigView: React.FC = () => {
@@ -44,19 +42,24 @@ const GigView: React.FC = () => {
     return <div className={styles.container}><p>{error || 'Gig not found'}</p></div>;
   }
 
+  // Defensive checks for developer data
+  const developer = gig.developer || {};
+  const profile = developer.profile || {};
+  const reputation = developer.reputation || { rating: 0, reviewCount: 0 };
+
   return (
     <div className={styles.container}>
          
       <DeveloperHero 
-        userName={gig.developer.profile.name || 'Anonymous'}
-        userImage={gig.developer.profile.avatar}
-        rating={gig.developer.reputation.rating}
-        reviewCount={gig.developer.reputation.reviewCount}
+        userName={profile.name || 'Anonymous'}
+        userImage={profile.avatar || undefined}
+        rating={reputation.rating || 0}
+        reviewCount={reputation.reviewCount || 0}
         userRole="Freelance Developer"
-        skills={gig.developer.profile.skills}
-        bio={gig.developer.profile.bio || gig.description}
-        memberSince={gig.developer.createdAt}
-        walletAddress={gig.developer.walletAddress}
+        skills={Array.isArray(profile.skills) ? profile.skills : []}
+        bio={profile.bio || gig.description || 'No bio available'}
+        memberSince={developer.createdAt || new Date().toISOString()}
+        walletAddress={developer.walletAddress || 'N/A'}
       />
       <div className={styles.container2}>
        
@@ -81,37 +84,27 @@ const GigView: React.FC = () => {
 
       {/* Package Cards Section */}
       <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', margin: '3rem 0' }}>
-        <PackageCard
-          title="Basic"
-          description={["Static analysis", "Basic manual review", "Summary report"]}
-          gameId={1}
-          price="5300 ETH"
-          delivery="14 Days"
-          revisions={1}
-          buttonLabel="Buy & Escrow"
-        />
-        <PackageCard
-          title="Standard"
-          description={["Static analysis", "Basic manual review", "Summary report", "Source file"]}
-          gameId={2}
-          price="7000 ETH"
-          delivery="10 Days"
-          revisions={2}
-          buttonLabel="Buy & Escrow"
-        />
-        <PackageCard
-          title="Premium"
-          description={["Full functional analysis", "Basic manual review", "Summary report", "Source file", "Vector file"]}
-          gameId={3}
-          price="9500 ETH"
-          delivery="07 Days"
-          revisions={3}
-          buttonLabel="Buy & Escrow"
-        />
+        {gig.packages && gig.packages.length > 0 && (
+          gig.packages.map((pkg, index) => (
+            <PackageCard
+              key={index}
+              title={pkg.name || 'Package'}
+              description={(pkg.features || []).slice(0, 5)}
+              gameId={index + 1}
+              price={`${pkg.price || 0} ${pkg.currency || 'USD'}`}
+              delivery={`${pkg.deliveryTime || 0} Days`}
+              revisions={pkg.revisions || 0}
+              buttonLabel="Buy & Escrow"
+            />
+          ))
+        )}
       </div>
-      <UserTable/>
-        <DeveloperTable />
-        <Table />
+      
+      {/* Customer Reviews Section */}
+      <div style={{ margin: '3rem 0' }}>
+        <h2>Customer Reviews</h2>
+        {developer._id && <Table developerId={developer._id} />}
+      </div>
       </div>
   
     </div>

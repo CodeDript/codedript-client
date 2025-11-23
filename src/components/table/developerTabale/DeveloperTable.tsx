@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import styles from './DeveloperTable.module.css';
+import { AgreementService, type Agreement } from '../../../api/agreementService';
+import { GigService, type Gig } from '../../../api/gigService';
+import { useAuth } from '../../../context/AuthContext';
 
 export type TabKey = 'myGigs' | 'activeContract' | 'incomingContract' | 'ongoingContract' | 'transactions';
 
@@ -17,39 +20,6 @@ interface DevRow {
   amount: string;
 }
 
-const sampleData: Record<string, DevRow[]> = {
-  myGigs: [
-    { id: 'g1', order: '0125', title: 'Website Redesign Project', client: 'Tech Startup Inc.', date: 'Jan 01, 2024', status: 'Active', amount: '5000 ETH' },
-    { id: 'g2', order: '0126', title: 'Mobile App Development', client: 'Fintech Solutions', date: 'Jan 15, 2024', status: 'Active', amount: '2500 ETH' },
-    { id: 'g3', order: '0127', title: 'Website Redesign Project', client: 'Tooling Co', date: 'Jan 01, 2024', status: 'Active', amount: '6000 ETH' },
-    { id: 'g4', order: '0128', title: 'UX / UI Design', client: 'Design Studio', date: 'Jan 01, 2024', status: 'Pending', amount: '5000 ETH' },
-    { id: 'g5', order: '0129', title: 'Website Redesign Project', client: 'Tech Startup Inc.', date: 'Feb 07, 2024', status: 'Active', amount: '6700 ETH' },
-    { id: 'g6', order: '0130', title: 'Maintenance & Support', client: 'Service Ltd.', date: 'Feb 16, 2024', status: 'Active', amount: '1200 ETH' },
-    { id: 'g7', order: '0131', title: 'Landing Page', client: 'RetailCo', date: 'Feb 22, 2024', status: 'Pending', amount: '900 ETH' },
-  ],
-
-  activeContract: [
-    { id: 'c1', order: '0145', title: 'API Integration', client: 'Acme Corp', date: 'Feb 01, 2024', status: 'Active', amount: '3000 ETH' },
-    { id: 'c2', order: '0146', title: 'Payments Module', client: 'PayCo', date: 'Feb 09, 2024', status: 'Active', amount: '4200 ETH' },
-    { id: 'c3', order: '0147', title: 'Scaling Improvements', client: 'CloudOps', date: 'Feb 14, 2024', status: 'Active', amount: '5200 ETH' },
-  ],
-
-  incomingContract: [
-    { id: 'i1', order: '0150', title: 'New Landing Page', client: 'RetailCo', date: 'Mar 01, 2024', status: 'Incoming', amount: '1200 ETH' },
-    { id: 'i2', order: '0151', title: 'Marketing Microsite', client: 'AdCo', date: 'Mar 04, 2024', status: 'Incoming', amount: '750 ETH' },
-  ],
-
-  ongoingContract: [
-    { id: 'o1', order: '0160', title: 'Long term support', client: 'Enterprise X', date: 'Dec 10, 2023', status: 'Ongoing', amount: '10000 ETH' },
-    { id: 'o2', order: '0161', title: 'Platform Migration', client: 'LegacyCo', date: 'Nov 11, 2023', status: 'Ongoing', amount: '8700 ETH' },
-  ],
-
-  transactions: [
-    { id: 't1', order: '0200', title: 'Payout', client: 'Tech Startup Inc.', date: 'Mar 17, 2024', status: 'Paid', amount: '5000 ETH' },
-    { id: 't2', order: '0201', title: 'Refund', client: 'RetailCo', date: 'Mar 22, 2024', status: 'Paid', amount: '300 ETH' },
-  ]
-};
-
 const TabLabel: Record<TabKey, string> = {
   myGigs: 'My Gigs',
   activeContract: 'Active Contract',
@@ -58,80 +28,206 @@ const TabLabel: Record<TabKey, string> = {
   transactions: 'Transactions',
 };
 
+// Map tab keys to agreement statuses (for developer role)
+const getStatusesForTab = (tab: TabKey): string[] => {
+  switch (tab) {
+    case 'activeContract':
+      return ['active', 'in_progress', 'escrow_deposit'];
+    case 'incomingContract':
+      return ['pending_developer', 'pending_client', 'pending_signatures'];
+    case 'ongoingContract':
+      return ['awaiting_final_approval'];
+    default:
+      return [];
+  }
+};
+
+// Map agreement status to display status
+const getDisplayStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'draft': 'Draft',
+    'pending_developer': 'Incoming',
+    'pending_client': 'Pending',
+    'pending_signatures': 'Pending',
+    'escrow_deposit': 'Depositing',
+    'active': 'Active',
+    'in_progress': 'Active',
+    'awaiting_final_approval': 'Ongoing',
+    'completed': 'Completed',
+    'cancelled': 'Cancelled',
+    'disputed': 'Disputed'
+  };
+  return statusMap[status] || status;
+};
+
+// Convert Agreement to DevRow for display
+const agreementToRow = (agreement: Agreement): DevRow => {
+  const date = new Date(agreement.createdAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric'
+  });
+
+  return {
+    id: agreement._id,
+    order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
+    title: agreement.project.name,
+    client: agreement.client.profile.name || agreement.client.email,
+    date,
+    status: getDisplayStatus(agreement.status),
+    amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
+  };
+};
+
 const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('myGigs');
   const [rows, setRows] = useState<DevRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const auth = useAuth();
 
-  // Simulate a fetch for each tab (allows wiring developerId later)
   // prevent stale fetches overwriting UI — use a request token
   const requestRef = React.useRef(0);
+
   React.useEffect(() => {
-    const reqId = ++requestRef.current;
-    setLoading(true);
+    // Handle myGigs separately (fetch gigs owned by the logged-in developer)
+    if (activeTab === 'myGigs') {
+      const fetchGigs = async () => {
+        const reqId = ++requestRef.current;
+        setLoading(true);
+        setError(null);
 
-    (async () => {
-      // simulate network latency
-      await new Promise((r) => setTimeout(r, 220));
-      const data = sampleData[activeTab] || [];
+        try {
+          // determine developer id from prop or auth context
+          const loggedInId = developerId || auth.user?._id;
+          if (!loggedInId) {
+            setRows([]);
+            return;
+          }
 
-      if (developerId) {
-        const seed = developerId.split('').reduce((s, ch) => s + ch.charCodeAt(0), 0);
-        const filtered = data.filter((_: DevRow, i: number) => ((i + seed) % 2) === 0);
-        // only update if this is the latest request
+          // fetch gigs owned by the developer, include inactive so owner sees drafts
+          const response = await GigService.getAllGigs({ developer: loggedInId, page: 1, limit: 100, includeInactive: true });
+          if (requestRef.current !== reqId) return;
+
+          const gigs: Gig[] = response.data || [];
+
+          const displayRows = gigs.map(g => ({
+            id: g._id,
+            order: (g.gigId ? g.gigId.toString() : g._id.slice(-4).toUpperCase()),
+            title: g.title,
+            client: g.developer.profile?.name || g.developer.email,
+            date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            status: (g.status || '').replace(/^(.)/, s => s.toUpperCase()),
+            amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
+          }));
+
+          setRows(displayRows);
+        } catch (err) {
+          if (requestRef.current !== reqId) return;
+          console.error('Error fetching gigs:', err);
+          setError('Failed to load gigs');
+          setRows([]);
+        } finally {
+          if (requestRef.current === reqId) setLoading(false);
+        }
+      };
+
+      fetchGigs();
+      return;
+    }
+
+    const fetchAgreements = async () => {
+      const reqId = ++requestRef.current;
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Get the statuses for the current tab
+        const statuses = getStatusesForTab(activeTab);
+        
+        // Fetch agreements for each status
+        const promises = statuses.map(status =>
+          AgreementService.getAllAgreements({ 
+            role: 'developer',
+            status,
+            limit: 100 
+          })
+        );
+
+        const responses = await Promise.all(promises);
+        
+        // only set state if this request is the latest
         if (requestRef.current !== reqId) return;
-        setRows(filtered.length ? filtered : data.slice(0, 5));
-      } else {
+
+        // Combine all agreements from different statuses
+        const allAgreements = responses.flatMap(response => response.data || []);
+        
+        // Convert to display rows
+        const displayRows = allAgreements.map(agreementToRow);
+        
+        setRows(displayRows);
+      } catch (err) {
         if (requestRef.current !== reqId) return;
-        setRows(data);
+        console.error('Error fetching agreements:', err);
+        setError('Failed to load contracts');
+        setRows([]);
+      } finally {
+        if (requestRef.current === reqId) {
+          setLoading(false);
+        }
       }
+    };
 
-      if (requestRef.current !== reqId) return;
-      setLoading(false);
-    })();
+    fetchAgreements();
 
     return () => { /* next call will bump requestRef.current */ };
   }, [activeTab, developerId]);
 
-  // NOTE: Replace the sampleData usage with real API calls when ready.
-  // Example: if (activeTab === 'myGigs') fetch(`/api/dev/${developerId}/gigs`)
-
   return (
     <div className={styles.tableWrapper1}>
-    <div className={styles.tableWrapper}>
-      <div className={styles.tabsBar}>
-        {Object.keys(TabLabel).map((key) => {
-          const k = key as TabKey;
-          return (
-            <button
-              key={k}
-              className={`${styles.tabButton} ${activeTab === k ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(k)}
-            >
-              {TabLabel[k]}
-            </button>
-          );
-        })}
-      </div>
+      <div className={styles.tableWrapper}>
+        <div className={styles.tabsBar}>
+          {Object.keys(TabLabel).map((key) => {
+            const k = key as TabKey;
+            return (
+              <button
+                key={k}
+                className={`${styles.tabButton} ${activeTab === k ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(k)}
+              >
+                {TabLabel[k]}
+              </button>
+            );
+          })}
+        </div>
 
-      <div className={styles.body}>
-        {loading && <div className={styles.loading}>Loading...</div>}
-        {!loading && rows.length === 0 && (<div className={styles.empty}>No items</div>)}
+        <div className={styles.body}>
+          {loading && <div className={styles.loading}>Loading...</div>}
+          {error && <div className={styles.error}>{error}</div>}
+          {!loading && !error && rows.length === 0 && (
+            <div className={styles.empty}>No contracts found</div>
+          )}
 
-        {rows.map((r) => (
-          <div className={styles.row} key={r.id}>
-            <div className={styles.orderCell}><span className={styles.orderNumber}>{r.order}</span></div>
-            <div className={styles.titleCell}>
-              <div className={styles.titleMain}>{r.title}</div>
-              <div className={styles.reviewer}>with {r.client}</div>
+          {!loading && !error && rows.map((r) => (
+            <div className={styles.row} key={r.id}>
+              <div className={styles.orderCell}>
+                <span className={styles.orderNumber}>{r.order}</span>
+              </div>
+              <div className={styles.titleCell}>
+                <div className={styles.titleMain}>{r.title}</div>
+                <div className={styles.reviewer}>with {r.client}</div>
+              </div>
+              <div className={styles.dateCell}>Created {r.date}</div>
+              <div className={styles.statusCell}>
+                <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                  {r.status}
+                </span>
+              </div>
+              <div className={styles.amountCell}>{r.amount}</div>
             </div>
-            <div className={styles.dateCell}>Created {r.date}</div>
-            <div className={styles.statusCell}><span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>{r.status}</span></div>
-            <div className={styles.amountCell}>{r.amount}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
     </div>
   );
 };
