@@ -41,11 +41,12 @@ const PackageCard: React.FC<PackageCardProps> = ({
  
 
   const handleCardClick = () => {
-    navigate(gameData.route);
+    // navigate to the contract processing page and pass package details in state
+    navigate('/contract-processing', { state: { title, description, price, delivery, revisions, image: gameData.image } });
   };
 
   return (
-    <div className={styles.packageCardContainer}>
+    <div className={styles.packageCardContainer} onClick={handleCardClick} role="button" tabIndex={0}>
       {/* Background SVG Border */}
       <svg className={styles.backgroundBorder} xmlns="http://www.w3.org/2000/svg" width="424" height="639" viewBox="0 0 424 639" fill="none" preserveAspectRatio="none">
         <mask id="path-1-inside-1_29_465" fill="white">
@@ -86,7 +87,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
           </ul>
           <div className={styles.buttonAlign2}>
              <div className={styles.buttonAlign}>
-            <Button3Black1 text={buttonLabel} onClick={() => {}} />
+            <Button3Black1 text={buttonLabel} onClick={(e: any) => { e.stopPropagation(); handleCardClick(); }} />
           </div>
         </div>
       </div>
