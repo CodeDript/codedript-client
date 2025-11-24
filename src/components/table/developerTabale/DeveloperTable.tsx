@@ -93,6 +93,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
+  const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -105,24 +106,37 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       const agreement = agreements.find(a => a._id === rowId);
       if (agreement && (agreement as any).blockchain?.transactionHash) {
         setSelectedTxHash((agreement as any).blockchain.transactionHash);
+        setSelectedBlockchainId((agreement as any).blockchain?.agreementId);
       }
       return;
     }
     
-    // Allow clicking for incoming contracts and active contracts
-    if (activeTab !== 'incomingContract' && activeTab !== 'activeContract') return;
-
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
 
-    // Navigate to the ContractView (rules) route and pass the agreement in state
-    navigate('/create-contract/rules', {
-      state: {
-        agreementId: agreement._id,
-        agreement: agreement,
-        isDeveloperView: true
-      }
-    });
+    // For incoming contracts, navigate to payment step (developer sets payment terms)
+    if (activeTab === 'incomingContract') {
+      navigate('/create-contract', {
+        state: {
+          agreementId: agreement._id,
+          agreement: agreement,
+          isDeveloperView: true
+        }
+      });
+      return;
+    }
+
+    // For active contracts, navigate to rules view
+    if (activeTab === 'activeContract') {
+      navigate('/create-contract/rules', {
+        state: {
+          agreementId: agreement._id,
+          agreement: agreement,
+          isDeveloperView: true
+        }
+      });
+      return;
+    }
   };
 
   React.useEffect(() => {
@@ -335,7 +349,11 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       {selectedTxHash && (
         <TransactionModal
           transactionHash={selectedTxHash}
-          onClose={() => setSelectedTxHash(null)}
+          blockchainId={selectedBlockchainId}
+          onClose={() => {
+            setSelectedTxHash(null);
+            setSelectedBlockchainId(undefined);
+          }}
         />
       )}
     </div>

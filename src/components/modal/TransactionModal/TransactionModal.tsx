@@ -4,6 +4,7 @@ import { getTransactionDetails } from '../../../services/ContractService';
 
 interface TransactionModalProps {
   transactionHash: string;
+  blockchainId?: number;
   onClose: () => void;
 }
 
@@ -22,16 +23,18 @@ interface TransactionDetails {
     functionName: string;
     functionSelector?: string;
     developer?: string;
+    ipfsHash?: string;
     inputDataLength?: number;
     hasIPFSHash?: boolean;
   };
 }
 
-const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, onClose }) => {
+const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, blockchainId, onClose }) => {
   const [details, setDetails] = useState<TransactionDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayText, setDisplayText] = useState<string[]>([]);
+  const [ipfsHashFromContract, setIpfsHashFromContract] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTransaction = async () => {
@@ -40,6 +43,19 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, on
       setDisplayText(['> Fetching transaction details...', '> Please wait...']);
 
       try {
+        // Fetch IPFS hash from smart contract if blockchainId is available
+        if (blockchainId !== undefined && blockchainId !== null) {
+          try {
+            const { getAgreementSummary } = await import('../../../services/ContractService');
+            const agreementData = await getAgreementSummary(blockchainId);
+            if (agreementData.docCid) {
+              setIpfsHashFromContract(agreementData.docCid);
+            }
+          } catch (err) {
+            console.warn('Could not fetch IPFS from contract:', err);
+          }
+        }
+
         const txDetails = await getTransactionDetails(transactionHash);
         setDetails(txDetails);
         
@@ -78,7 +94,13 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, on
             output.push(`> Developer:   ${txDetails.decodedInput.developer}`);
           }
           
-          if (txDetails.decodedInput.hasIPFSHash) {
+          // Show IPFS hash from contract first (most reliable), then from decoded input
+          const ipfsToShow = ipfsHashFromContract || txDetails.decodedInput.ipfsHash;
+          
+          if (ipfsToShow) {
+            output.push(`> IPFS Hash:   ${ipfsToShow}`);
+            output.push('> IPFS Link:   https://copper-near-junglefowl-259.mypinata.cloud/ipfs/' + ipfsToShow);
+          } else if (txDetails.decodedInput.hasIPFSHash) {
             output.push('> IPFS Hash:   ✓ Included in transaction');
           }
           

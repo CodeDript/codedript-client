@@ -87,6 +87,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
+  const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
   // use a request id to avoid stale responses overwriting newer state
@@ -98,6 +99,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       const agreement = agreements.find(a => a._id === rowId);
       if (agreement && (agreement as any).blockchain?.transactionHash) {
         setSelectedTxHash((agreement as any).blockchain.transactionHash);
+        setSelectedBlockchainId((agreement as any).blockchain?.agreementId);
       }
       return;
     }
@@ -278,7 +280,11 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       {selectedTxHash && (
         <TransactionModal
           transactionHash={selectedTxHash}
-          onClose={() => setSelectedTxHash(null)}
+          blockchainId={selectedBlockchainId}
+          onClose={() => {
+            setSelectedTxHash(null);
+            setSelectedBlockchainId(undefined);
+          }}
         />
       )}
     </div>

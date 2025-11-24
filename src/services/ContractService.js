@@ -351,10 +351,6 @@ function decodeContractInput(inputData) {
     // Get function selector (first 4 bytes / 8 hex chars after 0x)
     const functionSelector = inputData.slice(0, 10);
     
-    // createAgreement function selector: 0x + first 8 chars
-    // We'll check against known function selectors
-    const CREATE_AGREEMENT_SELECTOR = '0x' + 'e8d0aa7c'; // This is an example - actual selector from your contract
-    
     // For createAgreement: (address _developer, string _projectName, string _docCid, uint256 _totalValue, uint256 _startDate, uint256 _endDate)
     if (inputData.length > 10) {
       try {
@@ -365,15 +361,43 @@ function decodeContractInput(inputData) {
         const developerHex = paramData.slice(24, 64);
         const developer = '0x' + developerHex;
         
-        // Extract other basic info (this is a simplified decode)
-        // For full decode, we'd need to parse the dynamic string offsets
+        // Extract IPFS hash from the input data
+        // The IPFS CID is stored as a string parameter (_docCid)
+        // We need to find it in the encoded data
+        let ipfsHash = null;
+        
+        // Look for typical IPFS hash patterns (Qm... or bafy...)
+        const inputStr = inputData.toLowerCase();
+        
+        // Try to extract IPFS hash by looking for common IPFS CID patterns
+        // Convert hex to ASCII to find the IPFS hash
+        try {
+          // Skip function selector and decode hex to string
+          const hexStr = inputData.slice(10);
+          let decoded = '';
+          for (let i = 0; i < hexStr.length; i += 2) {
+            const byte = parseInt(hexStr.substr(i, 2), 16);
+            if (byte > 31 && byte < 127) { // Printable ASCII characters
+              decoded += String.fromCharCode(byte);
+            }
+          }
+          
+          // Look for IPFS CID patterns (Qm... is base58, bafy... is CIDv1)
+          const ipfsMatch = decoded.match(/\b(Qm[1-9A-HJ-NP-Za-km-z]{44,}|bafy[a-z0-9]{50,})\b/);
+          if (ipfsMatch) {
+            ipfsHash = ipfsMatch[1];
+          }
+        } catch (e) {
+          console.warn('Could not extract IPFS hash:', e);
+        }
         
         return {
           functionName: 'createAgreement',
           functionSelector: functionSelector,
           developer: developer,
+          ipfsHash: ipfsHash,
           inputDataLength: inputData.length,
-          hasIPFSHash: paramData.length > 128, // Approximate check
+          hasIPFSHash: !!ipfsHash,
         };
       } catch (decodeError) {
         console.warn('Could not decode parameters:', decodeError);
@@ -431,6 +455,39 @@ export async function getTransactionDetails(txHash) {
 
     // Decode input data to extract parameters
     const decodedInput = decodeContractInput(txData.input);
+
+    // Try to get IPFS hash from transaction logs (emitted events)
+    let ipfsHashFromLogs = null;
+    if (txReceipt.logs && txReceipt.logs.length > 0) {
+      // Look for IPFS hash in log data
+      for (const log of txReceipt.logs) {
+        if (log.data && log.data.length > 2) {
+          try {
+            const logDataStr = log.data;
+            let decoded = '';
+            for (let i = 2; i < logDataStr.length; i += 2) {
+              const byte = parseInt(logDataStr.substr(i, 2), 16);
+              if (byte > 31 && byte < 127) {
+                decoded += String.fromCharCode(byte);
+              }
+            }
+            const ipfsMatch = decoded.match(/\b(Qm[1-9A-HJ-NP-Za-km-z]{44,}|bafy[a-z0-9]{50,})\b/);
+            if (ipfsMatch) {
+              ipfsHashFromLogs = ipfsMatch[1];
+              break;
+            }
+          } catch (e) {
+            // Continue checking other logs
+          }
+        }
+      }
+    }
+
+    // If IPFS hash found in logs, add it to decoded input
+    if (ipfsHashFromLogs && decodedInput) {
+      decodedInput.ipfsHash = ipfsHashFromLogs;
+      decodedInput.hasIPFSHash = true;
+    }
 
     return {
       hash: txHash,
