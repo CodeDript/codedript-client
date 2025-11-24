@@ -288,8 +288,6 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               style={{
                 cursor: 'pointer'
               }}
-                  cursor: (activeTab === 'incomingContract' || activeTab === 'activeContract') ? 'pointer' : 'default'
-                }}
             >
               {activeTab === 'transactions' ? (
                 // Transactions tab: keep same cell structure as Active Contract
