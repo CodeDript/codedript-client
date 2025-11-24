@@ -218,13 +218,14 @@ export class ChangeRequestService {
    */
   static async approveChangeRequest(
     requestId: string,
-    reason?: string
+    reason?: string,
+    transactionHash?: string
   ): Promise<ApiResponse<{ changeRequest: ChangeRequest; updatedAgreement: any }>> {
     const response = await fetch(`${BACKEND_URL}/change-requests/${requestId}/approve`, {
       method: 'POST',
       credentials: 'include',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ reason, transactionHash }),
     });
 
     if (!response.ok) {

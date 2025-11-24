@@ -5,6 +5,7 @@ import Button3Black1 from '../../../../components/button/Button3Black1/Button3Bl
 import Button2 from '../../../../components/button/Button2/Button2';
 import MilestoneCard from '../../../../components/card/milestoneCard/MilestoneCard';
 import { mockMilestones } from '../../../../constants/milestonesMock';
+import { completeAgreement } from '../../../../services/ContractService';
 
 type Milestone = { title: string; due?: string; amount?: string; status?: string };
 
@@ -24,6 +25,8 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const location = useLocation();
   const agreement = location.state?.agreement;
   const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : mockMilestones);
+  const [isReleasingPayment, setIsReleasingPayment] = useState(false);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalMilestones(milestones && milestones.length ? milestones : mockMilestones);
@@ -35,6 +38,63 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const handleUpdateMilestoneStatus = (index: number | undefined, newStatus: string) => {
     if (typeof index !== 'number') return;
     setLocalMilestones(prev => prev.map((m, i) => i === index ? { ...m, status: newStatus } : m));
+  };
+
+  const handleReleasePayment = async () => {
+    if (!agreement?.blockchain?.agreementId) {
+      alert('This agreement does not have a blockchain ID. Payment can only be released for blockchain agreements.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to release ${value} ${currency} to the developer?\n\nThis will send all escrow funds to the developer and mark the agreement as completed. This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setIsReleasingPayment(true);
+    setReleaseError(null);
+
+    try {
+      console.log('🔓 Releasing payment for agreement:', agreement.blockchain.agreementId);
+      
+      const txResult = await completeAgreement(agreement.blockchain.agreementId);
+      console.log('✅ Payment released successfully:', txResult);
+
+      alert(`Payment released successfully!\n\nTransaction Hash: ${txResult.transactionHash}\n\nThe developer has received ${value} ${currency}.`);
+      
+      // Optionally update agreement status in backend
+      try {
+        const { AgreementService } = await import('../../../../api/agreementService');
+        await AgreementService.completeAgreement(agreement._id);
+        console.log('✅ Agreement marked as completed in database');
+      } catch (backendError) {
+        console.error('Failed to update agreement status in backend:', backendError);
+      }
+
+      // Navigate back to client dashboard
+      navigate('/client');
+    } catch (error: any) {
+      console.error('❌ Error releasing payment:', error);
+      
+      let errorMessage = 'Failed to release payment';
+      if (error.message) {
+        if (error.message.includes('user rejected') || error.message.includes('User denied')) {
+          errorMessage = 'Transaction was rejected in MetaMask';
+        } else if (error.message.includes('Only client can complete')) {
+          errorMessage = 'Only the client who created this agreement can release payment';
+        } else if (error.message.includes('Agreement must be active')) {
+          errorMessage = 'This agreement is not active or has already been completed';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setReleaseError(errorMessage);
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsReleasingPayment(false);
+    }
   };
 
   return (
@@ -119,7 +179,11 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
             <Button2 text="← Previous" onClick={() => { window.history.back(); }} />
           </div>
           <div className={styles.actionsRight}>
-            <Button2 text="View payment" onClick={() => { /* navigate to payment */ }} />
+            <Button2 
+              text={isReleasingPayment ? 'Releasing...' : 'Release Payment'} 
+              onClick={handleReleasePayment}
+              disabled={isReleasingPayment || !agreement?.blockchain?.agreementId}
+            />
             <Button3Black1 
               text="Request Change" 
               onClick={() => navigate('/create-contract/request-change', { state: { agreement } })} 

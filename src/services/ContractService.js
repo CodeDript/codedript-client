@@ -416,6 +416,64 @@ function decodeContractInput(inputData) {
 }
 
 /**
+ * Extract agreement ID from createAgreement transaction receipt
+ * @param {string} txHash - Transaction hash from createAgreement call
+ * @returns {Promise<number>} - The blockchain agreement ID
+ */
+export async function getAgreementIdFromTransaction(txHash) {
+  try {
+    const rpcRequest = getRpcClient({ client, chain: sepolia });
+    
+    // Wait for transaction to be mined with retry logic
+    console.log('⏳ Waiting for transaction to be mined...');
+    let txReceipt = null;
+    let attempts = 0;
+    const maxAttempts = 30; // 30 attempts = ~60 seconds max wait
+    
+    while (!txReceipt && attempts < maxAttempts) {
+      try {
+        txReceipt = await eth_getTransactionReceipt(rpcRequest, { hash: txHash });
+        if (txReceipt) {
+          console.log('✅ Transaction mined in block:', txReceipt.blockNumber);
+          break;
+        }
+      } catch (err) {
+        // Receipt not available yet, continue waiting
+      }
+      
+      // Wait 2 seconds before next attempt
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      attempts++;
+      console.log(`⏳ Waiting for confirmation... (${attempts}/${maxAttempts})`);
+    }
+
+    if (!txReceipt || !txReceipt.logs) {
+      throw new Error('Transaction receipt not found after waiting. Please check the transaction hash on Etherscan.');
+    }
+
+    // AgreementCreated event signature: AgreementCreated(uint256 indexed id, address indexed client, address indexed developer, string projectName, uint256 totalValue, uint256 startDate, uint256 endDate)
+    // The event has the id as the first indexed parameter, which is in topics[1]
+    const agreementCreatedEvent = txReceipt.logs.find(log => 
+      log.topics && log.topics.length >= 2 && log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase()
+    );
+
+    if (!agreementCreatedEvent) {
+      throw new Error('AgreementCreated event not found in transaction logs');
+    }
+
+    // Extract agreement ID from topics[1] (first indexed parameter)
+    const agreementIdHex = agreementCreatedEvent.topics[1];
+    const agreementId = Number(BigInt(agreementIdHex));
+
+    console.log('✅ Extracted blockchain agreement ID:', agreementId);
+    return agreementId;
+  } catch (error) {
+    console.error('Error extracting agreement ID from transaction:', error);
+    throw new Error('Failed to extract agreement ID from blockchain transaction');
+  }
+}
+
+/**
  * Get transaction details by hash using Thirdweb SDK
  * @param {string} txHash - Transaction hash
  */

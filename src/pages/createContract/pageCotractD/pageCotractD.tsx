@@ -417,6 +417,13 @@ const PageCotractD: React.FC = () => {
       const blockchainTxHash = blockchainTx.transactionHash;
       console.log('Transaction hash:', blockchainTxHash);
       
+      // Extract blockchain agreement ID from transaction receipt
+      console.log('📝 Extracting blockchain agreement ID from transaction...');
+      const { getAgreementIdFromTransaction } = await import('../../../services/ContractService');
+      
+      const blockchainAgreementId = await getAgreementIdFromTransaction(blockchainTxHash);
+      console.log('✅ Blockchain agreement ID:', blockchainAgreementId);
+      
       // Step 2: Update agreement status on backend to 'active' with blockchain data
       console.log('📝 Updating agreement status to active...');
       
@@ -424,7 +431,8 @@ const PageCotractD: React.FC = () => {
       const result = await AgreementService.clientApproveAgreement(
         routeState.agreementId,
         blockchainTxHash,
-        ipfsHash
+        ipfsHash,
+        blockchainAgreementId
       );
 
       if (result.success) {

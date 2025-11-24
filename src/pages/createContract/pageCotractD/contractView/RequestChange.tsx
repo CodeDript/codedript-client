@@ -8,17 +8,19 @@ import Button2 from '../../../../components/button/Button2/Button2';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 import { ChangeRequestService, type ChangeRequest as ApiChangeRequest, type AttachedFile } from '../../../../api/changeRequestService';
 import { useAuth } from '../../../../context/AuthContext';
+import { requestChange } from '../../../../services/ContractService';
 
 type ChangeRequest = ApiChangeRequest;
 
 const RequestChange: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const agreement = location.state?.agreement;
-  const agreementId = agreement?._id;
+  const initialAgreement = location.state?.agreement;
+  const agreementId = initialAgreement?._id;
   const { user } = useAuth();
   const userRole = user?.role || 'client';
 
+  const [agreement, setAgreement] = useState<any>(initialAgreement);
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed'>('pending');
   const [showModal, setShowModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ChangeRequest | null>(null);
@@ -60,10 +62,42 @@ const RequestChange: React.FC = () => {
       return () => clearTimeout(timer);
     }
 
-    const fetchChangeRequests = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        // Fetch updated agreement data to get blockchain.agreementId
+        const { AgreementService } = await import('../../../../api/agreementService');
+        const agreementResponse = await AgreementService.getAgreementById(agreementId);
+        if (agreementResponse.success && agreementResponse.data) {
+          let updatedAgreement = agreementResponse.data;
+          const blockchainData = (updatedAgreement as any).blockchain;
+          
+          // If blockchain transaction exists but no agreementId, extract it
+          if (blockchainData?.transactionHash && !blockchainData?.agreementId) {
+            console.log('⚠️ Blockchain ID missing. Extracting from transaction:', blockchainData.transactionHash);
+            try {
+              const ContractService = await import('../../../../services/ContractService') as any;
+              const extractedId = await ContractService.getAgreementIdFromTransaction(blockchainData.transactionHash);
+              console.log('✅ Extracted blockchain agreement ID:', extractedId);
+              
+              // Save it to backend
+              await AgreementService.extractBlockchainId(agreementId, extractedId);
+              console.log('✅ Saved blockchain agreement ID to database');
+              
+              // Update local agreement object
+              (updatedAgreement as any).blockchain.agreementId = extractedId;
+            } catch (extractError) {
+              console.error('❌ Failed to extract blockchain ID:', extractError);
+            }
+          }
+          
+          setAgreement(updatedAgreement);
+          console.log('✅ Agreement loaded with blockchain ID:', (updatedAgreement as any).blockchain?.agreementId);
+        }
+
+        // Fetch change requests
         const response = await ChangeRequestService.getChangeRequestsByAgreement(agreementId);
         
         if (response.success) {
@@ -73,21 +107,21 @@ const RequestChange: React.FC = () => {
           setConfirmedRequests(confirmed);
         }
       } catch (err: any) {
-        console.error('Failed to fetch change requests:', err);
+        console.error('Failed to fetch data:', err);
         if (err.message.includes('Authentication') || err.message.includes('log in')) {
           setError('Session expired. Redirecting to login...');
           setTimeout(() => {
             navigate('/login', { state: { from: location.pathname } });
           }, 2000);
         } else {
-          setError(err.message || 'Failed to load change requests');
+          setError(err.message || 'Failed to load data');
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchChangeRequests();
+    fetchData();
   }, [agreementId, user, navigate, location.pathname]);
 
   const handleConfirmClick = (request: ChangeRequest) => {
@@ -140,8 +174,57 @@ const RequestChange: React.FC = () => {
     const request = confirmedRequests.find(req => req._id === requestId);
     if (!request) return;
 
+    const amount = request.confirmation?.amount || 0;
+    const currency = request.confirmation?.currency || 'ETH';
+    const blockchainId = agreement?.blockchain?.agreementId;
+
+    console.log('🔍 Agreement blockchain data:', {
+      hasBlockchain: !!agreement?.blockchain,
+      agreementId: blockchainId,
+      transactionHash: agreement?.blockchain?.transactionHash,
+      fullBlockchainObject: agreement?.blockchain
+    });
+
+    // Check if we should process on blockchain
+    const shouldUseBlockchain = blockchainId && currency === 'ETH';
+
+    if (!shouldUseBlockchain && currency === 'ETH') {
+      console.warn('⚠️ No blockchain ID found. Agreement blockchain data:', agreement?.blockchain);
+      const proceedOffChain = window.confirm(
+        'This agreement was not created on the blockchain. The change request will be processed off-chain only. Do you want to continue?'
+      );
+      if (!proceedOffChain) return;
+    }
+
+    if (currency !== 'ETH' && blockchainId) {
+      alert('Currently only ETH payments are supported for blockchain transactions. This will be processed off-chain.');
+    }
+
     try {
-      const response = await ChangeRequestService.approveChangeRequest(requestId);
+      let txHash = undefined;
+
+      // Step 1: Call smart contract if blockchain ID exists and currency is ETH
+      if (shouldUseBlockchain) {
+        const changeDescription = `${request.title}: ${request.description}`;
+        const amountEth = amount.toString();
+
+        console.log('Calling smart contract requestChange:', {
+          blockchainId,
+          changeDescription,
+          amountEth
+        });
+
+        const txResult = await requestChange(blockchainId, changeDescription, amountEth);
+        console.log('Blockchain transaction successful:', txResult);
+        txHash = txResult.transactionHash;
+      }
+
+      // Step 2: Update backend to mark as approved
+      const response = await ChangeRequestService.approveChangeRequest(
+        requestId,
+        undefined,
+        txHash
+      );
       
       if (response.success) {
         setConfirmedRequests(prev =>
@@ -149,13 +232,22 @@ const RequestChange: React.FC = () => {
             req._id === requestId ? response.data.changeRequest : req
           )
         );
-        const amount = request.confirmation?.amount || 0;
-        const currency = request.confirmation?.currency || 'ETH';
-        alert(`Request approved! Contract price updated by ${amount} ${currency}`);
+        
+        if (txHash) {
+          alert(`Request approved! Contract price updated by ${amount} ${currency}.\nBlockchain transaction: ${txHash}`);
+        } else {
+          alert(`Request approved! Contract price updated by ${amount} ${currency}.\n(Off-chain only)`);
+        }
       }
     } catch (err: any) {
       console.error('Failed to approve request:', err);
-      alert(err.message || 'Failed to approve request');
+      if (err.message?.includes('user rejected')) {
+        alert('Transaction cancelled by user');
+      } else if (err.message?.includes('insufficient funds')) {
+        alert('Insufficient funds to complete the transaction');
+      } else {
+        alert(err.message || 'Failed to approve request');
+      }
     }
   };
 
