@@ -48,4 +48,4 @@ const Developer: React.FC = () => {
   );
 };
 
-export default Developer;
+export default Developer;

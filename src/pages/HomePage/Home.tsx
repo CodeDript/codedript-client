@@ -95,6 +95,23 @@ agreements " />
           </div>
         </div>
       </section>
+      {/* Promotional Strip */}
+      <section className={styles.promoStrip} aria-label="Earn with us promotional">
+        <div className={styles.promoInner}>
+          <div className={styles.promoText}>
+            <div className={styles.topBtn}>
+              <Button5W text="View more →" onClick={() => console.log('View more')} />
+            </div>
+
+            <h2>Earn With Us, Become a Developer</h2>
+            <p>Eliminate payment disputes, reduce fees, and build trust with blockchain-powered agreements</p>
+
+            <div className={styles.bottomBtn}>
+              <Button1 text="Join " onClick={() => console.log('Join now')} />
+            </div>
+          </div>
+        </div>
+      </section>
 
      
       

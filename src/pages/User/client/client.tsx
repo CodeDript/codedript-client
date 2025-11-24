@@ -20,4 +20,4 @@ const Client: React.FC = () => {
   );
 };
 
-export default Client;
+export default Client;
