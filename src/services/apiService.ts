@@ -39,11 +39,32 @@ export class ApiService {
   /**
    * POST request
    */
-  static async post<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  static async post<T>(endpoint: string, data: any, options?: { headers?: Record<string, string> }): Promise<ApiResponse<T>> {
+    const isFormData = data instanceof FormData;
+    
+    const token = localStorage.getItem('authToken');
+    const headers: HeadersInit = {
+      ...(token && { Authorization: `Bearer ${token}` })
+    };
+
+    // Don't set Content-Type for FormData (browser will set it with boundary)
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    // Merge custom headers if provided (but skip Content-Type for FormData)
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        if (!(isFormData && key.toLowerCase() === 'content-type')) {
+          headers[key] = value;
+        }
+      });
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data)
+      headers,
+      body: isFormData ? data : JSON.stringify(data)
     });
 
     if (!response.ok) {

@@ -16,10 +16,14 @@ const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setD
   const [category, setCategory] = useState<string>(formData?.gigData?.category || '');
 
   useEffect(() => {
-    // keep context in sync when category changes
+    // keep context in sync when category or receiving address changes
     const newGigData = { ...(formData.gigData || {}), category } as any;
-    updateFormData({ gigData: newGigData });
-  }, [category]);
+    updateFormData({ 
+      gigData: newGigData,
+      developerReceivingAddress
+    });
+  }, [category, developerReceivingAddress]);
+  
   return (
     <>
       <h4 className={styles.sectionTitle}>Gig Details</h4>

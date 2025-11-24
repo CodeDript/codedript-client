@@ -168,4 +168,92 @@ export class GigService {
     const response = await ApiService.get<any>(endpoint);
     return response as PaginatedResponse<Gig[]>;
   }
+
+  /**
+   * Create new gig
+   */
+  static async createGig(gigData: {
+    title: string;
+    description: string;
+    category: string;
+    subcategory?: string;
+    receivingAddress?: string;
+    requirements?: string;
+    packages?: Array<{
+      name: 'Basic' | 'Standard' | 'Premium';
+      price: number;
+      currency: string;
+      deliveryTime: number;
+      revisions: number;
+      features: string[];
+    }>;
+    pricingType?: 'fixed' | 'hourly';
+    pricingAmount?: number;
+    pricingCurrency?: string;
+    deliveryTime?: number;
+    revisions?: number;
+    tags?: string[];
+    status?: 'draft' | 'active' | 'paused' | 'inactive';
+    images?: File[];
+  }): Promise<{ success: boolean; data?: Gig; message?: string }> {
+    try {
+      const formData = new FormData();
+      
+      // Add basic fields
+      formData.append('title', gigData.title);
+      formData.append('description', gigData.description);
+      formData.append('category', gigData.category);
+      
+      if (gigData.subcategory) formData.append('subcategory', gigData.subcategory);
+      if (gigData.receivingAddress) formData.append('receivingAddress', gigData.receivingAddress);
+      if (gigData.requirements) formData.append('requirements', gigData.requirements);
+      
+      // Add packages as JSON string
+      if (gigData.packages && gigData.packages.length > 0) {
+        formData.append('packages', JSON.stringify(gigData.packages));
+      }
+      
+      // Add pricing
+      if (gigData.pricingType) formData.append('pricingType', gigData.pricingType);
+      if (gigData.pricingAmount) formData.append('pricingAmount', gigData.pricingAmount.toString());
+      if (gigData.pricingCurrency) formData.append('pricingCurrency', gigData.pricingCurrency);
+      
+      // Add delivery and revisions
+      if (gigData.deliveryTime) formData.append('deliveryTime', gigData.deliveryTime.toString());
+      if (gigData.revisions !== undefined) formData.append('revisions', gigData.revisions.toString());
+      
+      // Add tags
+      if (gigData.tags && gigData.tags.length > 0) {
+        gigData.tags.forEach(tag => formData.append('tags', tag));
+      }
+      
+      // Add status
+      if (gigData.status) formData.append('status', gigData.status);
+      
+      // Add images
+      if (gigData.images && gigData.images.length > 0) {
+        gigData.images.forEach((image) => {
+          formData.append('images', image);
+        });
+      }
+      
+      const response = await ApiService.post<any>('/gigs', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      return {
+        success: true,
+        data: response.data,
+        message: response.message || 'Gig created successfully'
+      };
+    } catch (error: any) {
+      console.error('Error creating gig:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Failed to create gig'
+      };
+    }
+  }
 }
