@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
 
-export type TabKey = 'activeContract' | 'incomingContract' | 'ongoingContract';
+export type TabKey = 'activeContract' | 'transactions' | 'ongoingContract';
 
 interface UserTableProps {
   userId?: string;
@@ -17,11 +17,12 @@ interface DevRow {
   date: string;
   status: string;
   amount: string;
+  transactionHash?: string;
 }
 
 const TabLabel: Record<TabKey, string> = {
   activeContract: 'Active Contract',
-  incomingContract: 'Incoming Contract',
+  transactions: 'Transactions',
   ongoingContract: 'Ongoing Contract',
 };
 
@@ -30,8 +31,8 @@ const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
     case 'activeContract':
       return ['active', 'in_progress', 'escrow_deposit'];
-    case 'incomingContract':
-      return ['pending_signatures']; // Ready for client to sign
+    case 'transactions':
+      return []; // Transactions are fetched separately
     case 'ongoingContract':
       return ['pending_developer', 'pending_client', 'awaiting_final_approval']; // Pending developer setup OR pending client review
     default:
@@ -76,6 +77,8 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   };
 };
 
+// (Using agreements with blockchain.transactionHash for Transactions tab)
+
 const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('activeContract');
   const [rows, setRows] = useState<DevRow[]>([]);
@@ -109,41 +112,62 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   };
 
   React.useEffect(() => {
-    const fetchAgreements = async () => {
+    const fetchData = async () => {
       const reqId = ++requestRef.current;
       setLoading(true);
       setError(null);
 
       try {
-        // Get the statuses for the current tab
-        const statuses = getStatusesForTab(activeTab);
-        
-        // Fetch agreements for each status
-        const promises = statuses.map(status =>
-          AgreementService.getAllAgreements({ 
+        // Handle transactions tab separately: fetch agreements that have blockchain transaction hashes
+        if (activeTab === 'transactions') {
+          const resp = await AgreementService.getAllAgreements({ 
             role: 'client',
-            status,
-            limit: 100 
-          })
-        );
+            limit: 200
+          });
 
-        const responses = await Promise.all(promises);
-        
-        // only set state if this request is the latest
-        if (requestRef.current !== reqId) return;
+          if (requestRef.current !== reqId) return;
 
-        // Combine all agreements from different statuses
-        const allAgreements = responses.flatMap(response => response.data || []);
-        
-        // Convert to display rows
-        const displayRows = allAgreements.map(agreementToRow);
-        
-        setAgreements(allAgreements);
-        setRows(displayRows);
+          const allAgreements = resp.data || [];
+          // keep only agreements that have a blockchain transaction hash
+          const txAgreements = allAgreements.filter(a => (a as any).blockchain && (a as any).blockchain.transactionHash);
+          const displayRows = txAgreements.map(a => ({
+            ...agreementToRow(a),
+            transactionHash: (a as any).blockchain.transactionHash
+          }));
+
+          setAgreements(txAgreements as Agreement[]);
+          setRows(displayRows);
+        } else {
+          // Get the statuses for the current tab
+          const statuses = getStatusesForTab(activeTab);
+          
+          // Fetch agreements for each status
+          const promises = statuses.map(status =>
+            AgreementService.getAllAgreements({ 
+              role: 'client',
+              status,
+              limit: 100 
+            })
+          );
+
+          const responses = await Promise.all(promises);
+          
+          // only set state if this request is the latest
+          if (requestRef.current !== reqId) return;
+
+          // Combine all agreements from different statuses
+          const allAgreements = responses.flatMap(response => response.data || []);
+          
+          // Convert to display rows
+          const displayRows = allAgreements.map(agreementToRow);
+          
+          setAgreements(allAgreements);
+          setRows(displayRows);
+        }
       } catch (err) {
         if (requestRef.current !== reqId) return;
-        console.error('Error fetching agreements:', err);
-        setError('Failed to load contracts');
+        console.error('Error fetching data:', err);
+        setError(activeTab === 'transactions' ? 'Failed to load transactions' : 'Failed to load contracts');
         setRows([]);
       } finally {
         if (requestRef.current === reqId) {
@@ -152,7 +176,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       }
     };
 
-    fetchAgreements();
+    fetchData();
 
     // no-op cleanup: future requests will have a different reqId
     return () => { /* keep requestRef.current as latest */ };
@@ -196,20 +220,44 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
                   cursor: isClickable ? 'pointer' : 'default'
                 }}
               >
-                <div className={styles.orderCell}>
-                  <span className={styles.orderNumber}>{r.order}</span>
-                </div>
-                <div className={styles.titleCell}>
-                  <div className={styles.titleMain}>{r.title}</div>
-                  <div className={styles.reviewer}>with {r.client}</div>
-                </div>
-                <div className={styles.dateCell}>Created {r.date}</div>
-                <div className={styles.statusCell}>
-                  <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
-                    {r.status}
-                  </span>
-                </div>
-                <div className={styles.amountCell}>{r.amount}</div>
+                {activeTab === 'transactions' ? (
+                  // Transactions tab: keep same cell structure as Active Contract
+                  // but show truncated Tx hash in the title and hide status visually
+                  <>
+                    <div className={styles.orderCell}>
+                      <span className={styles.orderNumber}>Tx</span>
+                    </div>
+                    <div className={styles.titleCell}>
+                      <div className={styles.titleMain}>
+                        {r.transactionHash ? `${r.transactionHash.slice(0, 6)}...${r.transactionHash.slice(-4)}` : 'N/A'}
+                      </div>
+                      <div className={styles.reviewer}></div>
+                    </div>
+                    <div className={styles.dateCell}>Created {r.date}</div>
+                    <div className={styles.statusCell}>
+                      <span className={styles.pill} style={{ visibility: 'hidden' }}>hidden</span>
+                    </div>
+                    <div className={styles.amountCell}>{r.amount}</div>
+                  </>
+                ) : (
+                  // Other tabs: show full details
+                  <>
+                    <div className={styles.orderCell}>
+                      <span className={styles.orderNumber}>{r.order}</span>
+                    </div>
+                    <div className={styles.titleCell}>
+                      <div className={styles.titleMain}>{r.title}</div>
+                      <div className={styles.reviewer}>with {r.client}</div>
+                    </div>
+                    <div className={styles.dateCell}>Created {r.date}</div>
+                    <div className={styles.statusCell}>
+                      <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                        {r.status}
+                      </span>
+                    </div>
+                    <div className={styles.amountCell}>{r.amount}</div>
+                  </>
+                )}
               </div>
             );
           })}
