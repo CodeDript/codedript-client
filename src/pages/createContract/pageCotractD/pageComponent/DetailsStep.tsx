@@ -6,11 +6,11 @@ type Props = {
   setTitle: (v: string) => void;
   description: string;
   setDescription: (v: string) => void;
-  developerId: string;
-  setDeveloperId: (v: string) => void;
+  developerReceivingAddress: string;
+  setDeveloperReceivingAddress: (v: string) => void;
 };
 
-const DetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription, developerId, setDeveloperId }) => {
+const DetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription, developerReceivingAddress, setDeveloperReceivingAddress }) => {
   return (
     <>
       <h4 className={styles.sectionTitle}>Project Details</h4>
@@ -27,8 +27,8 @@ const DetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescrip
         </div>
 
         <div className={styles.formRow}>
-          <label className={styles.zenThin}>Developer ID :</label>
-          <input value={developerId} onChange={(e)=>setDeveloperId(e.target.value)} />
+          <label className={styles.zenThin}>Developer Receiving Ethereum Address :</label>
+          <input value={developerReceivingAddress} onChange={(e)=>setDeveloperReceivingAddress(e.target.value)} placeholder="Enter receiving address (e.g. 0x...)" />
         </div>
       </section>
     </>

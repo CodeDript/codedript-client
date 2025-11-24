@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { initZoomControl } from './utils/helpers'
+import { AgreementProvider } from './context/AgreementContext'
 
 // Initialize zoom control
 initZoomControl();
@@ -12,6 +13,8 @@ if (!container) throw new Error('Root element not found')
 
 createRoot(container).render(
   <React.StrictMode>
-    <App />
+    <AgreementProvider>
+      <App />
+    </AgreementProvider>
   </React.StrictMode>
 )

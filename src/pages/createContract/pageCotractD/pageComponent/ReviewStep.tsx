@@ -6,7 +6,8 @@ type Milestone = { title: string; amount: string };
 type Props = {
   title: string;
   description: string;
-  developerId: string;
+  developerWallet?: string;
+  developerReceivingAddress?: string;
   clientName: string;
   clientEmail: string;
   value: string;
@@ -14,9 +15,19 @@ type Props = {
   deadline: string;
   milestones: Milestone[];
   filesNote: string;
+  isClientView?: boolean;
 };
 
-const ReviewStep: React.FC<Props> = ({ title, description, developerId, clientName, clientEmail, value, currency, deadline, milestones, filesNote }) => {
+const ReviewStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, clientName, clientEmail, value, currency, deadline, milestones, filesNote, isClientView }) => {
+  const [approved, setApproved] = React.useState(false);
+
+  // Expose approved state to parent via callback
+  React.useEffect(() => {
+    if (isClientView && (window as any).__setClientApproved) {
+      (window as any).__setClientApproved(approved);
+    }
+  }, [approved, isClientView]);
+
   return (
     <>
       <h4 className={styles.sectionTitle}>Review</h4>
@@ -57,7 +68,7 @@ const ReviewStep: React.FC<Props> = ({ title, description, developerId, clientNa
 
             <div style={{flex:1}}>
               <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Developer</div>
-              <div className={`${styles.reviewValueLarge}`}>{developerId}</div>
+              <div className={`${styles.reviewValueLarge}`}>{developerReceivingAddress || developerWallet || 'No receiving address'}</div>
             </div>
           </div>
         </div>
@@ -82,6 +93,20 @@ const ReviewStep: React.FC<Props> = ({ title, description, developerId, clientNa
           <div style={{marginTop:20}}>
             <div className={styles.juraTitle} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Additional Terms</div>
             <div style={{padding:10, border:'1px solid #eee', marginTop:6, fontFamily:'Jura', fontSize:'16px'}} className={styles.reviewValue}>{filesNote}</div>
+          </div>
+        )}
+
+        {isClientView && (
+          <div style={{marginTop:16, display:'flex', gap:8, alignItems:'center'}}>
+            <input 
+              id="clientApprove" 
+              type="checkbox" 
+              checked={approved} 
+              onChange={(e) => setApproved(e.target.checked)} 
+            />
+            <label htmlFor="clientApprove" style={{fontFamily:'Jura'}}>
+              I approve these payment terms and agree to pay {value} {currency} to the smart contract escrow
+            </label>
           </div>
         )}
       </div>

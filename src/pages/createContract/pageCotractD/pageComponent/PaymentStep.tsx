@@ -7,7 +7,8 @@ type Milestone = { title: string; amount: string };
 type Props = {
   title: string;
   description: string;
-  developerId: string;
+  developerWallet?: string;
+  developerReceivingAddress?: string;
   clientName: string;
   clientEmail: string;
   value: string;
@@ -20,15 +21,18 @@ type Props = {
   setMilestones: (m: Milestone[]) => void;
   paymentConfirmed: boolean;
   setPaymentConfirmed: (b: boolean) => void;
+  isDeveloperView?: boolean;
 };
 
-const PaymentStep: React.FC<Props> = ({ title, description, developerId, clientName, clientEmail, value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed }) => {
+const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, clientName, clientEmail, value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed, isDeveloperView }) => {
   const updateMilestone = (idx: number, field: 'title'|'amount', v: string) => {
     const next = milestones.map((m,i)=> i===idx ? {...m, [field]: v} : m);
     setMilestones(next);
   };
 
   const addMilestone = () => setMilestones([...milestones, {title:'New Milestone', amount: '0'}]);
+
+  const confirmButtonText = isDeveloperView ? 'I accept these payment terms and milestones' : 'I confirm the developer and accept these payment terms';
 
   return (
     <>
@@ -69,7 +73,7 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerId, clientN
 
           <div style={{flex:1}}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Developer</div>
-            <div className={`${styles.reviewValueLarge}`}>{developerId}</div>
+            <div className={`${styles.reviewValueLarge}`}>{developerReceivingAddress || developerWallet || 'No receiving address'}</div>
           </div>
         </div>
       </div>
@@ -119,7 +123,7 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerId, clientN
 
         <div style={{marginTop:16, display:'flex', gap:8, alignItems:'center'}}>
           <input id="confirmDev" type="checkbox" checked={paymentConfirmed} onChange={(e)=> setPaymentConfirmed(e.target.checked)} />
-          <label htmlFor="confirmDev" style={{fontFamily:'Jura'}}>I confirm the developer and accept these payment terms</label>
+          <label htmlFor="confirmDev" style={{fontFamily:'Jura'}}>{confirmButtonText}</label>
         </div>
       </div>
     </>

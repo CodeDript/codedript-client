@@ -183,9 +183,10 @@ export async function createAgreementComplete(
       throw new Error(`Client wallet is invalid: ${err?.message || String(err)}`);
     }
 
-    // Set startDate to current time + 60 seconds buffer to avoid contract revert
+    // Set startDate to current time + 5 minutes buffer to avoid contract revert
     // (contract requires: _startDate >= block.timestamp)
-    const startDate = Math.floor(Date.now() / 1000) + 60; // Current + 60 sec buffer
+    // 5-minute buffer accounts for MetaMask confirmation time and transaction mining
+    const startDate = Math.floor(Date.now() / 1000) + 300; // Current + 5 min buffer
     const endDate = formData.deadline 
       ? Math.floor(new Date(formData.deadline).getTime() / 1000)
       : Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000); // Default 30 days

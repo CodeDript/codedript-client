@@ -17,12 +17,25 @@ import partiesIcon from '../../../assets/contractSvg/parties.svg';
 import paymentIcon from '../../../assets/contractSvg/paymentTerms.svg';
 import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
+import { useAgreement } from '../../../context/AgreementContext';
 
 const PageCotractD: React.FC = () => {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('Website Redesign Project');
   const [description, setDescription] = useState('Describe the project scope, deliverables, and requirement');
-  const [developerId, setDeveloperId] = useState('0x23356745e898');
+  // developerWallet: the developer's profile wallet (used to fetch developer info)
+  const [developerWallet, setDeveloperWallet] = useState('');
+  // developerReceivingAddress: the Ethereum address the client will send payments to
+  const [developerReceivingAddress, setDeveloperReceivingAddress] = useState('');
+  // gigId: optional ID used to fetch the gig and obtain developer wallet
+  const [gigId, setGigId] = useState<string | undefined>(undefined);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  // Track if viewing as developer (from incoming agreement) - disables previous button
+  const [isDeveloperView, setIsDeveloperView] = useState(false);
+  // Track if viewing as client (from pending agreement) - shows review step
+  const [isClientView, setIsClientView] = useState(false);
+
+  const { uploadFilesToIPFS, updateFormData, formData, createAgreement } = useAgreement();
 
   // Parties
   const [clientName, setClientName] = useState('Devid kamron');
@@ -39,25 +52,140 @@ const PageCotractD: React.FC = () => {
 
   // Files & terms
   const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
-  // uploaded files
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  // uploaded files - use context files
+  const uploadedFiles = formData.uploadedFiles;
+  const setUploadedFiles = (files: File[]) => {
+    updateFormData({ uploadedFiles: files });
+  };
   // payment confirmation (developer accepted contract)
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [isAcceptingAgreement, setIsAcceptingAgreement] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
+  const [clientApproved, setClientApproved] = useState(false);
+  const [isApprovingAgreement, setIsApprovingAgreement] = useState(false);
+
+  // Allow ReviewStep to update clientApproved state
+  React.useEffect(() => {
+    (window as any).__setClientApproved = setClientApproved;
+    return () => {
+      delete (window as any).__setClientApproved;
+    };
+  }, []);
 
   const { state: routeState } = useLocation();
 
   useEffect(() => {
     if (routeState) {
-      // populate from passed package data when available
-      if (routeState.title) setTitle(routeState.title);
-      if (routeState.description) setDescription(Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description);
-      if (routeState.developerId) setDeveloperId(routeState.developerId);
+      // Check if this is a client viewing a pending agreement for review
+      if (routeState.agreementId && routeState.isClientView) {
+        setIsClientView(true);
+        setStep(5); // Go directly to review step
+        
+        // Load agreement details from route state
+        if (routeState.agreement) {
+          const agreement = routeState.agreement;
+          setTitle(agreement.project?.name || '');
+          setDescription(agreement.project?.description || '');
+          setValue(agreement.financials?.totalValue?.toString() || '0');
+          setCurrency(agreement.financials?.currency || 'ETH');
+          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
+          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
+          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
+          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
+          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
+          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
+          setFilesNote(agreement.terms?.additionalTerms || '');
+          
+          // Load milestones if available
+          if (agreement.milestones && agreement.milestones.length > 0) {
+            const loadedMilestones = agreement.milestones.map((m: any) => ({
+              title: m.title || '',
+              amount: m.financials?.value?.toString() || m.amount?.toString() || '0'
+            }));
+            setMilestones(loadedMilestones);
+          }
+        }
+      }
+      // Check if this is a developer viewing an incoming agreement
+      else if (routeState.agreementId && routeState.isDeveloperView) {
+        setIsDeveloperView(true);
+        setStep(4); // Go directly to payment step
+        
+        // Load agreement details from route state
+        if (routeState.agreement) {
+          const agreement = routeState.agreement;
+          setTitle(agreement.project?.name || '');
+          setDescription(agreement.project?.description || '');
+          setValue(agreement.financials?.totalValue?.toString() || '0');
+          setCurrency(agreement.financials?.currency || 'ETH');
+          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
+          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
+          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
+          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
+          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
+          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
+          
+          // Load milestones if available
+          if (agreement.milestones && agreement.milestones.length > 0) {
+            const loadedMilestones = agreement.milestones.map((m: any) => ({
+              title: m.title || '',
+              amount: m.amount?.toString() || '0'
+            }));
+            setMilestones(loadedMilestones);
+          }
+        }
+      } else {
+        // populate from passed package data when available (client flow)
+        if (routeState.title) setTitle(routeState.title);
+        if (routeState.description) setDescription(Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description);
+        // if gigId is provided, the component will fetch the gig to obtain developer details
+        if (routeState.gigId) setGigId(routeState.gigId);
+        // routeState.developerId represents the developer's profile wallet (used to fetch profile) - legacy support
+        if (routeState.developerId) setDeveloperWallet(routeState.developerId);
+        // routeState.developerWallet is the preferred way to pass developer wallet from gig flow
+        if (routeState.developerWallet) setDeveloperWallet(routeState.developerWallet);
+        // Get client info from route state (passed from contract processing after MetaMask connection)
+        if (routeState.clientWallet) setClientWallet(routeState.clientWallet);
+        if (routeState.clientName) setClientName(routeState.clientName);
+        if (routeState.clientEmail) setClientEmail(routeState.clientEmail);
+        // do NOT auto-fill the receiving address from the developer profile; client must enter it
+      }
     }
+    
+    // Sync context with route data
+    updateFormData({
+      projectName: routeState?.title || title,
+      projectDescription: routeState?.description 
+        ? (Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description)
+        : description,
+      gigId: routeState?.gigId || gigId,
+      developerWallet: routeState?.developerWallet || routeState?.developerId || developerWallet,
+      clientWallet: routeState?.clientWallet || clientWallet,
+      clientName: routeState?.clientName || clientName,
+      clientEmail: routeState?.clientEmail || clientEmail
+    });
   }, [routeState]);
 
   const navigate = useNavigate();
 
-  const next = () => setStep((s) => Math.min(5, s + 1));
+  const next = async () => {
+    // If moving from step 3 (FilesTermsStep) to step 4, upload files to IPFS first
+    if (step === 3 && uploadedFiles.length > 0) {
+      setIsUploadingFiles(true);
+      const result = await uploadFilesToIPFS();
+      setIsUploadingFiles(false);
+      
+      if (!result.success) {
+        alert(`File upload failed: ${result.error || 'Unknown error'}`);
+        return; // Don't proceed to next step
+      }
+      
+      console.log('Files uploaded to IPFS. CIDs:', result.cids);
+    }
+    
+    setStep((s) => Math.min(5, s + 1));
+  };
+  
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
   const navigateBack = () => {
@@ -65,28 +193,60 @@ const PageCotractD: React.FC = () => {
     navigate(-1);
   };
 
-  const handleCreateContract = () => {
-    // assemble payload (placeholder - replace with real API call)
-    const payload = {
-      title,
-      description,
-      developerId,
+  const handleCreateContract = async () => {
+    console.log('handleCreateContract called');
+    
+    // Upload files to IPFS first if any files are present
+    let uploadedCids: string[] = [];
+    if (uploadedFiles.length > 0) {
+      console.log('Uploading files to IPFS...');
+      setIsUploadingFiles(true);
+      const result = await uploadFilesToIPFS();
+      setIsUploadingFiles(false);
+      
+      if (!result.success) {
+        alert(`File upload failed: ${result.error || 'Unknown error'}`);
+        return; // Don't proceed if upload failed
+      }
+      
+      console.log('Files uploaded to IPFS. CIDs:', result.cids);
+      uploadedCids = result.cids;
+    }
+    
+    // Update context with ALL form data including uploaded CIDs
+    updateFormData({
+      projectName: title,
+      projectDescription: description,
       clientName,
       clientEmail,
       clientWallet,
-      value,
+      developerReceivingAddress,
+      totalValue: value,
       currency,
       deadline,
       milestones,
       filesNote,
-      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
-    };
+      uploadedFilesCids: uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids
+    });
+    
+    // Wait for context to update
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // Create agreement via API with the uploaded CIDs
+    console.log('Creating agreement with CIDs:', uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
+    setIsUploadingFiles(true);
+    const result = await createAgreement(uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
+    setIsUploadingFiles(false);
+    
+    if (!result.success) {
+      alert(`Agreement creation failed: ${result.error || 'Unknown error'}`);
+      return;
+    }
+    
+    console.log('Agreement created successfully with ID:', result.agreementId);
 
-    console.log('Create contract payload', payload);
-    // TODO: call real api to create contract
-
-    // advance the flow to the Payment Terms step (step 4)
-    setStep(4);
+    // Navigate to client profile page after successful agreement creation
+    navigate('/client');
   };
 
   const handleFinish = () => {
@@ -94,7 +254,8 @@ const PageCotractD: React.FC = () => {
     const payload = {
       title,
       description,
-      developerId,
+      developerWallet,
+      developerReceivingAddress,
       clientName,
       clientEmail,
       clientWallet,
@@ -109,15 +270,200 @@ const PageCotractD: React.FC = () => {
     navigate('/create-contract/rules', { state: payload });
   };
 
+  const handleDeveloperAccept = async () => {
+    if (!routeState?.agreementId) {
+      setAcceptError('Agreement ID not found');
+      return;
+    }
+
+    setIsAcceptingAgreement(true);
+    setAcceptError(null);
+
+    try {
+      const { AgreementService } = await import('../../../api/agreementService');
+      
+      const result = await AgreementService.developerAcceptAgreement(
+        routeState.agreementId,
+        {
+          totalValue: parseFloat(value) || 0,
+          currency: currency
+        },
+        milestones
+      );
+
+      if (result.success) {
+        console.log('✅ Developer accepted agreement successfully');
+        // Navigate to developer profile
+        navigate('/developer');
+      } else {
+        setAcceptError('Failed to accept agreement');
+      }
+    } catch (error: any) {
+      console.error('Error accepting agreement:', error);
+      setAcceptError(error.message || 'Failed to accept agreement');
+    } finally {
+      setIsAcceptingAgreement(false);
+    }
+  };
+
+  const handleClientApprove = async () => {
+    if (!routeState?.agreementId) {
+      setAcceptError('Agreement ID not found');
+      return;
+    }
+
+    if (!routeState?.agreement) {
+      setAcceptError('Agreement details not found');
+      return;
+    }
+
+    setIsApprovingAgreement(true);
+    setAcceptError(null);
+
+    try {
+      const agreement = routeState.agreement;
+      
+      // Step 1: Create agreement on blockchain with developer-assigned payment terms
+      console.log('📝 Creating agreement on blockchain...');
+      
+      // Import blockchain service
+      const { createAgreement: createBlockchainAgreement } = await import('../../../services/ContractService');
+      const { uploadFileToIPFS } = await import('../../../services/agreementCreationService');
+      
+      // Prepare agreement data for blockchain
+      const developerWalletAddr = (agreement.developerInfo?.walletAddress || '').toLowerCase().trim();
+      const projectName = agreement.project?.name || title;
+      const totalValueEth = agreement.financials?.totalValue?.toString() || value;
+      
+      // Upload metadata to IPFS if not already uploaded
+      let ipfsHash = agreement.documents?.contractPdf?.ipfsHash || '';
+      
+      if (!ipfsHash) {
+        console.log('No IPFS hash found, creating metadata document...');
+        const metadataJson = {
+          projectName: projectName,
+          projectDescription: agreement.project?.description || description,
+          clientName: agreement.clientInfo?.name || clientName,
+          clientEmail: agreement.clientInfo?.email || clientEmail,
+          developerName: agreement.developerInfo?.name || developerName,
+          developerEmail: agreement.developerInfo?.email || developerEmail,
+          totalValue: totalValueEth,
+          currency: agreement.financials?.currency || currency,
+          milestones: milestones,
+          createdAt: new Date().toISOString(),
+        };
+        
+        const metadataBlob = new Blob([JSON.stringify(metadataJson, null, 2)], {
+          type: 'application/json',
+        });
+        const metadataFile = new File([metadataBlob], 'agreement-metadata.json', {
+          type: 'application/json',
+        });
+        
+        const metadataUpload = await uploadFileToIPFS(metadataFile);
+        ipfsHash = metadataUpload.ipfsHash;
+        console.log('✅ Metadata uploaded to IPFS:', ipfsHash);
+      }
+      
+      // Set dates for blockchain
+      // Use 5-minute buffer to account for MetaMask confirmation time and transaction mining
+      const startDate = Math.floor(Date.now() / 1000) + 300; // Current + 5 min buffer
+      const endDate = agreement.project?.expectedEndDate 
+        ? Math.floor(new Date(agreement.project.expectedEndDate).getTime() / 1000)
+        : Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000); // Default 30 days
+      
+      console.log('Blockchain params:', {
+        developer: developerWalletAddr,
+        projectName,
+        docCid: ipfsHash,
+        totalValue: totalValueEth,
+        startDate,
+        endDate
+      });
+      
+      // Create agreement on blockchain (this will charge ETH from client's wallet)
+      const blockchainTx = await createBlockchainAgreement(
+        developerWalletAddr,
+        projectName,
+        ipfsHash,
+        totalValueEth,
+        startDate,
+        endDate
+      );
+      
+      console.log('✅ Blockchain transaction submitted:', blockchainTx);
+      
+      if (!blockchainTx.transactionHash) {
+        throw new Error('Transaction hash not found in blockchain response');
+      }
+      
+      const blockchainTxHash = blockchainTx.transactionHash;
+      console.log('Transaction hash:', blockchainTxHash);
+      
+      // Step 2: Update agreement status on backend to 'active' with blockchain data
+      console.log('📝 Updating agreement status to active...');
+      
+      const { AgreementService } = await import('../../../api/agreementService');
+      const result = await AgreementService.clientApproveAgreement(
+        routeState.agreementId,
+        blockchainTxHash,
+        ipfsHash
+      );
+
+      if (result.success) {
+        console.log('✅ Agreement approved and activated successfully');
+        console.log('✅ ETH transferred to smart contract escrow');
+        // Navigate to client profile
+        navigate('/client');
+      } else {
+        setAcceptError('Failed to approve agreement');
+      }
+    } catch (error: any) {
+      console.error('Error approving agreement:', error);
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to approve agreement';
+      
+      if (error.message) {
+        if (error.message.includes('user rejected') || error.message.includes('User denied')) {
+          errorMessage = 'Transaction was rejected in MetaMask';
+        } else if (error.message.includes('insufficient funds')) {
+          errorMessage = 'Insufficient ETH balance to complete transaction';
+        } else if (error.message.includes('Start date must be in the future')) {
+          errorMessage = 'Start date validation failed. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setAcceptError(errorMessage);
+    } finally {
+      setIsApprovingAgreement(false);
+    }
+  };
+
   // handlers used by UI of the action buttons
   const leftButtonText = step === 1 ? '← Previous' : '← Previous';
-  const leftHandler = step === 1 ? navigateBack : prev;
+  const leftIsDisabled = isDeveloperView || isClientView; // Disable previous button for developer/client view
+  const leftHandler = leftIsDisabled ? () => {} : (step === 1 ? navigateBack : prev);
 
-  const rightIsCreate = step === 3; // files & terms
-  const rightIsDisabled = step === 4 && paymentConfirmed; // payment step locked until confirm
+  const rightIsCreate = step === 3 && !isDeveloperView && !isClientView; // files & terms (client flow only)
+  const rightIsDeveloperAccept = step === 4 && isDeveloperView; // developer accepting (enabled when paymentConfirmed)
+  const rightIsClientApprove = step === 5 && isClientView; // client approving (enabled when clientApproved)
+  const rightIsDisabled = (step === 4 && !paymentConfirmed && isDeveloperView) || (step === 4 && !paymentConfirmed && !isDeveloperView) || (step === 5 && !clientApproved && isClientView); // disabled until checkbox confirmed
+  
   // when on the final review step (5), finish should navigate to rules page
-  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : (step === 5 ? handleFinish : next));
-  const rightText = rightIsCreate ? 'Create Contract' : (step < 5 ? 'Next' : 'Finish');
+  const rightHandler = rightIsCreate 
+    ? handleCreateContract 
+    : (rightIsDeveloperAccept && paymentConfirmed
+      ? handleDeveloperAccept 
+      : (rightIsClientApprove && clientApproved
+        ? handleClientApprove
+        : (rightIsDisabled ? () => {} : (step === 5 && !isClientView ? handleFinish : next))));
+  
+  const rightText = isUploadingFiles || isAcceptingAgreement || isApprovingAgreement
+    ? (rightIsCreate ? 'Creating Agreement...' : (isAcceptingAgreement ? 'Accepting Agreement...' : (isApprovingAgreement ? 'Processing Payment...' : 'Uploading Files...')))
+    : (rightIsCreate ? 'Create Contract' : (rightIsDeveloperAccept ? 'Accept & Submit to Client' : (rightIsClientApprove ? 'Approve & Pay' : (step < 5 ? 'Next' : 'Finish'))));
 
   return (
     <div className={styles.container}>
@@ -169,6 +515,12 @@ const PageCotractD: React.FC = () => {
 
           <div className={authStyles.cardBadge} aria-hidden>Create Project</div>
           
+          {acceptError && (
+            <div style={{padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00'}}>
+              {acceptError}
+            </div>
+          )}
+          
           <div className={styles.cardBody}>
             {step === 1 && (
               <DetailsStep
@@ -176,8 +528,8 @@ const PageCotractD: React.FC = () => {
                 setTitle={setTitle}
                 description={description}
                 setDescription={setDescription}
-                developerId={developerId}
-                setDeveloperId={setDeveloperId}
+                developerReceivingAddress={developerReceivingAddress}
+                setDeveloperReceivingAddress={setDeveloperReceivingAddress}
               />
             )}
             {step === 2 && (
@@ -190,7 +542,9 @@ const PageCotractD: React.FC = () => {
                 setClientWallet={setClientWallet}
                 developerName={developerName}
                 developerEmail={developerEmail}
-                developerWallet={developerId}
+                developerWallet={developerWallet}
+                gigId={gigId}
+                developerReceivingAddress={developerReceivingAddress}
               />
             )}
             {step === 3 && (
@@ -200,7 +554,8 @@ const PageCotractD: React.FC = () => {
               <PaymentStep
                 title={title}
                 description={description}
-                developerId={developerId}
+                developerWallet={developerWallet}
+                developerReceivingAddress={developerReceivingAddress}
                 clientName={clientName}
                 clientEmail={clientEmail}
                 value={value}
@@ -213,6 +568,7 @@ const PageCotractD: React.FC = () => {
                 setMilestones={setMilestones}
                 paymentConfirmed={paymentConfirmed}
                 setPaymentConfirmed={setPaymentConfirmed}
+                isDeveloperView={isDeveloperView}
               />
             )}
             
@@ -220,7 +576,8 @@ const PageCotractD: React.FC = () => {
               <ReviewStep
                 title={title}
                 description={description}
-                developerId={developerId}
+                developerWallet={developerWallet}
+                developerReceivingAddress={developerReceivingAddress}
                 clientName={clientName}
                 clientEmail={clientEmail}
                 value={value}
@@ -228,12 +585,18 @@ const PageCotractD: React.FC = () => {
                 deadline={deadline}
                 milestones={milestones}
                 filesNote={filesNote}
+                isClientView={isClientView}
               />
             )}
             <div className={styles.actions}>
-              <div className={styles.leftBtn}><Button2 text={leftButtonText} onClick={() => leftHandler()} /></div>
-              <div className={styles.rightBtn} style={{ opacity: rightIsDisabled ? 0.6 : 1 }} aria-disabled={rightIsDisabled}>
-                <Button3Black1 text={rightText} onClick={() => rightHandler()} />
+              <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
+                <Button2 text={leftButtonText} onClick={() => leftHandler()} />
+              </div>
+              <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isUploadingFiles ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isUploadingFiles}>
+                <Button3Black1 
+                  text={isUploadingFiles ? 'Uploading Files...' : rightText} 
+                  onClick={() => rightHandler()} 
+                />
               </div>
             </div>
 

@@ -3,6 +3,8 @@ import styles from "./NavBar.module.css";
 import UserIconDropdown from '../dropedown/UserIcondd';
 import { useNavigate, useLocation } from "react-router-dom";
 import Button2 from '../../components/button/Button2/Button2';
+import { useAgreement } from '../../context/AgreementContext';
+import { connectWallet } from '../../services/ContractService';
 
 type NavBarProps = {
     isLoggedIn: boolean;
@@ -39,6 +41,38 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
 
     const handleDropDownClick = () => setIsDropdownOpen((prev) => !prev);
     const handleDropdownClose = () => setIsDropdownOpen(false);
+
+    const { updateFormData } = useAgreement();
+
+    const handleConnectButton = async () => {
+        // If user not authenticated, open login modal
+        const stored = localStorage.getItem('user');
+        if (!stored) {
+            onLoginClick();
+            return;
+        }
+
+        try {
+            // Connect MetaMask via ContractService
+            const account = await connectWallet();
+            const walletAddress = account?.address;
+            const userData = JSON.parse(stored);
+
+            // Store client info into AgreementContext
+            updateFormData({
+                clientWallet: walletAddress,
+                clientName: userData?.profile?.name || userData?.email?.split('@')[0] || 'Client',
+                clientEmail: userData?.email || ''
+            });
+
+            // Do not navigate — keep the user on the same page
+            console.log('Navbar: connected wallet', walletAddress);
+        } catch (err: any) {
+            console.error('Navbar connect wallet error:', err);
+            // fallback to open login modal
+            onLoginClick();
+        }
+    };
 
     return (
         <div className={styles.NavBar}>
@@ -106,7 +140,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
             <div className={styles.desktopProfileSection}>
                 {!isLoggedIn ? (
                     <div className={styles.buttonSection}>
-                   <Button2 text="Connect Wallet" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }} />
+                   <Button2 text="Connect Wallet" onClick={async () => { await handleConnectButton(); setIsMobileMenuOpen(false); }} />
                     </div>
                 ) : (
                     <div className={styles.profileContainer}>
