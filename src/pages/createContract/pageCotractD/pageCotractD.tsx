@@ -63,6 +63,8 @@ const PageCotractD: React.FC = () => {
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [clientApproved, setClientApproved] = useState(false);
   const [isApprovingAgreement, setIsApprovingAgreement] = useState(false);
+  // Store project files IPFS hash for download functionality
+  const [projectFilesIpfsHash, setProjectFilesIpfsHash] = useState<string>('');
 
   // Allow ReviewStep to update clientApproved state
   React.useEffect(() => {
@@ -124,6 +126,13 @@ const PageCotractD: React.FC = () => {
           setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
           setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
           setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
+          
+          // Extract project files IPFS hash for download functionality
+          if (agreement.documents?.projectFiles && agreement.documents.projectFiles.length > 0) {
+            setProjectFilesIpfsHash(agreement.documents.projectFiles[0].ipfsHash || '');
+          } else if (agreement.documents?.contractPdf?.ipfsHash) {
+            setProjectFilesIpfsHash(agreement.documents.contractPdf.ipfsHash);
+          }
           
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
@@ -569,6 +578,7 @@ const PageCotractD: React.FC = () => {
                 paymentConfirmed={paymentConfirmed}
                 setPaymentConfirmed={setPaymentConfirmed}
                 isDeveloperView={isDeveloperView}
+                projectFilesIpfsHash={projectFilesIpfsHash}
               />
             )}
             

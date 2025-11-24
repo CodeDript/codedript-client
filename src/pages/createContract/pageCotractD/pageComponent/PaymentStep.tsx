@@ -22,9 +22,10 @@ type Props = {
   paymentConfirmed: boolean;
   setPaymentConfirmed: (b: boolean) => void;
   isDeveloperView?: boolean;
+  projectFilesIpfsHash?: string;
 };
 
-const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, clientName, clientEmail, value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed, isDeveloperView }) => {
+const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, clientName, clientEmail, value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed, isDeveloperView, projectFilesIpfsHash }) => {
   const updateMilestone = (idx: number, field: 'title'|'amount', v: string) => {
     const next = milestones.map((m,i)=> i===idx ? {...m, [field]: v} : m);
     setMilestones(next);
@@ -33,6 +34,18 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, dev
   const addMilestone = () => setMilestones([...milestones, {title:'New Milestone', amount: '0'}]);
 
   const confirmButtonText = isDeveloperView ? 'I accept these payment terms and milestones' : 'I confirm the developer and accept these payment terms';
+
+  // Handle download project files - navigate to Pinata gateway
+  const handleDownloadFiles = () => {
+    if (!projectFilesIpfsHash) {
+      alert('No project files available to download');
+      return;
+    }
+    
+    // Pinata gateway URL format: copper-near-junglefowl-259.mypinata.cloud/ipfs/yourCID
+    const gatewayUrl = `https://copper-near-junglefowl-259.mypinata.cloud/ipfs/${projectFilesIpfsHash}`;
+    window.open(gatewayUrl, '_blank');
+  };
 
   return (
     <>
@@ -79,9 +92,18 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, dev
       </div>
 
       <div style={{marginTop:12}}>
-        <div className={styles.downloadPill} role="button" tabIndex={0} onClick={(e)=>e.preventDefault()} onKeyDown={(e)=>{ if(e.key==='Enter') e.preventDefault(); }}>
+        <div 
+          className={styles.downloadPill} 
+          role="button" 
+          tabIndex={0} 
+          onClick={handleDownloadFiles} 
+          onKeyDown={(e)=>{ if(e.key==='Enter') handleDownloadFiles(); }}
+          style={{ cursor: projectFilesIpfsHash ? 'pointer' : 'not-allowed', opacity: projectFilesIpfsHash ? 1 : 0.5 }}
+        >
           <img src={downloadIcon} alt="download" className={styles.downloadIcon} />
-          <a className={styles.downloadLink} href="#" onClick={(e)=>e.preventDefault()}>Download project files</a>
+          <span className={styles.downloadLink}>
+            {projectFilesIpfsHash ? 'Download project files' : 'No files available'}
+          </span>
         </div>
       </div>
 
