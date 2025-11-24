@@ -5,6 +5,8 @@ import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
 import { GigService, type Gig } from '../../api/gigService';
 import { ApiService } from '../../services/apiService';
+import { useNavigate } from 'react-router-dom';
+import Button1 from '../../components/button/Button1/Button1';
 
 const AllGigs: React.FC = () => {
   const [gigs, setGigs] = useState<Gig[]>([]);
@@ -12,6 +14,7 @@ const AllGigs: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -53,7 +56,8 @@ const AllGigs: React.FC = () => {
           });
         }
 
-        setGigs(fetchedGigs);
+        // append when loading additional pages
+        setGigs((prev) => (page === 1 ? fetchedGigs : [...prev, ...fetchedGigs]));
         setHasMore(response.pagination.page < response.pagination.totalPages);
         setError(null);
       } catch (err) {
@@ -115,6 +119,24 @@ const AllGigs: React.FC = () => {
             ) : (
               <p>No gigs available at the moment.</p>
             )}
+          </div>
+          {/* load more and create gig buttons */}
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:20, gap:12}}>
+            <div>
+              {(hasMore || isLoading) && (
+                <button
+                  className={styles.loadMoreBtn}
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={isLoading || !hasMore}
+                  style={{padding:'10px 18px', borderRadius:8, border:'1px solid #111', background:'#111', color:'#fff', cursor: isLoading || !hasMore ? 'not-allowed' : 'pointer'}}
+                >
+                  {isLoading ? 'Loading...' : 'Load more'}
+                </button>
+              )}
+            </div>
+            <div>
+              <Button1 text="Create Gige" onClick={() => navigate('/create-gig')} />
+            </div>
           </div>
         </div>
       </section>

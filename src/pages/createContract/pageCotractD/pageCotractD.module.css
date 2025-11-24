@@ -80,6 +80,34 @@
   opacity: 1;
 }
 
+/* numeric step badge and label for Create Gig flow */
+.stepNumber {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  color: #8a8a8a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.stepLabel {
+  font-family: 'Jura', sans-serif;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* active state: invert badge and label for contrast */
+.stepItem.active .stepNumber {
+  background: transparent;
+  color: #fff;
+}
+.stepItem.active .stepLabel { color: #fff; }
 .progress {
   height: 16px;
   background: #dcdcdc;
