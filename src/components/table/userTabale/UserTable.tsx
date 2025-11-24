@@ -104,24 +104,36 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       return;
     }
     
-    // Only allow clicking for ongoing contracts tab
-    if (activeTab !== 'ongoingContract') return;
-    
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
-    
-    // Only navigate if status is pending_client (ready for client review after developer set payment terms)
-    if (agreement.status === 'pending_client') {
-      // Navigate to contract review page
-      navigate('/create-contract', {
+
+    // For active contracts, navigate to rules view (client can view and request changes)
+    if (activeTab === 'activeContract') {
+      navigate('/create-contract/rules', {
         state: {
           agreementId: agreement._id,
           agreement: agreement,
           isClientView: true
         }
       });
+      return;
     }
-    // pending_developer agreements are visible but not clickable (waiting for developer)
+    
+    // For ongoing contracts tab
+    if (activeTab === 'ongoingContract') {
+      // Only navigate if status is pending_client (ready for client review after developer set payment terms)
+      if (agreement.status === 'pending_client') {
+        // Navigate to contract review page
+        navigate('/create-contract', {
+          state: {
+            agreementId: agreement._id,
+            agreement: agreement,
+            isClientView: true
+          }
+        });
+      }
+      // pending_developer agreements are visible but not clickable (waiting for developer)
+    }
   };
 
   React.useEffect(() => {

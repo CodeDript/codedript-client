@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './RequestChange.module.css';
 import authStyles from '../../../../components/auth/AuthForm.module.css';
@@ -6,85 +6,89 @@ import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
 import heroOutlinedown from '../../../../assets/Login/cardBackgrounddown.svg';
 import Button2 from '../../../../components/button/Button2/Button2';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
+import { ChangeRequestService, type ChangeRequest as ApiChangeRequest, type AttachedFile } from '../../../../api/changeRequestService';
+import { useAuth } from '../../../../context/AuthContext';
 
-type AttachedFile = {
-  name: string;
-  size: number;
-  url: string;
-  type?: string;
-};
-
-type ChangeRequest = {
-  id: string;
-  title: string;
-  description: string;
-  status: 'pending' | 'confirmed' | 'approved' | 'rejected';
-  amount?: string;
-  details?: string;
-  createdBy: 'client' | 'developer';
-  attachedFiles?: AttachedFile[];
-};
+type ChangeRequest = ApiChangeRequest;
 
 const RequestChange: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const agreement = location.state?.agreement;
+  const agreementId = agreement?._id;
+  const { user } = useAuth();
+  const userRole = user?.role || 'client';
 
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed'>('pending');
   const [showModal, setShowModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ChangeRequest | null>(null);
   const [modalDetails, setModalDetails] = useState('');
   const [modalAmount, setModalAmount] = useState('');
+  const [modalCurrency, setModalCurrency] = useState('ETH');
 
   // New change request form state (client-only)
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDescription, setNewRequestDescription] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const userRole = 'client'; // TODO: Get from auth context
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   // View details modal
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [viewingRequest, setViewingRequest] = useState<ChangeRequest | null>(null);
 
-  // Mock data - replace with actual data from API/context
-  const [pendingRequests, setPendingRequests] = useState<ChangeRequest[]>([
-    {
-      id: 'REQ001',
-      title: 'Add new feature module',
-      description: 'Client requests additional authentication module',
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: [
-        { name: 'requirements-document.pdf', size: 245000, url: '#', type: 'application/pdf' },
-        { name: 'feature-specs.docx', size: 128000, url: '#', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
-      ],
-    },
-    {
-      id: 'REQ002',
-      title: 'Update design specs',
-      description: 'Change color scheme and typography',
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: [
-        { name: 'design-mockup.png', size: 1200000, url: '#', type: 'image/png' },
-      ],
-    },
-  ]);
+  // Data from backend
+  const [pendingRequests, setPendingRequests] = useState<ChangeRequest[]>([]);
+  const [confirmedRequests, setConfirmedRequests] = useState<ChangeRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [confirmedRequests, setConfirmedRequests] = useState<ChangeRequest[]>([
-    {
-      id: 'REQ003',
-      title: 'Database optimization',
-      description: 'Optimize queries and add indexes',
-      status: 'confirmed',
-      amount: '500',
-      details: 'Will implement caching layer and optimize slow queries',
-      createdBy: 'developer',
-      attachedFiles: [
-        { name: 'performance-report.pdf', size: 340000, url: '#', type: 'application/pdf' },
-      ],
-    },
-  ]);
+  // Fetch change requests on mount
+  useEffect(() => {
+    if (!agreementId) {
+      setError('No agreement found. Please navigate from the contract view.');
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
+      setError('Please log in to view change requests.');
+      setLoading(false);
+      // Redirect to login after 2 seconds
+      const timer = setTimeout(() => {
+        navigate('/login', { state: { from: location.pathname } });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+
+    const fetchChangeRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await ChangeRequestService.getChangeRequestsByAgreement(agreementId);
+        
+        if (response.success) {
+          const pending = response.data.filter(req => req.status === 'pending');
+          const confirmed = response.data.filter(req => req.status === 'confirmed');
+          setPendingRequests(pending);
+          setConfirmedRequests(confirmed);
+        }
+      } catch (err: any) {
+        console.error('Failed to fetch change requests:', err);
+        if (err.message.includes('Authentication') || err.message.includes('log in')) {
+          setError('Session expired. Redirecting to login...');
+          setTimeout(() => {
+            navigate('/login', { state: { from: location.pathname } });
+          }, 2000);
+        } else {
+          setError(err.message || 'Failed to load change requests');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChangeRequests();
+  }, [agreementId, user, navigate, location.pathname]);
 
   const handleConfirmClick = (request: ChangeRequest) => {
     setSelectedRequest(request);
@@ -93,48 +97,84 @@ const RequestChange: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleIgnore = (requestId: string) => {
-    setPendingRequests(prev => prev.filter(req => req.id !== requestId));
-    // TODO: Call API to update request status
+  const handleIgnore = async (requestId: string) => {
+    try {
+      await ChangeRequestService.ignoreChangeRequest(requestId);
+      setPendingRequests(prev => prev.filter(req => req._id !== requestId));
+      alert('Change request ignored');
+    } catch (err: any) {
+      console.error('Failed to ignore request:', err);
+      alert(err.message || 'Failed to ignore request');
+    }
   };
 
-  const handleModalConfirm = () => {
-    if (!selectedRequest || !modalAmount) return;
+  const handleModalConfirm = async () => {
+    if (!selectedRequest || !modalAmount) {
+      alert('Please enter an amount');
+      return;
+    }
 
-    const confirmedRequest: ChangeRequest = {
-      ...selectedRequest,
-      status: 'confirmed',
-      amount: modalAmount,
-      details: modalDetails,
-    };
+    try {
+      const amount = parseFloat(modalAmount);
+      const response = await ChangeRequestService.confirmChangeRequest(
+        selectedRequest._id,
+        amount,
+        modalCurrency,
+        modalDetails
+      );
 
-    setConfirmedRequests(prev => [...prev, confirmedRequest]);
-    setPendingRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
-    setShowModal(false);
-    setSelectedRequest(null);
-    // TODO: Call API to save confirmed request
+      if (response.success) {
+        setConfirmedRequests(prev => [...prev, response.data]);
+        setPendingRequests(prev => prev.filter(req => req._id !== selectedRequest._id));
+        setShowModal(false);
+        setSelectedRequest(null);
+        alert('Change request confirmed successfully');
+      }
+    } catch (err: any) {
+      console.error('Failed to confirm request:', err);
+      alert(err.message || 'Failed to confirm request');
+    }
   };
 
-  const handleClientApprove = (requestId: string) => {
-    const request = confirmedRequests.find(req => req.id === requestId);
+  const handleClientApprove = async (requestId: string) => {
+    const request = confirmedRequests.find(req => req._id === requestId);
     if (!request) return;
 
-    setConfirmedRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: 'approved' as const } : req
-      )
-    );
-    // TODO: Call API to update contract price and request status
-    alert(`Request approved! Contract price will be updated by ${request.amount} ETH`);
+    try {
+      const response = await ChangeRequestService.approveChangeRequest(requestId);
+      
+      if (response.success) {
+        setConfirmedRequests(prev =>
+          prev.map(req =>
+            req._id === requestId ? response.data.changeRequest : req
+          )
+        );
+        const amount = request.confirmation?.amount || 0;
+        const currency = request.confirmation?.currency || 'ETH';
+        alert(`Request approved! Contract price updated by ${amount} ${currency}`);
+      }
+    } catch (err: any) {
+      console.error('Failed to approve request:', err);
+      alert(err.message || 'Failed to approve request');
+    }
   };
 
-  const handleClientReject = (requestId: string) => {
-    setConfirmedRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: 'rejected' as const } : req
-      )
-    );
-    // TODO: Call API to update request status
+  const handleClientReject = async (requestId: string) => {
+    try {
+      const response = await ChangeRequestService.rejectChangeRequest(requestId);
+      
+      if (response.success) {
+        setConfirmedRequests(prev =>
+          prev.map(req =>
+            req._id === requestId ? response.data : req
+          )
+        );
+        alert('Change request rejected');
+      }
+    } catch (err: any) {
+      console.error('Failed to reject request:', err);
+      alert(err.message || 'Failed to reject request');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,35 +188,58 @@ const RequestChange: React.FC = () => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmitNewRequest = () => {
+  const handleSubmitNewRequest = async () => {
     if (!newRequestTitle.trim() || !newRequestDescription.trim()) {
       alert('Please fill in both title and description');
       return;
     }
 
-    // Convert File objects to AttachedFile format
-    const convertedFiles: AttachedFile[] = attachedFiles.map(file => ({
-      name: file.name,
-      size: file.size,
-      url: URL.createObjectURL(file), // Create temporary URL for preview
-      type: file.type,
-    }));
+    if (!agreementId) {
+      alert('No agreement found');
+      return;
+    }
 
-    const newRequest: ChangeRequest = {
-      id: `REQ${String(pendingRequests.length + 1 + confirmedRequests.length).padStart(3, '0')}`,
-      title: newRequestTitle,
-      description: newRequestDescription,
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: convertedFiles.length > 0 ? convertedFiles : undefined,
-    };
+    try {
+      setUploadingFiles(true);
 
-    setPendingRequests(prev => [...prev, newRequest]);
-    setNewRequestTitle('');
-    setNewRequestDescription('');
-    setAttachedFiles([]);
-    // TODO: Call API to create new request with file uploads to IPFS/Supabase
-    alert('Change request submitted successfully!');
+      // Upload files to IPFS first
+      const uploadedFiles: AttachedFile[] = [];
+      for (const file of attachedFiles) {
+        const response = await ChangeRequestService.uploadFileToIPFS(file);
+        if (response.success) {
+          uploadedFiles.push(response.data);
+        }
+      }
+
+      console.log('Uploaded files:', uploadedFiles);
+      console.log('Creating change request with:', {
+        agreementId,
+        title: newRequestTitle,
+        description: newRequestDescription,
+        attachedFiles: uploadedFiles
+      });
+
+      // Create change request with IPFS hashes
+      const response = await ChangeRequestService.createChangeRequest(
+        agreementId,
+        newRequestTitle,
+        newRequestDescription,
+        uploadedFiles // Always pass the array, even if empty
+      );
+
+      if (response.success) {
+        setPendingRequests(prev => [...prev, response.data]);
+        setNewRequestTitle('');
+        setNewRequestDescription('');
+        setAttachedFiles([]);
+        alert('Change request submitted successfully!');
+      }
+    } catch (err: any) {
+      console.error('Failed to submit request:', err);
+      alert(err.message || 'Failed to submit request');
+    } finally {
+      setUploadingFiles(false);
+    }
   };
 
   const handleRowClick = (request: ChangeRequest) => {
@@ -244,6 +307,22 @@ const RequestChange: React.FC = () => {
           </div>
 
           <div className={authStyles.authBody}>
+
+        {/* Loading State */}
+        {loading && (
+          <div className={styles.loadingState}>Loading change requests...</div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className={styles.errorState}>
+            <p>Error: {error}</p>
+            <button onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
 
         {/* Client-only: New Change Request Form */}
         {userRole === 'client' && (
@@ -315,7 +394,10 @@ const RequestChange: React.FC = () => {
             </div>
 
             <div className={styles.submitBtnWrapper}>
-              <Button3Black1 text="Submit Request" onClick={handleSubmitNewRequest} />
+              <Button3Black1 
+                text={uploadingFiles ? "Uploading..." : "Submit Request"} 
+                onClick={handleSubmitNewRequest} 
+              />
             </div>
           </div>
         )}
@@ -356,8 +438,8 @@ const RequestChange: React.FC = () => {
                   </tr>
                 ) : (
                   pendingRequests.map(request => (
-                    <tr key={request.id} className={styles.clickableRow}>
-                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.id}</td>
+                    <tr key={request._id} className={styles.clickableRow}>
+                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.requestId}</td>
                       <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
                       <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.description}</td>
                       <td className={styles.actionsCell}>
@@ -374,7 +456,7 @@ const RequestChange: React.FC = () => {
                           className={styles.ignoreBtn}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleIgnore(request.id);
+                            handleIgnore(request._id);
                           }}
                         >
                           Ignore
@@ -411,11 +493,11 @@ const RequestChange: React.FC = () => {
                   </tr>
                 ) : (
                   confirmedRequests.map(request => (
-                    <tr key={request.id} className={styles.clickableRow}>
-                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.id}</td>
+                    <tr key={request._id} className={styles.clickableRow}>
+                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.requestId}</td>
                       <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
-                      <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.details || request.description}</td>
-                      <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.amount} ETH</td>
+                      <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.confirmation?.details || request.description}</td>
+                      <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.confirmation?.amount} {request.confirmation?.currency || 'ETH'}</td>
                       <td className={styles.statusCell} onClick={() => handleRowClick(request)}>
                         <span className={styles[`status${request.status}`]}>{request.status}</span>
                       </td>
@@ -426,7 +508,7 @@ const RequestChange: React.FC = () => {
                               className={styles.approveBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleClientApprove(request.id);
+                                handleClientApprove(request._id);
                               }}
                             >
                               Approve
@@ -435,7 +517,7 @@ const RequestChange: React.FC = () => {
                               className={styles.rejectBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleClientReject(request.id);
+                                handleClientReject(request._id);
                               }}
                             >
                               Reject
@@ -470,7 +552,7 @@ const RequestChange: React.FC = () => {
             <div className={styles.detailsBody}>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Request ID:</span>
-                <span className={styles.detailValue}>{viewingRequest.id}</span>
+                <span className={styles.detailValue}>{viewingRequest.requestId}</span>
               </div>
 
               <div className={styles.detailRow}>
@@ -483,17 +565,17 @@ const RequestChange: React.FC = () => {
                 <span className={styles.detailValue}>{viewingRequest.description}</span>
               </div>
 
-              {viewingRequest.details && (
+              {viewingRequest.confirmation?.details && (
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Additional Details:</span>
-                  <span className={styles.detailValue}>{viewingRequest.details}</span>
+                  <span className={styles.detailValue}>{viewingRequest.confirmation.details}</span>
                 </div>
               )}
 
-              {viewingRequest.amount && (
+              {viewingRequest.confirmation?.amount && (
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Amount:</span>
-                  <span className={styles.detailValue}>{viewingRequest.amount} ETH</span>
+                  <span className={styles.detailValue}>{viewingRequest.confirmation.amount} {viewingRequest.confirmation.currency}</span>
                 </div>
               )}
 
@@ -506,7 +588,10 @@ const RequestChange: React.FC = () => {
 
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Created By:</span>
-                <span className={styles.detailValue}>{viewingRequest.createdBy}</span>
+                <span className={styles.detailValue}>
+                  {viewingRequest.createdBy.role === 'client' ? 'Client' : 'Developer'}
+                  {viewingRequest.createdBy.user.profile?.name && ` (${viewingRequest.createdBy.user.profile.name})`}
+                </span>
               </div>
 
               {/* Attached Files */}
@@ -545,7 +630,7 @@ const RequestChange: React.FC = () => {
             
             <div className={styles.modalSection}>
               <div className={styles.modalLabel}>Request ID:</div>
-              <div className={styles.modalValue}>{selectedRequest.id}</div>
+              <div className={styles.modalValue}>{selectedRequest.requestId}</div>
             </div>
 
             <div className={styles.modalSection}>
@@ -574,17 +659,30 @@ const RequestChange: React.FC = () => {
 
             <div className={styles.modalFormGroup}>
               <label htmlFor="modalAmount" className={styles.modalLabel}>
-                Amount of Change Request (ETH):
+                Amount of Change Request:
               </label>
-              <input
-                id="modalAmount"
-                type="number"
-                step="0.01"
-                className={styles.modalInput}
-                placeholder="Enter amount in ETH"
-                value={modalAmount}
-                onChange={(e) => setModalAmount(e.target.value)}
-              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  id="modalAmount"
+                  type="number"
+                  step="0.01"
+                  className={styles.modalInput}
+                  placeholder="Enter amount"
+                  value={modalAmount}
+                  onChange={(e) => setModalAmount(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <select
+                  className={styles.modalInput}
+                  value={modalCurrency}
+                  onChange={(e) => setModalCurrency(e.target.value)}
+                  style={{ width: '100px' }}
+                >
+                  <option value="ETH">ETH</option>
+                  <option value="USD">USD</option>
+                  <option value="USDT">USDT</option>
+                </select>
+              </div>
             </div>
 
             <div className={styles.modalActions}>
@@ -597,6 +695,8 @@ const RequestChange: React.FC = () => {
           </div>
         </div>
       )}
+          </>
+        )}
           </div>
         </div>
       </div>

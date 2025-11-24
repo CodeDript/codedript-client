@@ -20,6 +20,23 @@
   margin-bottom: 32px;
 }
 
+.loadingIndicator {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .title {
   font-family: 'Zen Dots', sans-serif;
   font-size: 36px;
