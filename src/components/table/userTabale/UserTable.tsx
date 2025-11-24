@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
+import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'activeContract' | 'transactions' | 'ongoingContract';
 
@@ -85,12 +86,22 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // use a request id to avoid stale responses overwriting newer state
   const requestRef = React.useRef(0);
 
   const handleAgreementClick = (rowId: string) => {
+    // Handle transactions tab separately - open modal
+    if (activeTab === 'transactions') {
+      const agreement = agreements.find(a => a._id === rowId);
+      if (agreement && (agreement as any).blockchain?.transactionHash) {
+        setSelectedTxHash((agreement as any).blockchain.transactionHash);
+      }
+      return;
+    }
+    
     // Only allow clicking for ongoing contracts tab
     if (activeTab !== 'ongoingContract') return;
     
@@ -209,7 +220,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
 
           {!loading && !error && rows.map(r => {
             const agreement = agreements.find(a => a._id === r.id);
-            const isClickable = activeTab === 'ongoingContract' && agreement?.status === 'pending_client';
+            const isClickable = activeTab === 'transactions' || (activeTab === 'ongoingContract' && agreement?.status === 'pending_client');
             
             return (
               <div 
@@ -263,6 +274,13 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
           })}
         </div>
       </div>
+      
+      {selectedTxHash && (
+        <TransactionModal
+          transactionHash={selectedTxHash}
+          onClose={() => setSelectedTxHash(null)}
+        />
+      )}
     </div>
   );
 };

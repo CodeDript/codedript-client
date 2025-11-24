@@ -4,6 +4,7 @@ import styles from './DeveloperTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
 import { GigService, type Gig } from '../../../api/gigService';
 import { useAuth } from '../../../context/AuthContext';
+import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'myGigs' | 'activeContract' | 'transactions' | 'ongoingContract';
 
@@ -88,6 +89,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -95,8 +97,14 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const requestRef = React.useRef(0);
 
   const handleAgreementClick = (rowId: string) => {
-    // Don't allow clicking for transactions tab
-    if (activeTab === 'transactions') return;
+    // Handle transactions tab separately - open modal
+    if (activeTab === 'transactions') {
+      const agreement = agreements.find(a => a._id === rowId);
+      if (agreement && (agreement as any).blockchain?.transactionHash) {
+        setSelectedTxHash((agreement as any).blockchain.transactionHash);
+      }
+      return;
+    }
     
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
@@ -272,7 +280,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               key={r.id}
               onClick={() => handleAgreementClick(r.id)}
               style={{
-                cursor: activeTab === 'transactions' ? 'default' : 'pointer'
+                cursor: 'pointer'
               }}
             >
               {activeTab === 'transactions' ? (
@@ -317,6 +325,13 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
           ))}
         </div>
       </div>
+      
+      {selectedTxHash && (
+        <TransactionModal
+          transactionHash={selectedTxHash}
+          onClose={() => setSelectedTxHash(null)}
+        />
+      )}
     </div>
   );
 };

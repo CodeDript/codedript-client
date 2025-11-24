@@ -8,6 +8,10 @@ import {
   sendTransaction,
   prepareContractCall,
   readContract,
+  getRpcClient,
+  eth_getTransactionByHash,
+  eth_getTransactionReceipt,
+  eth_getBlockByNumber,
 } from "thirdweb";
 
 // ============================================
@@ -328,5 +332,65 @@ export async function getNextId() {
   });
 
   return Number(result);
+}
+
+// ============================================
+// TRANSACTION OPERATIONS
+// ============================================
+
+/**
+ * Get transaction details by hash using Thirdweb SDK
+ * @param {string} txHash - Transaction hash
+ */
+export async function getTransactionDetails(txHash) {
+  try {
+    // Get RPC client for Sepolia
+    const rpcRequest = getRpcClient({ client, chain: sepolia });
+    
+    // Fetch transaction and receipt using Thirdweb's helper functions
+    const [txData, txReceipt] = await Promise.all([
+      eth_getTransactionByHash(rpcRequest, { hash: txHash }),
+      eth_getTransactionReceipt(rpcRequest, { hash: txHash })
+    ]);
+
+    if (!txData || !txReceipt) {
+      throw new Error('Transaction not found');
+    }
+
+    // Get block details for timestamp
+    const blockData = await eth_getBlockByNumber(rpcRequest, {
+      blockNumber: txReceipt.blockNumber,
+      includeTransactions: false
+    });
+
+    // Convert hex values to readable formats
+    const valueInWei = BigInt(txData.value || 0n);
+    const valueInEth = (Number(valueInWei) / 1e18).toFixed(6);
+    
+    const gasUsed = Number(txReceipt.gasUsed);
+    const gasPrice = Number(txData.gasPrice || 0n);
+    const gasPriceInGwei = (gasPrice / 1e9).toFixed(2);
+    
+    const blockNumber = Number(txReceipt.blockNumber);
+    const timestamp = new Date(Number(blockData.timestamp) * 1000).toLocaleString();
+    
+    const status = txReceipt.status === 'success' ? 'Success ✓' : 'Failed ✗';
+
+    return {
+      hash: txHash,
+      from: txData.from,
+      to: txData.to || 'Contract Creation',
+      value: valueInEth,
+      gasUsed: gasUsed.toLocaleString(),
+      gasPrice: gasPriceInGwei,
+      blockNumber: blockNumber.toString(),
+      timestamp: timestamp,
+      status: status,
+      data: txData.input
+    };
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    throw new Error('Failed to fetch transaction details. Please check the transaction hash.');
+  }
 }
 
