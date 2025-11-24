@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './contractsViewBase.module.css';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 import Button2 from '../../../../components/button/Button2/Button2';
+import MilestoneCard from '../../../../components/card/milestoneCard/MilestoneCard';
+import { mockMilestones } from '../../../../constants/milestonesMock';
 
 type Milestone = { title: string; due?: string; amount?: string; status?: string };
 
@@ -21,9 +23,19 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const navigate = useNavigate();
   const location = useLocation();
   const agreement = location.state?.agreement;
-  
-  const total = milestones.reduce((s, m) => s + Number(m.amount || 0), 0);
-  const progress = milestones.length ? Math.round((1 / milestones.length) * 100) : 0;
+  const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : mockMilestones);
+
+  useEffect(() => {
+    setLocalMilestones(milestones && milestones.length ? milestones : mockMilestones);
+  }, [milestones]);
+
+  const total = localMilestones.reduce((s, m) => s + Number(m.amount || 0), 0);
+  const progress = localMilestones.length ? Math.round((localMilestones.filter(m => m.status === 'done').length / localMilestones.length) * 100) : 0;
+
+  const handleUpdateMilestoneStatus = (index: number | undefined, newStatus: string) => {
+    if (typeof index !== 'number') return;
+    setLocalMilestones(prev => prev.map((m, i) => i === index ? { ...m, status: newStatus } : m));
+  };
 
   return (
     <div className={styles.summaryWrap1}>
@@ -88,20 +100,17 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
 
         <div className={styles.milestoneCard}>
         <div className={styles.milestoneHeader}>Milestone Breakdown</div>
-        <div className={styles.milestoneList}>
-          {milestones.map((m, i) => (
-            <div key={i} className={styles.milestoneItem}>
-              <div className={styles.milestoneLeft}>
-                <div className={styles.milestoneTitle}>{m.title}</div>
-                <div className={styles.milestoneDue}>{m.due}</div>
-              </div>
-              <div className={styles.milestoneRight}>
-                <div className={styles.milestoneAmount}>{m.amount} {currency}</div>
-                <div className={styles.milestoneStatus}>{m.status || 'Pending'}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+          <div className={styles.milestoneList}>
+            {localMilestones.map((m, i) => (
+              <MilestoneCard
+                key={i}
+                index={i}
+                milestone={m}
+                editable={true}
+                onUpdateStatus={handleUpdateMilestoneStatus}
+              />
+            ))}
+          </div>
         </div>
       
         
