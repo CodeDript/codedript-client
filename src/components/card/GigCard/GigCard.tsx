@@ -106,12 +106,17 @@ const GigCard: React.FC<GigCardProps> = ({
           </div>
 
           {/* Skills */}
-          <div className={styles.skillsSection}>
+          <div className={styles.skillsSection} role="list" aria-label="Top skills">
             {skills.slice(0, 3).map((skill, index) => (
-              <span key={index} className={styles.skillBadge}>
+              <span key={index} role="listitem" className={styles.skillBadge}>
                 {skill}
               </span>
             ))}
+            {skills.length > 3 && (
+              <span className={styles.moreSkills} aria-label={`and ${skills.length - 3} more skills`}>
+                +{skills.length - 3}
+              </span>
+            )}
           </div>
         </div>
       </div>

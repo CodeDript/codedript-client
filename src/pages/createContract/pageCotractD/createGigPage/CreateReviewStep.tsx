@@ -49,6 +49,13 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
     }
   }, [approved, isClientView]);
 
+  function formatId(id?: string) {
+    if (!id) return '';
+    const s = id.toString();
+    if (s.length <= 10) return s;
+    return `${s.slice(0,5)}...${s.slice(-5)}`;
+  }
+
   return (
     <>
       <h4 className={styles.sectionTitle}>Publish</h4>
@@ -85,7 +92,7 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
           {/* Developer Receiving Address row (moved from Parties) */}
           <div className={styles.reviewRow}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Developer Receiving Ethereum Address :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formData?.developerReceivingAddress || developerReceivingAddress || developerWallet || 'No receiving address'}</div>
+            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formatId(formData?.developerReceivingAddress || developerReceivingAddress || developerWallet || '') || 'No receiving address'}</div>
           </div>
         </div>
         {/* Packages summary - show if gigData packages exist, otherwise show N/A table */}

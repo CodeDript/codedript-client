@@ -18,6 +18,7 @@ import paymentIcon from '../../../assets/contractSvg/paymentTerms.svg';
 import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
 import { useAgreement } from '../../../context/AgreementContext';
+import ChatWidget from '../../../components/chat/ChatWidget';
 
 const PageCotractD: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -615,6 +616,7 @@ const PageCotractD: React.FC = () => {
             </section>
           </div>
         </div>
+        <ChatWidget />
       </div>
     </div>
   );
