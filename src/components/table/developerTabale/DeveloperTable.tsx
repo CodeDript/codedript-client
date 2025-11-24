@@ -4,8 +4,9 @@ import styles from './DeveloperTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
 import { GigService, type Gig } from '../../../api/gigService';
 import { useAuth } from '../../../context/AuthContext';
+import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
-export type TabKey = 'myGigs' | 'activeContract' | 'incomingContract' | 'ongoingContract' | 'transactions';
+export type TabKey = 'myGigs' | 'incomingContract' | 'activeContract' | 'transactions' | 'ongoingContract';
 
 interface DeveloperTableProps {
   developerId?: string;
@@ -19,23 +20,26 @@ interface DevRow {
   date: string;
   status: string;
   amount: string;
+  transactionHash?: string;
 }
 
 const TabLabel: Record<TabKey, string> = {
   myGigs: 'My Gigs',
-  activeContract: 'Active Contract',
   incomingContract: 'Incoming Contract',
-  ongoingContract: 'Ongoing Contract',
+  activeContract: 'Active Contract',
   transactions: 'Transactions',
+  ongoingContract: 'Ongoing Contract',
 };
 
 // Map tab keys to agreement statuses (for developer role)
 const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
+    case 'incomingContract':
+      return ['pending_developer'];
     case 'activeContract':
       return ['active', 'in_progress', 'escrow_deposit'];
-    case 'incomingContract':
-      return ['pending_developer', 'pending_client', 'pending_signatures'];
+    case 'transactions':
+      return []; // Transactions are fetched separately
     case 'ongoingContract':
       return ['awaiting_final_approval'];
     default:
@@ -80,12 +84,15 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   };
 };
 
+// (Using agreements with blockchain.transactionHash for Transactions tab)
+
 const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('myGigs');
   const [rows, setRows] = useState<DevRow[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -93,6 +100,15 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const requestRef = React.useRef(0);
 
   const handleAgreementClick = (rowId: string) => {
+    // Handle transactions tab separately - open modal
+    if (activeTab === 'transactions') {
+      const agreement = agreements.find(a => a._id === rowId);
+      if (agreement && (agreement as any).blockchain?.transactionHash) {
+        setSelectedTxHash((agreement as any).blockchain.transactionHash);
+      }
+      return;
+    }
+    
     // Allow clicking for incoming contracts and active contracts
     if (activeTab !== 'incomingContract' && activeTab !== 'activeContract') return;
 
@@ -153,6 +169,41 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       };
 
       fetchGigs();
+      return;
+    }
+
+    // Handle transactions tab separately: fetch agreements that have blockchain transaction hashes
+    if (activeTab === 'transactions') {
+      const fetchTxFromAgreements = async () => {
+        const reqId = ++requestRef.current;
+        setLoading(true);
+        setError(null);
+
+        try {
+          const resp = await AgreementService.getAllAgreements({ role: 'developer', limit: 200 });
+
+          if (requestRef.current !== reqId) return;
+
+          const allAgreements = resp.data || [];
+          const txAgreements = allAgreements.filter(a => (a as any).blockchain && (a as any).blockchain.transactionHash);
+          const displayRows = txAgreements.map(a => ({
+            ...agreementToRow(a),
+            transactionHash: (a as any).blockchain.transactionHash
+          }));
+
+          setAgreements(txAgreements as Agreement[]);
+          setRows(displayRows);
+        } catch (err) {
+          if (requestRef.current !== reqId) return;
+          console.error('Error fetching transactions from agreements:', err);
+          setError('Failed to load transactions');
+          setRows([]);
+        } finally {
+          if (requestRef.current === reqId) setLoading(false);
+        }
+      };
+
+      fetchTxFromAgreements();
       return;
     }
 
@@ -235,27 +286,60 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               key={r.id}
               onClick={() => handleAgreementClick(r.id)}
               style={{
+                cursor: 'pointer'
+              }}
                   cursor: (activeTab === 'incomingContract' || activeTab === 'activeContract') ? 'pointer' : 'default'
                 }}
             >
-              <div className={styles.orderCell}>
-                <span className={styles.orderNumber}>{r.order}</span>
-              </div>
-              <div className={styles.titleCell}>
-                <div className={styles.titleMain}>{r.title}</div>
-                <div className={styles.reviewer}>with {r.client}</div>
-              </div>
-              <div className={styles.dateCell}>Created {r.date}</div>
-              <div className={styles.statusCell}>
-                <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
-                  {r.status}
-                </span>
-              </div>
-              <div className={styles.amountCell}>{r.amount}</div>
+              {activeTab === 'transactions' ? (
+                // Transactions tab: keep same cell structure as Active Contract
+                // but show truncated Tx hash in the title and hide status visually
+                <>
+                  <div className={styles.orderCell}>
+                    <span className={styles.orderNumber}>Tx</span>
+                  </div>
+                  <div className={styles.titleCell}>
+                    <div className={styles.titleMain}>
+                      {r.transactionHash ? `${r.transactionHash.slice(0, 6)}...${r.transactionHash.slice(-4)}` : 'N/A'}
+                    </div>
+                    <div className={styles.reviewer}></div>
+                  </div>
+                  <div className={styles.dateCell}>Created {r.date}</div>
+                  <div className={styles.statusCell}>
+                    <span className={styles.pill} style={{ visibility: 'hidden' }}>hidden</span>
+                  </div>
+                  <div className={styles.amountCell}>{r.amount}</div>
+                </>
+              ) : (
+                // Other tabs: show full details
+                <>
+                  <div className={styles.orderCell}>
+                    <span className={styles.orderNumber}>{r.order}</span>
+                  </div>
+                  <div className={styles.titleCell}>
+                    <div className={styles.titleMain}>{r.title}</div>
+                    <div className={styles.reviewer}>with {r.client}</div>
+                  </div>
+                  <div className={styles.dateCell}>Created {r.date}</div>
+                  <div className={styles.statusCell}>
+                    <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                      {r.status}
+                    </span>
+                  </div>
+                  <div className={styles.amountCell}>{r.amount}</div>
+                </>
+              )}
             </div>
           ))}
         </div>
       </div>
+      
+      {selectedTxHash && (
+        <TransactionModal
+          transactionHash={selectedTxHash}
+          onClose={() => setSelectedTxHash(null)}
+        />
+      )}
     </div>
   );
 };

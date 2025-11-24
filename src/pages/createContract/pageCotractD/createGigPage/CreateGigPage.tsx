@@ -11,6 +11,7 @@ import CreatePriceing from './CreatePriceing';
 import CreateFilesTermsStep from './CreateFilesTermsStep';
 import CreateReviewStep from './CreateReviewStep';
 import { useAgreement } from '../../../../context/AgreementContext';
+import { GigService } from '../../../../api/gigService';
 
 const CreateGigPage: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -20,31 +21,28 @@ const CreateGigPage: React.FC = () => {
   const [developerReceivingAddress, setDeveloperReceivingAddress] = useState('');
   const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-  const [isDeveloperView, setIsDeveloperView] = useState(false);
   const [isClientView, setIsClientView] = useState(false);
   const [priceingAgreed, setPriceingAgreed] = useState(false);
+  const [isCreatingGig, setIsCreatingGig] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
-  const { uploadFilesToIPFS, updateFormData, formData, createAgreement } = useAgreement();
+  const { uploadFilesToIPFS, updateFormData, formData } = useAgreement();
 
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [clientWallet, setClientWallet] = useState('');
   
 
-  const [value, setValue] = useState('0');
-  const [currency, setCurrency] = useState('ETH');
-  const [deadline, setDeadline] = useState('');
-  const [milestones, setMilestones] = useState([{ title: 'Initial', amount: '0' }]);
+  const [value] = useState('0');
+  const [currency] = useState('ETH');
+  const [deadline] = useState('');
+  const [milestones] = useState([{ title: 'Initial', amount: '0' }]);
 
   const [filesNote, setFilesNote] = useState('');
   const uploadedFiles = formData.uploadedFiles;
   const setUploadedFiles = (files: File[]) => updateFormData({ uploadedFiles: files });
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [isAcceptingAgreement, setIsAcceptingAgreement] = useState(false);
-  const [acceptError, setAcceptError] = useState<string | null>(null);
+  const [acceptError] = useState<string | null>(null);
   const [clientApproved, setClientApproved] = useState(false);
-  const [isApprovingAgreement, setIsApprovingAgreement] = useState(false);
-  const [projectFilesIpfsHash, setProjectFilesIpfsHash] = useState<string>('');
 
   React.useEffect(() => {
     (window as any).__setClientApproved = setClientApproved;
@@ -71,7 +69,8 @@ const CreateGigPage: React.FC = () => {
       developerWallet: routeState?.developerWallet || developerWallet,
       clientWallet: routeState?.clientWallet || clientWallet,
       clientName: routeState?.clientName || clientName,
-      clientEmail: routeState?.clientEmail || clientEmail
+      clientEmail: routeState?.clientEmail || clientEmail,
+      developerReceivingAddress: developerReceivingAddress
     });
   }, [routeState]);
 
@@ -91,23 +90,84 @@ const CreateGigPage: React.FC = () => {
 
   const navigateBack = () => navigate(-1);
 
-  const handleCreateContract = async () => {
-    // minimal create action: store form into context and navigate to client
-    updateFormData({ projectName: title, projectDescription: description, clientName, clientEmail, clientWallet });
-    navigate('/client');
+  const handlePublishGig = async () => {
+    setIsCreatingGig(true);
+    setCreateError(null);
+
+    try {
+      // Get packages from context (set by CreatePriceing step)
+      const packages = formData.gigData?.packages || [];
+      
+      // Get category from context (set by CreateDetailsStep)
+      const category = formData.gigData?.category || 'other';
+
+      // Calculate pricing from packages (use first package as base pricing)
+      const basePackage = packages.find(p => p.name === 'Basic') || packages[0];
+      const pricingAmount = basePackage ? basePackage.price : 0;
+      const pricingCurrency = basePackage ? basePackage.currency : 'ETH';
+      const deliveryTime = basePackage ? basePackage.deliveryTime : 7;
+      const revisions = basePackage ? basePackage.revisions : 2;
+
+      // Create gig data
+      const gigData = {
+        title,
+        description,
+        category,
+        receivingAddress: developerReceivingAddress,
+        requirements: filesNote,
+        packages: packages.map((pkg: any) => ({
+          name: pkg.name,
+          price: pkg.price,
+          currency: pkg.currency,
+          deliveryTime: pkg.deliveryTime,
+          revisions: pkg.revisions,
+          features: pkg.features || []
+        })),
+        pricingType: 'fixed' as const,
+        pricingAmount,
+        pricingCurrency,
+        deliveryTime,
+        revisions,
+        tags: [],
+        status: 'active' as const,
+        images: uploadedFiles
+      };
+
+      // Call the API
+      const result = await GigService.createGig(gigData);
+
+      if (result.success && result.data) {
+        // Success - navigate to the created gig or developer dashboard
+        alert('Gig created successfully!');
+        navigate(`/gig/${result.data._id}`);
+      } else {
+        setCreateError(result.message || 'Failed to create gig');
+      }
+    } catch (error: any) {
+      console.error('Error creating gig:', error);
+      setCreateError(error.message || 'An unexpected error occurred');
+    } finally {
+      setIsCreatingGig(false);
+    }
   };
 
   const leftButtonText = '← Previous';
   const leftIsDisabled = false;
   const leftHandler = leftIsDisabled ? () => {} : (step === 1 ? navigateBack : prev);
 
-  // Requirements (3) proceeds to Publish (4) in the 4-step gig flow.
-  const rightIsCreate = false;
-  const rightIsDisabled = (step === 2 && !priceingAgreed);
+  // On step 4 (Publish), right button should publish the gig
+  const rightIsPublish = step === 4;
+  const rightIsDisabled = (step === 2 && !priceingAgreed) || isCreatingGig;
 
-  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : (step === 4 ? () => {} : next));
+  const rightHandler = rightIsPublish 
+    ? handlePublishGig 
+    : (rightIsDisabled ? () => {} : next);
 
-  const rightText = isUploadingFiles ? 'Uploading Files...' : (rightIsCreate ? 'Create Contract' : (step < 4 ? 'Next' : 'Finish'));
+  const rightText = isCreatingGig 
+    ? 'Publishing...' 
+    : isUploadingFiles 
+    ? 'Uploading Files...' 
+    : (rightIsPublish ? 'Publish Gig' : (step < 4 ? 'Next' : 'Finish'));
 
   return (
     <div className={styles.container}>
@@ -145,6 +205,11 @@ const CreateGigPage: React.FC = () => {
 
             <section className={styles.cardArea}>
               <div className={authStyles.cardBadge} aria-hidden>Create Gig</div>
+              {createError && (
+                <div style={{padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00'}}>
+                  {createError}
+                </div>
+              )}
               {acceptError && (
                 <div style={{padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00'}}>
                   {acceptError}
@@ -190,9 +255,9 @@ const CreateGigPage: React.FC = () => {
                   <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
                     <Button2 text={leftButtonText} onClick={() => leftHandler()} />
                   </div>
-                  <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isUploadingFiles ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isUploadingFiles}>
+                  <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isUploadingFiles || isCreatingGig ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isUploadingFiles || isCreatingGig}>
                     <Button3Black1 
-                      text={isUploadingFiles ? 'Uploading Files...' : rightText} 
+                      text={rightText} 
                       onClick={() => rightHandler()} 
                     />
                   </div>

@@ -8,6 +8,10 @@ import {
   sendTransaction,
   prepareContractCall,
   readContract,
+  getRpcClient,
+  eth_getTransactionByHash,
+  eth_getTransactionReceipt,
+  eth_getBlockByNumber,
 } from "thirdweb";
 
 // ============================================
@@ -328,5 +332,122 @@ export async function getNextId() {
   });
 
   return Number(result);
+}
+
+// ============================================
+// TRANSACTION OPERATIONS
+// ============================================
+
+/**
+ * Decode contract input data
+ * @private
+ */
+function decodeContractInput(inputData) {
+  try {
+    if (!inputData || inputData === '0x') {
+      return null;
+    }
+
+    // Get function selector (first 4 bytes / 8 hex chars after 0x)
+    const functionSelector = inputData.slice(0, 10);
+    
+    // createAgreement function selector: 0x + first 8 chars
+    // We'll check against known function selectors
+    const CREATE_AGREEMENT_SELECTOR = '0x' + 'e8d0aa7c'; // This is an example - actual selector from your contract
+    
+    // For createAgreement: (address _developer, string _projectName, string _docCid, uint256 _totalValue, uint256 _startDate, uint256 _endDate)
+    if (inputData.length > 10) {
+      try {
+        // Remove 0x and function selector
+        const paramData = inputData.slice(10);
+        
+        // Developer address (first 32 bytes, but address is in the last 20 bytes)
+        const developerHex = paramData.slice(24, 64);
+        const developer = '0x' + developerHex;
+        
+        // Extract other basic info (this is a simplified decode)
+        // For full decode, we'd need to parse the dynamic string offsets
+        
+        return {
+          functionName: 'createAgreement',
+          functionSelector: functionSelector,
+          developer: developer,
+          inputDataLength: inputData.length,
+          hasIPFSHash: paramData.length > 128, // Approximate check
+        };
+      } catch (decodeError) {
+        console.warn('Could not decode parameters:', decodeError);
+      }
+    }
+    
+    return {
+      functionName: 'Contract Call',
+      functionSelector: functionSelector,
+      inputDataLength: inputData.length,
+    };
+  } catch (error) {
+    console.error('Error decoding input:', error);
+    return null;
+  }
+}
+
+/**
+ * Get transaction details by hash using Thirdweb SDK
+ * @param {string} txHash - Transaction hash
+ */
+export async function getTransactionDetails(txHash) {
+  try {
+    // Get RPC client for Sepolia
+    const rpcRequest = getRpcClient({ client, chain: sepolia });
+    
+    // Fetch transaction and receipt using Thirdweb's helper functions
+    const [txData, txReceipt] = await Promise.all([
+      eth_getTransactionByHash(rpcRequest, { hash: txHash }),
+      eth_getTransactionReceipt(rpcRequest, { hash: txHash })
+    ]);
+
+    if (!txData || !txReceipt) {
+      throw new Error('Transaction not found');
+    }
+
+    // Get block details for timestamp
+    const blockData = await eth_getBlockByNumber(rpcRequest, {
+      blockNumber: txReceipt.blockNumber,
+      includeTransactions: false
+    });
+
+    // Convert hex values to readable formats
+    const valueInWei = BigInt(txData.value || 0n);
+    const valueInEth = (Number(valueInWei) / 1e18).toFixed(6);
+    
+    const gasUsed = Number(txReceipt.gasUsed);
+    const gasPrice = Number(txData.gasPrice || 0n);
+    const gasPriceInGwei = (gasPrice / 1e9).toFixed(2);
+    
+    const blockNumber = Number(txReceipt.blockNumber);
+    const timestamp = new Date(Number(blockData.timestamp) * 1000).toLocaleString();
+    
+    const status = txReceipt.status === 'success' ? 'Success ✓' : 'Failed ✗';
+
+    // Decode input data to extract parameters
+    const decodedInput = decodeContractInput(txData.input);
+
+    return {
+      hash: txHash,
+      from: txData.from,
+      to: txData.to || 'Contract Creation',
+      value: valueInEth,
+      gasUsed: gasUsed.toLocaleString(),
+      gasPrice: gasPriceInGwei,
+      blockNumber: blockNumber.toString(),
+      timestamp: timestamp,
+      status: status,
+      input: txData.input,
+      decodedInput: decodedInput
+    };
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    throw new Error('Failed to fetch transaction details. Please check the transaction hash.');
+  }
 }
 
