@@ -39,6 +39,7 @@ export function getChangeRequest(agreementId: number, changeIndex: number): Prom
   timestamp: number;
 }>;
 export function getNextId(): Promise<number>;
+export function getTransactionDetails(transactionHash: string): Promise<any>;
 
 export const CONTRACT_ADDRESS: string;
 export const ABI: any[];

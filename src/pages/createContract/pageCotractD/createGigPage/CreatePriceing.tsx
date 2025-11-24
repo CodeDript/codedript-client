@@ -92,7 +92,13 @@ const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
     ];
 
     // merge into existing gigData if present
-    updateFormData({ gigData: { ...(formData.gigData || {}), packages } });
+    updateFormData({ gigData: { 
+      id: formData.gigData?.id || '', 
+      title: formData.gigData?.title || '', 
+      description: formData.gigData?.description || '', 
+      ...(formData.gigData || {}), 
+      packages 
+    } });
   }, [basicPrice, standardPrice, premiumPrice, basicDelivery, standardDelivery, premiumDelivery, basicRevisions, standardRevisions, premiumRevisions, basicFeatures, standardFeatures, premiumFeatures]);
   return (
     <>

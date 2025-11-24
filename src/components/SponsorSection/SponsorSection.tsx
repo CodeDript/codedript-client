@@ -1,6 +1,5 @@
 import React from 'react';
 import styles from './SponsorSection.module.css';
-import { i } from 'motion/react-client';
 import HeaderText from '../HeaderText/HeaderText';
 
 interface Sponsor {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styles from './RequestChange.module.css';
 import authStyles from '../../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
@@ -27,8 +27,6 @@ type ChangeRequest = {
 
 const RequestChange: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const agreement = location.state?.agreement;
 
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed'>('pending');
   const [showModal, setShowModal] = useState(false);

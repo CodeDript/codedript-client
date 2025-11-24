@@ -51,7 +51,7 @@ function App() {
             <p style={styles.intro}>
               Connect your MetaMask wallet and sign a message to login securely.
             </p>
-            <MetaMaskLogin onLoginSuccess={handleLoginSuccess} />
+            <MetaMaskLogin onLoginSuccess={() => handleLoginSuccess('', '')} />
           </>
         ) : (
           <div style={styles.dashboard}>

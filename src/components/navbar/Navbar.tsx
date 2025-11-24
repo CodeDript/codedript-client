@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import styles from "./NavBar.module.css";
+import styles from "./Navbar.module.css";
 import UserIconDropdown from '../dropedown/UserIcondd';
 import { useNavigate, useLocation } from "react-router-dom";
 import Button2 from '../../components/button/Button2/Button2';

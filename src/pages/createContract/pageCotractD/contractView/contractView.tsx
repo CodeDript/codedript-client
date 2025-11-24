@@ -5,29 +5,20 @@ import authStyles from '../../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
 import heroOutlinedown from '../../../../assets/Login/cardBackgrounddown.svg';
 
-import DetailsStep from '../pageComponent/DetailsStep';
-import PartiesStep from '../pageComponent/PartiesStep';
-import FilesTermsStep from '../pageComponent/FilesTermsStep';
-import PaymentStep from '../pageComponent/PaymentStep';
-import ReviewStep from '../pageComponent/ReviewStep';
 // icons removed for contractView (project details and step icons)
-import Rulrs from './Rulrs';
-import Button2 from '../../../../components/button/Button2/Button2';
-import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 import ContractSummary from './ContractSummary';
 
 const PageCotractD: React.FC = () => {
-  const [step, setStep] = useState(1);
+  useState(1);
   const [title, setTitle] = useState('Website Redesign Project');
   const [description, setDescription] = useState('Describe the project scope, deliverables, and requirement');
-  const [developerId, setDeveloperId] = useState('0x23356745e898');
+  const [, setDeveloperId] = useState('0x23356745e898');
 
   // Parties
   const [clientName, setClientName] = useState('Devid kamron');
-  const [clientEmail, setClientEmail] = useState('Devidkamronwest12@gmail.com');
-  const [clientWallet, setClientWallet] = useState('0x23356745e898');
+  useState('Devidkamronwest12@gmail.com');
+  useState('0x23356745e898');
   const [developerName] = useState('Sia Kroven');
-  const [developerEmail] = useState('connectsia kroven@gmail.com');
 
   // Payment
   const [value, setValue] = useState('5000');
@@ -36,14 +27,11 @@ const PageCotractD: React.FC = () => {
   const [milestones, setMilestones] = useState([{ title: 'Reasons', amount: '5000' }]);
 
   // Files & terms
-  const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
+  useState('Any additional terms, conditions, or special requirement ...');
   // uploaded files
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  // payment confirmation (developer accepted contract)
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  useState<File[]>([]);
 
-  const location = useLocation();
-  const { state: routeState } = location;
+  const { state: routeState } = useLocation();
 
   useEffect(() => {
     if (routeState) {
@@ -63,7 +51,9 @@ const PageCotractD: React.FC = () => {
           setValue(ag.financials.totalValue || value);
           setCurrency(ag.financials.currency || currency);
         }
-        if (ag.client?.profile?.name) setClientName(ag.client.profile.name);
+        if (ag.client?.profile?.name) {
+          setClientName(ag.client.profile.name);
+        }
         if (ag.developer?.profile?.name) {
           // developerName is defined as const state; we can't set it, but we'll leave title/developerId updates above
         }
@@ -71,48 +61,9 @@ const PageCotractD: React.FC = () => {
     }
   }, [routeState]);
 
-  const navigate = useNavigate();
-
-  const next = () => setStep((s) => Math.min(5, s + 1));
-  const prev = () => setStep((s) => Math.max(1, s - 1));
-
-  const navigateBack = () => {
-    // go back to previous page (likely the gig / package card)
-    navigate(-1);
-  };
-
-  const handleCreateContract = () => {
-    // assemble payload (placeholder - replace with real API call)
-    const payload = {
-      title,
-      description,
-      developerId,
-      clientName,
-      clientEmail,
-      clientWallet,
-      value,
-      currency,
-      deadline,
-      milestones,
-      filesNote,
-      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
-    };
-
-    console.log('Create contract payload', payload);
-    // TODO: call real api to create contract
-
-    // advance the flow to the Payment Terms step (step 4)
-    setStep(4);
-  };
+  useNavigate();
 
   // handlers used by UI of the action buttons
-  const leftButtonText = step === 1 ? '← Previous' : '← Previous';
-  const leftHandler = step === 1 ? navigateBack : prev;
-
-  const rightIsCreate = step === 3; // files & terms
-  const rightIsDisabled = step === 4 && paymentConfirmed; // payment step locked until confirm
-  const rightHandler = rightIsCreate ? handleCreateContract : (rightIsDisabled ? () => {} : next);
-  const rightText = rightIsCreate ? 'Create Contract' : (step < 5 ? 'Next' : 'Finish');
 
   return (
     <div className={styles.container}>

@@ -29,8 +29,7 @@ const GigCard: React.FC<GigCardProps> = ({
   userRole = "Freelance Developer",
   price = 2000,
   currency = "ETH",
-  skills = ["Node.js", "React", "Java"],
-  gigImage = "https://via.placeholder.com/300x200"
+  skills = ["Node.js", "React", "Java"]
 }) => {
   const navigate = useNavigate();
 

@@ -11,7 +11,7 @@ interface MetaMaskLoginProps {
 }
 
 const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
-  const { loginWithWallet, user, clearError } = useAuth();
+  const { loginWithWallet, clearError } = useAuth();
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const navigate = useNavigate();
 

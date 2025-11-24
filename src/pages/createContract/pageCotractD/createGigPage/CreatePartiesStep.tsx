@@ -21,7 +21,7 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
   const [fetchedDeveloperName, setFetchedDeveloperName] = useState('');
   const [fetchedDeveloperEmail, setFetchedDeveloperEmail] = useState('');
   const [fetchedDeveloperWallet, setFetchedDeveloperWallet] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   const { setGigData, setDeveloperProfile } = useAgreement();
 

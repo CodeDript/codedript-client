@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styles from './AuthForm.module.css';
 import { showAlert } from './Alert';
-import { useAuth } from '../../context/AuthContext';
 import securityIcon from '../../assets/svg/iconsax-security.svg';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import MetaMaskLogin from './MetaMaskLogin';

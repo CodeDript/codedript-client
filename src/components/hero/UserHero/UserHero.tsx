@@ -3,16 +3,12 @@ import styles from './UserHero.module.css';
 // heroGrid removed — not used in this variant
 import heroOutline from '../../../assets/svg/black base.svg';
 import calenderIcon from '../../../assets/svg/calander.svg';
-import hierarchyIcon from '../../../assets/svg/hierarchy.svg';
-import starIcon from '../../../assets/svg/starIcon.svg';
-import Button4Black2 from '../../button/Button4Black2/Button4Black2';
 import { ApiService } from '../../../services/apiService';
 import type { User } from '../../../types';
 
 const UserHero: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -22,8 +18,7 @@ const UserHero: React.FC = () => {
         setUser(response.data);
       } catch (err: any) {
         console.error('Failed to fetch user data:', err);
-        setError(err.message || 'Failed to load user data');
-      } finally {
+      } finally{
         setIsLoading(false);
       }
     };

@@ -21,7 +21,7 @@ const CreateGigPage: React.FC = () => {
   const [developerReceivingAddress, setDeveloperReceivingAddress] = useState('');
   const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-  const [isClientView, setIsClientView] = useState(false);
+  const [isClientView] = useState(false);
   const [priceingAgreed, setPriceingAgreed] = useState(false);
   const [isCreatingGig, setIsCreatingGig] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ const CreateGigPage: React.FC = () => {
   const uploadedFiles = formData.uploadedFiles;
   const setUploadedFiles = (files: File[]) => updateFormData({ uploadedFiles: files });
   const [acceptError] = useState<string | null>(null);
-  const [clientApproved, setClientApproved] = useState(false);
+  const [, setClientApproved] = useState(false);
 
   React.useEffect(() => {
     (window as any).__setClientApproved = setClientApproved;

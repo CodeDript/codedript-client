@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import styles from './gigview.module.css';
 import { useParams } from 'react-router-dom';
 import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
-import HeaderText from '../../components/HeaderText/HeaderText';
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';

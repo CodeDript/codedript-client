@@ -1,5 +1,5 @@
 import Button3Black1 from '../../button/Button3Black1/Button3Black1';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Package.module.css';
 import ClockIcon from '../../../assets/svg/cloack.svg';
@@ -26,7 +26,6 @@ interface PackageCardProps {
 const PackageCard: React.FC<PackageCardProps> = ({
   title = "Game",
   description = ["Experience this exciting game."],
-  gameId = 1,
   price = '',
   delivery = '',
   revisions = 0,
@@ -35,7 +34,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
   developerWallet,
 }) => {
   const navigate = useNavigate();
-  const [gameData, setGameData] = useState<{ name: string; description: string; image: string; route: string }>({
+  const [gameData] = useState<{ name: string; description: string; image: string; route: string }>({
     name: title,
     description: 'Experience this exciting game.',
     image: 'https://via.placeholder.com/300x200?text=Game',
@@ -91,7 +90,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
           </ul>
           <div className={styles.buttonAlign2}>
              <div className={styles.buttonAlign}>
-            <Button3Black1 text={buttonLabel} onClick={(e: any) => { e.stopPropagation(); handleCardClick(); }} />
+            <Button3Black1 text={buttonLabel} onClick={() => handleCardClick()} />
           </div>
         </div>
       </div>

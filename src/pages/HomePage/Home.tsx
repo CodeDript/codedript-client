@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
-import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
-import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 import GigCard from '../../components/card/GigCard/GigCard';
 import HomeGameCard from '../../components/HomeGameCard/HomeGameCard';
 import Footer from '../../components/footer/Footer';
 import WorkFlow from '../../components/work flow/WorkFlow';
 import Button1 from '../../components/button/Button1/Button1';
-import Button2 from '../../components/button/Button2/Button2';
-import Button3B from '../../components/button/Button3Black1/Button3Black1';
-import Button4B from '../../components/button/Button4Black2/Button4Black2';
 import Button5W from '../../components/button/Button5White1/Button5White1';
-import UserHero from '../../components/hero/UserHero/UserHero';
 import HeaderText from '../../components/HeaderText/HeaderText';
 import About from '../../components/aboutSection/About';
 import SponsorSection from '../../components/SponsorSection/SponsorSection';

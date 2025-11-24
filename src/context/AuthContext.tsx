@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { connectWallet } from '../services/ContractService';
 import { getAddress } from 'ethers';
 
@@ -85,7 +85,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const isLoggedIn = localStorage.getItem('isLoggedIn');
         const storedWallet = localStorage.getItem('walletAddress');
         const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('authToken');
 
         if (isLoggedIn === 'true' && storedUser) {
           setUser(JSON.parse(storedUser));
@@ -116,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const account = await connectWallet();
 
       // account can be an object with `address` or a string. Normalize it safely.
-      const rawAddress = (account && (account.address || account)) || '';
+      const rawAddress = typeof account === 'string' ? account : (account?.address || '');
       let address: string;
       try {
         // This will throw if the address is invalid and also returns checksum address
@@ -276,11 +275,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // ============================================
   // HELPER FUNCTIONS
   // ============================================
-  const refreshUserData = async (token: string) => {
-    // Not used in simplified version
-    return;
-  };
-
   const clearAuthData = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('walletAddress');

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styles from './developer.module.css';
 import DeveloperHero from '../../../components/hero/DeveloperHero/DeveloperHero';
 import DeveloperTable from '../../../components/table/developerTabale/DeveloperTable';

@@ -6,12 +6,9 @@ import dript from '../../../assets/HeroMain/dript.svg';
 import blackbar from '../../../assets/HeroMain/blackbb.svg';
 import partical from '../../../assets/HeroMain/1 copy 4.svg';
 import partical2 from '../../../assets/HeroMain/1 copy 6.svg';
-import { useNavigate } from 'react-router-dom';
 // import Hyperspeed from '../Background/Hyperspeed/Hyperspeed';
 
 const HeroMain: React.FC = () => {
-
-  const navigate = useNavigate();
 
   return (
     <div className={styles.heroBackground}>

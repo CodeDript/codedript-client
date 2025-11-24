@@ -8,7 +8,7 @@ interface TransactionModalProps {
   onClose: () => void;
 }
 
-interface TransactionDetails {
+type TransactionDetails = {
   hash: string;
   from: string;
   to: string;
@@ -30,9 +30,9 @@ interface TransactionDetails {
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, blockchainId, onClose }) => {
-  const [details, setDetails] = useState<TransactionDetails | null>(null);
+  const [, setDetails] = useState<TransactionDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [displayText, setDisplayText] = useState<string[]>([]);
   const [ipfsHashFromContract, setIpfsHashFromContract] = useState<string | null>(null);
 
