@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './DeveloperTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
 import { GigService, type Gig } from '../../../api/gigService';
@@ -72,7 +73,7 @@ const agreementToRow = (agreement: Agreement): DevRow => {
     id: agreement._id,
     order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
     title: agreement.project.name,
-    client: agreement.client.profile.name || agreement.client.email,
+    client: agreement.client?.profile?.name || agreement.client?.email || agreement.clientInfo?.name || 'Unknown Client',
     date,
     status: getDisplayStatus(agreement.status),
     amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
@@ -82,12 +83,31 @@ const agreementToRow = (agreement: Agreement): DevRow => {
 const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('myGigs');
   const [rows, setRows] = useState<DevRow[]>([]);
+  const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
+  const navigate = useNavigate();
 
   // prevent stale fetches overwriting UI — use a request token
   const requestRef = React.useRef(0);
+
+  const handleAgreementClick = (rowId: string) => {
+    // Only allow clicking for incoming contracts tab
+    if (activeTab !== 'incomingContract') return;
+    
+    const agreement = agreements.find(a => a._id === rowId);
+    if (!agreement) return;
+    
+    // Navigate to contract page with agreement details for developer to review
+    navigate('/create-contract', {
+      state: {
+        agreementId: agreement._id,
+        agreement: agreement,
+        isDeveloperView: true
+      }
+    });
+  };
 
   React.useEffect(() => {
     // Handle myGigs separately (fetch gigs owned by the logged-in developer)
@@ -165,6 +185,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
         // Convert to display rows
         const displayRows = allAgreements.map(agreementToRow);
         
+        setAgreements(allAgreements);
         setRows(displayRows);
       } catch (err) {
         if (requestRef.current !== reqId) return;
@@ -209,7 +230,14 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
           )}
 
           {!loading && !error && rows.map((r) => (
-            <div className={styles.row} key={r.id}>
+            <div 
+              className={styles.row} 
+              key={r.id}
+              onClick={() => handleAgreementClick(r.id)}
+              style={{
+                cursor: activeTab === 'incomingContract' ? 'pointer' : 'default'
+              }}
+            >
               <div className={styles.orderCell}>
                 <span className={styles.orderNumber}>{r.order}</span>
               </div>

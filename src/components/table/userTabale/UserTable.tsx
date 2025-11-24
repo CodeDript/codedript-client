@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
 import { AgreementService, type Agreement } from '../../../api/agreementService';
 
@@ -24,15 +25,15 @@ const TabLabel: Record<TabKey, string> = {
   ongoingContract: 'Ongoing Contract',
 };
 
-// Map tab keys to agreement statuses
+// Map tab keys to agreement statuses (for client role)
 const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
     case 'activeContract':
       return ['active', 'in_progress', 'escrow_deposit'];
     case 'incomingContract':
-      return ['pending_developer', 'pending_client', 'pending_signatures'];
+      return ['pending_signatures']; // Ready for client to sign
     case 'ongoingContract':
-      return ['awaiting_final_approval'];
+      return ['pending_developer', 'pending_client', 'awaiting_final_approval']; // Pending developer setup OR pending client review
     default:
       return [];
   }
@@ -68,7 +69,7 @@ const agreementToRow = (agreement: Agreement): DevRow => {
     id: agreement._id,
     order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
     title: agreement.project.name,
-    client: agreement.developer.profile.name || agreement.developer.email,
+    client: agreement.developer?.profile?.name || agreement.developer?.email || agreement.developerInfo?.name || 'Unknown Developer',
     date,
     status: getDisplayStatus(agreement.status),
     amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
@@ -78,11 +79,34 @@ const agreementToRow = (agreement: Agreement): DevRow => {
 const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('activeContract');
   const [rows, setRows] = useState<DevRow[]>([]);
+  const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // use a request id to avoid stale responses overwriting newer state
   const requestRef = React.useRef(0);
+
+  const handleAgreementClick = (rowId: string) => {
+    // Only allow clicking for ongoing contracts tab
+    if (activeTab !== 'ongoingContract') return;
+    
+    const agreement = agreements.find(a => a._id === rowId);
+    if (!agreement) return;
+    
+    // Only navigate if status is pending_client (ready for client review after developer set payment terms)
+    if (agreement.status === 'pending_client') {
+      // Navigate to contract review page
+      navigate('/create-contract', {
+        state: {
+          agreementId: agreement._id,
+          agreement: agreement,
+          isClientView: true
+        }
+      });
+    }
+    // pending_developer agreements are visible but not clickable (waiting for developer)
+  };
 
   React.useEffect(() => {
     const fetchAgreements = async () => {
@@ -114,6 +138,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
         // Convert to display rows
         const displayRows = allAgreements.map(agreementToRow);
         
+        setAgreements(allAgreements);
         setRows(displayRows);
       } catch (err) {
         if (requestRef.current !== reqId) return;
@@ -158,24 +183,36 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
             <div className={styles.empty}>No contracts found</div>
           )}
 
-          {!loading && !error && rows.map(r => (
-            <div className={styles.row} key={r.id}>
-              <div className={styles.orderCell}>
-                <span className={styles.orderNumber}>{r.order}</span>
+          {!loading && !error && rows.map(r => {
+            const agreement = agreements.find(a => a._id === r.id);
+            const isClickable = activeTab === 'ongoingContract' && agreement?.status === 'pending_client';
+            
+            return (
+              <div 
+                className={styles.row} 
+                key={r.id}
+                onClick={() => handleAgreementClick(r.id)}
+                style={{
+                  cursor: isClickable ? 'pointer' : 'default'
+                }}
+              >
+                <div className={styles.orderCell}>
+                  <span className={styles.orderNumber}>{r.order}</span>
+                </div>
+                <div className={styles.titleCell}>
+                  <div className={styles.titleMain}>{r.title}</div>
+                  <div className={styles.reviewer}>with {r.client}</div>
+                </div>
+                <div className={styles.dateCell}>Created {r.date}</div>
+                <div className={styles.statusCell}>
+                  <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                    {r.status}
+                  </span>
+                </div>
+                <div className={styles.amountCell}>{r.amount}</div>
               </div>
-              <div className={styles.titleCell}>
-                <div className={styles.titleMain}>{r.title}</div>
-                <div className={styles.reviewer}>with {r.client}</div>
-              </div>
-              <div className={styles.dateCell}>Created {r.date}</div>
-              <div className={styles.statusCell}>
-                <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
-                  {r.status}
-                </span>
-              </div>
-              <div className={styles.amountCell}>{r.amount}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

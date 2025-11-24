@@ -95,6 +95,8 @@ const GigView: React.FC = () => {
               delivery={`${pkg.deliveryTime || 0} Days`}
               revisions={pkg.revisions || 0}
               buttonLabel="Buy & Escrow"
+              gigId={gig._id}
+              developerWallet={developer.walletAddress}
             />
           ))
         )}

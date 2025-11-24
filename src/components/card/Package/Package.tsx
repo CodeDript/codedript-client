@@ -18,6 +18,8 @@ interface PackageCardProps {
   delivery?: string;
   revisions?: number;
   buttonLabel?: string;
+  gigId?: string;
+  developerWallet?: string;
 }
 
 
@@ -29,6 +31,8 @@ const PackageCard: React.FC<PackageCardProps> = ({
   delivery = '',
   revisions = 0,
   buttonLabel = '',
+  gigId,
+  developerWallet,
 }) => {
   const navigate = useNavigate();
   const [gameData, setGameData] = useState<{ name: string; description: string; image: string; route: string }>({
@@ -42,7 +46,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
 
   const handleCardClick = () => {
     // navigate to the contract processing page and pass package details in state
-    navigate('/contract-processing', { state: { title, description, price, delivery, revisions, image: gameData.image } });
+    navigate('/contract-processing', { state: { title, description, price, delivery, revisions, image: gameData.image, gigId, developerWallet } });
   };
 
   return (

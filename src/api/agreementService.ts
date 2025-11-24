@@ -30,6 +30,16 @@ export interface Agreement {
   agreementId?: string;
   client: AgreementUser;
   developer: AgreementUser;
+  clientInfo?: {
+    name?: string;
+    email?: string;
+    walletAddress?: string;
+  };
+  developerInfo?: {
+    name?: string;
+    email?: string;
+    walletAddress?: string;
+  };
   gig?: {
     _id: string;
     title: string;
@@ -148,6 +158,43 @@ export class AgreementService {
    */
   static async submitAgreement(id: string): Promise<ApiResponse<Agreement>> {
     return ApiService.post<Agreement>(`/agreements/${id}/submit`, {});
+  }
+
+  /**
+   * Client approves agreement after developer sets payment terms
+   * Includes blockchain transaction hash from createAgreement call
+   */
+  static async clientApproveAgreement(
+    id: string, 
+    blockchainTxHash: string, 
+    ipfsHash?: string
+  ): Promise<ApiResponse<Agreement>> {
+    return ApiService.post<Agreement>(`/agreements/${id}/client-approve`, {
+      blockchainTxHash,
+      ipfsHash
+    });
+  }
+
+  /**
+   * Developer accepts agreement with payment terms and milestones
+   */
+  static async developerAcceptAgreement(
+    id: string, 
+    financials: { totalValue: number; currency: string },
+    milestones: Array<{ title: string; amount: string; description?: string }>
+  ): Promise<ApiResponse<Agreement>> {
+    return ApiService.post<Agreement>(`/agreements/${id}/developer-accept`, {
+      financials,
+      milestones: milestones.map((m) => ({
+        title: m.title,
+        description: m.description || m.title,
+        amount: m.amount,
+        financials: {
+          value: parseFloat(m.amount) || 0,
+          currency: financials.currency
+        }
+      }))
+    });
   }
 
   /**
