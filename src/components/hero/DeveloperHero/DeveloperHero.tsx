@@ -83,10 +83,11 @@ const DeveloperHero: React.FC<DeveloperHeroProps> = ({
      
         </div>
          <div className={styles.skillsBase}>
-             <div className={styles.skills}>
-            {skills.map((skill, index) => (
-              <Button4Black2 key={index} text={skill} className={styles.skillButton} />
-            ))}
+            <div className={styles.skills}>
+             {skills.slice(0, 4).map((skill, index) => (
+               <Button4Black2 key={index} text={skill} className={styles.skillButton} />
+             ))}
+             
           </div>
       </div>
       </div>
