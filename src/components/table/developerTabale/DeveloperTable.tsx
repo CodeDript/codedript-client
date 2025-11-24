@@ -109,11 +109,14 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       return;
     }
     
+    // Allow clicking for incoming contracts and active contracts
+    if (activeTab !== 'incomingContract' && activeTab !== 'activeContract') return;
+
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
-    
-    // Navigate to contract page with agreement details for developer to review
-    navigate('/create-contract', {
+
+    // Navigate to the ContractView (rules) route and pass the agreement in state
+    navigate('/create-contract/rules', {
       state: {
         agreementId: agreement._id,
         agreement: agreement,
@@ -285,6 +288,8 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               style={{
                 cursor: 'pointer'
               }}
+                  cursor: (activeTab === 'incomingContract' || activeTab === 'activeContract') ? 'pointer' : 'default'
+                }}
             >
               {activeTab === 'transactions' ? (
                 // Transactions tab: keep same cell structure as Active Contract
