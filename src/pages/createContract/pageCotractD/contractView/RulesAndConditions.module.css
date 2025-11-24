@@ -1,0 +1,175 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 24px;
+  min-height: 80vh;
+  background: transparent;
+  margin-top: 60px;
+}
+
+.inner {
+  width: 100%;
+  max-width: 1280px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 36px;
+  margin: 0;
+  color: #111;
+}
+
+.contentArea {
+  background: #fff;
+  border: 2px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+/* Project Details */
+.projectDetails {
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid #e2e2e2;
+}
+
+.sectionTitle {
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 1.5rem;
+  color: #111;
+  margin: 0 0 24px 0;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailLabel {
+  font-family: 'Jura', sans-serif;
+  font-weight: 700;
+  color: #555;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailValue {
+  font-family: 'Jura', sans-serif;
+  color: #222;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Terms Section */
+.termsSection {
+  margin-top: 32px;
+}
+
+.termItem {
+  margin-bottom: 28px;
+}
+
+.termTitle {
+  font-family: 'Jura', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 12px 0;
+}
+
+.termText {
+  font-family: 'Jura', sans-serif;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.7;
+  margin: 0;
+  text-align: justify;
+}
+
+/* Action Buttons */
+.actionsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  padding-bottom: 30px;
+  border-top: 2px solid #e2e2e2;
+}
+
+.prevBtn {
+  display: flex;
+  align-items: center;
+}
+
+.actionsRight {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionsRow {
+    flex-direction: column-reverse;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .prevBtn {
+    justify-content: center;
+  }
+
+  .actionsRight {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contentArea {
+    padding: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+
+  .termTitle {
+    font-size: 1rem;
+  }
+
+  .termText {
+    font-size: 0.9rem;
+  }
+}

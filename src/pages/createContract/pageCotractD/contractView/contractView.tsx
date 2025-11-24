@@ -14,6 +14,7 @@ import ReviewStep from '../pageComponent/ReviewStep';
 import Rulrs from './Rulrs';
 import Button2 from '../../../../components/button/Button2/Button2';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
+import ContractSummary from './ContractSummary';
 
 const PageCotractD: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -50,6 +51,23 @@ const PageCotractD: React.FC = () => {
       if (routeState.title) setTitle(routeState.title);
       if (routeState.description) setDescription(Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description);
       if (routeState.developerId) setDeveloperId(routeState.developerId);
+      // if an agreement object is passed in route state, populate common fields
+      if (routeState.agreement) {
+        const ag = routeState.agreement as any;
+        if (ag.project?.name) setTitle(ag.project.name);
+        if (ag.project?.description) setDescription(ag.project.description);
+        if (ag.developer?.walletAddress) setDeveloperId(ag.developer.walletAddress);
+        if (ag.milestones && Array.isArray(ag.milestones)) setMilestones(ag.milestones.map((m: any) => ({ title: m.title || '', amount: m.amount || '0', due: m.due || undefined, status: m.status })));
+        if (ag.deadline) setDeadline(ag.deadline);
+        if (ag.financials) {
+          setValue(ag.financials.totalValue || value);
+          setCurrency(ag.financials.currency || currency);
+        }
+        if (ag.client?.profile?.name) setClientName(ag.client.profile.name);
+        if (ag.developer?.profile?.name) {
+          // developerName is defined as const state; we can't set it, but we'll leave title/developerId updates above
+        }
+      }
     }
   }, [routeState]);
 
@@ -125,85 +143,29 @@ const PageCotractD: React.FC = () => {
           <div className={authStyles.cardBadge} aria-hidden>Create Project</div>
           
           <div className={styles.cardBody}>
-            {location.pathname && location.pathname.endsWith('/rules') ? (
-              <Rulrs
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-                developerId={developerId}
-                setDeveloperId={setDeveloperId}
-              />
-            ) : (
-              <>            
-            {step === 1 && (
-              <DetailsStep
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-                developerId={developerId}
-                setDeveloperId={setDeveloperId}
+            {/* show a contract summary when agreement data is provided via route state */}
+            {routeState && routeState.agreement && (
+              <ContractSummary
+                title={routeState.agreement.project?.name || title}
+                description={routeState.agreement.project?.description || description}
+                value={routeState.agreement.financials?.totalValue || value}
+                currency={routeState.agreement.financials?.currency || currency}
+                deadline={routeState.agreement.deadline || deadline}
+                clientName={routeState.agreement.client?.profile?.name || clientName}
+                developerName={routeState.agreement.developer?.profile?.name || developerName}
+                milestones={routeState.agreement.milestones || milestones}
+                
               />
             )}
-            {step === 2 && (
-              <PartiesStep
-                clientName={clientName}
-                setClientName={setClientName}
-                clientEmail={clientEmail}
-                setClientEmail={setClientEmail}
-                clientWallet={clientWallet}
-                setClientWallet={setClientWallet}
-                developerName={developerName}
-                developerEmail={developerEmail}
-                developerWallet={developerId}
-              />
-            )}
-            {step === 3 && (
-              <FilesTermsStep filesNote={filesNote} setFilesNote={setFilesNote} files={uploadedFiles} setFiles={setUploadedFiles} />
-            )}
-            {step === 4 && (
-              <PaymentStep
-                title={title}
-                description={description}
-                developerId={developerId}
-                clientName={clientName}
-                clientEmail={clientEmail}
-                value={value}
-                setValue={setValue}
-                currency={currency}
-                setCurrency={setCurrency}
-                deadline={deadline}
-                setDeadline={setDeadline}
-                milestones={milestones}
-                setMilestones={setMilestones}
-                paymentConfirmed={paymentConfirmed}
-                setPaymentConfirmed={setPaymentConfirmed}
-              />
-            )}
+
+                   
+           
+        
+          
             
-            {step === 5 && (
-              <ReviewStep
-                title={title}
-                description={description}
-                developerId={developerId}
-                clientName={clientName}
-                clientEmail={clientEmail}
-                value={value}
-                currency={currency}
-                deadline={deadline}
-                milestones={milestones}
-                filesNote={filesNote}
-              />
-            )}
-            <div className={styles.actions}>
-              <div className={styles.leftBtn}><Button2 text={leftButtonText} onClick={() => leftHandler()} /></div>
-              <div className={styles.rightBtn} style={{ opacity: rightIsDisabled ? 0.6 : 1 }} aria-disabled={rightIsDisabled}>
-                <Button3Black1 text={rightText} onClick={() => rightHandler()} />
-              </div>
-            </div>
-            </>
-            )}
+           
+           
+            
 
      
           </div>
