@@ -93,14 +93,14 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const requestRef = React.useRef(0);
 
   const handleAgreementClick = (rowId: string) => {
-    // Only allow clicking for incoming contracts tab
-    if (activeTab !== 'incomingContract') return;
-    
+    // Allow clicking for incoming contracts and active contracts
+    if (activeTab !== 'incomingContract' && activeTab !== 'activeContract') return;
+
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
-    
-    // Navigate to contract page with agreement details for developer to review
-    navigate('/create-contract', {
+
+    // Navigate to the ContractView (rules) route and pass the agreement in state
+    navigate('/create-contract/rules', {
       state: {
         agreementId: agreement._id,
         agreement: agreement,
@@ -235,8 +235,8 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               key={r.id}
               onClick={() => handleAgreementClick(r.id)}
               style={{
-                cursor: activeTab === 'incomingContract' ? 'pointer' : 'default'
-              }}
+                  cursor: (activeTab === 'incomingContract' || activeTab === 'activeContract') ? 'pointer' : 'default'
+                }}
             >
               <div className={styles.orderCell}>
                 <span className={styles.orderNumber}>{r.order}</span>

@@ -10,6 +10,8 @@ import ContractProcessing from './components/ContractPages/contractprocessing.ts
 import PageCotractD from './pages/createContract/pageCotractD/pageCotractD.tsx';
 import ContractView from './pages/createContract/pageCotractD/contractView/contractView';
 import CreateGigPage from './pages/createContract/pageCotractD/createGigPage/CreateGigPage';
+import RequestChange from './pages/createContract/pageCotractD/contractView/RequestChange';
+import RulesAndConditions from './pages/createContract/pageCotractD/contractView/RulesAndConditions';
 import Client from './pages/User/client/client.tsx';
 import Developer from './pages/User/developer/developer.tsx';
 import './App.css';
@@ -53,6 +55,8 @@ function AppContent() {
           <Route path="/create-contract" element={<PageCotractD />} />
           <Route path="/create-gig" element={<CreateGigPage />} />
           <Route path="/create-contract/rules" element={<ContractView />} />
+          <Route path="/create-contract/request-change" element={<RequestChange />} />
+          <Route path="/create-contract/terms" element={<RulesAndConditions />} />
         </Routes>
       </div>
       <Alert />

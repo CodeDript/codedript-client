@@ -171,6 +171,61 @@
 
 .cardBody { background: #ffffff00; border-radius: 6px; padding: 8px; }
 
+/* ContractSummary specific styles */
+.summaryWrap { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; align-items: start; width: 100%; }
+.leftColumn { display: flex; flex-direction: column; gap: 12px; }
+.projectCard, .partiesCard, .milestoneCard { background: #fff; border: 1px solid #dcdcdc; border-radius: 6px; padding: 12px; }
+.projectCard { margin-bottom: 6px; }
+.projectCardInner { display:flex; flex-direction:column; gap:12px; }
+.overviewHeader { font-family: 'Zen Dots', sans-serif; color:#222; font-size:1rem; font-weight:700; margin-bottom: 8px; }
+.overviewBox { background: #f7f7f7; border: 1px solid #e2e2e2; padding: 12px; border-radius: 4px; }
+.overviewRow { display:flex; gap:12px; padding:6px 0; align-items:flex-start; }
+.overviewLabel { width: 110px; font-family: 'Zen Dots', sans-serif; color:#555; font-weight:700; font-size: 0.85rem; }
+.overviewValue { font-family: 'Jura', sans-serif; color:#666; font-size: 0.95rem; }
+.overviewMeta { display:flex; flex-wrap: wrap; gap:18px; color:#444; align-items:center; font-family:'Jura',sans-serif; font-size:0.9rem; margin-top:8px; }
+.progressBar { height: 8px; background:#e6e6e6; border-radius: 6px; overflow:hidden; margin-top:8px; }
+.progressFill { height:100%; background:#4a4a4a; width:0%; transition: width 300ms ease; }
+
+.partiesCard { display:flex; flex-direction: column; margin-top: 0; }
+.partiesInner { display:flex; gap:24px; width:100%; margin-top: 6px; }
+.partiesCol { flex:1; }
+.partiesHeading { font-family:'Zen Dots',sans-serif; font-weight:700; color:#333; margin-bottom:6px; font-size: 0.9rem; }
+.partiesName { font-family:'Jura',sans-serif; font-weight:700; color:#222; font-size: 1rem; }
+.partiesSub { font-family:'Jura',sans-serif; color:#777; font-size:0.85rem; margin-top: 2px; }
+
+.milestoneCard { display: flex; flex-direction: column; max-width: none; }
+.milestoneHeader { font-family:'Zen Dots',sans-serif; font-weight:700; color:#222; margin-bottom:12px; font-size: 1rem; }
+.milestoneList { display:flex; flex-direction:column; gap:8px; }
+.milestoneItem { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#fafafa; border:1px solid #efefef; border-radius:6px; }
+.milestoneLeft { display:flex; flex-direction:column; }
+.milestoneTitle { font-family:'Jura',sans-serif; font-weight:700; color:#222; font-size: 0.95rem; }
+.milestoneDue { font-family:'Jura',sans-serif; color:#888; font-size:0.8rem; margin-top: 2px; }
+.milestoneRight { text-align:right; }
+.milestoneAmount { font-family:'Zen Dots',sans-serif; color:#111; font-weight:700; font-size: 0.95rem; }
+.milestoneStatus { font-family:'Jura',sans-serif; color:#6b7280; font-size:0.8rem; margin-top: 2px; }
+
+.milestoneFooter { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top: 12px; border-top: 1px solid #e2e2e2; }
+.totalLabel { font-family:'Jura',sans-serif; color:#444; font-weight: 700; font-size: 1rem; }
+.totalValue { font-family:'Zen Dots',sans-serif; color:#111; font-weight:700; font-size: 1.1rem; }
+
+.buttonWrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
+
+.actionsRow { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top: 22px; }
+.prevBtn { display:flex; align-items:center; }
+.actionsRight { display:flex; gap:12px; align-items:center; }
+
+/* adjust spacing for small screens */
+@media (max-width: 900px) {
+  .actionsRow { flex-direction: column-reverse; gap: 12px; align-items: stretch; }
+  .prevBtn { justify-content: center; }
+  .actionsRight { justify-content: center; }
+}
+
+@media (max-width: 900px) {
+  .summaryWrap { grid-template-columns: 1fr; }
+  .buttonWrapper { justify-content: stretch; }
+}
+
 .sectionTitle { font-family: 'Zen Dots', sans-serif; margin: 1px 0 12px 0; color: #222; }
 
 
