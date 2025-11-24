@@ -390,6 +390,13 @@ const PageCotractD: React.FC = () => {
         startDate,
         endDate
       });
+
+      // Verify IPFS hash is present before sending to blockchain
+      if (!ipfsHash || ipfsHash.trim() === '') {
+        throw new Error('IPFS hash is required but missing. Please try again.');
+      }
+      
+      console.log('✅ IPFS Hash verified and ready to send to blockchain:', ipfsHash);
       
       // Create agreement on blockchain (this will charge ETH from client's wallet)
       const blockchainTx = await createBlockchainAgreement(

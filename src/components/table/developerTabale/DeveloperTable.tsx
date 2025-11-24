@@ -6,7 +6,7 @@ import { GigService, type Gig } from '../../../api/gigService';
 import { useAuth } from '../../../context/AuthContext';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
-export type TabKey = 'myGigs' | 'activeContract' | 'transactions' | 'ongoingContract';
+export type TabKey = 'myGigs' | 'incomingContract' | 'activeContract' | 'transactions' | 'ongoingContract';
 
 interface DeveloperTableProps {
   developerId?: string;
@@ -25,6 +25,7 @@ interface DevRow {
 
 const TabLabel: Record<TabKey, string> = {
   myGigs: 'My Gigs',
+  incomingContract: 'Incoming Contract',
   activeContract: 'Active Contract',
   transactions: 'Transactions',
   ongoingContract: 'Ongoing Contract',
@@ -33,6 +34,8 @@ const TabLabel: Record<TabKey, string> = {
 // Map tab keys to agreement statuses (for developer role)
 const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
+    case 'incomingContract':
+      return ['pending_developer'];
     case 'activeContract':
       return ['active', 'in_progress', 'escrow_deposit'];
     case 'transactions':

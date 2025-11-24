@@ -17,7 +17,14 @@ interface TransactionDetails {
   blockNumber: string;
   timestamp: string;
   status: string;
-  data?: string;
+  input?: string;
+  decodedInput?: {
+    functionName: string;
+    functionSelector?: string;
+    developer?: string;
+    inputDataLength?: number;
+    hasIPFSHash?: boolean;
+  };
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, onClose }) => {
@@ -54,9 +61,43 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, on
           `> Gas Used:    ${txDetails.gasUsed}`,
           `> Gas Price:   ${txDetails.gasPrice} Gwei`,
           '',
-          '> ================================',
-          '> End of transaction details',
         ];
+
+        // Add decoded input data if available
+        if (txDetails.decodedInput) {
+          output.push('> --------------------------------');
+          output.push('> Contract Call Information:');
+          output.push('> --------------------------------');
+          output.push(`> Function:    ${txDetails.decodedInput.functionName}`);
+          
+          if (txDetails.decodedInput.functionSelector) {
+            output.push(`> Selector:    ${txDetails.decodedInput.functionSelector}`);
+          }
+          
+          if (txDetails.decodedInput.developer) {
+            output.push(`> Developer:   ${txDetails.decodedInput.developer}`);
+          }
+          
+          if (txDetails.decodedInput.hasIPFSHash) {
+            output.push('> IPFS Hash:   ✓ Included in transaction');
+          }
+          
+          if (txDetails.decodedInput.inputDataLength) {
+            output.push(`> Data Size:   ${txDetails.decodedInput.inputDataLength} bytes`);
+          }
+          
+          output.push('');
+        }
+
+        // Add input data preview
+        if (txDetails.input && txDetails.input !== '0x') {
+          output.push('> Input Data:');
+          output.push(`> ${txDetails.input.slice(0, 66)}...`);
+          output.push('');
+        }
+        
+        output.push('> ================================');
+        output.push('> End of transaction details');
         
         setDisplayText(output);
       } catch (err) {
