@@ -1,7 +1,7 @@
 // API Service for REST API calls
 import type { ApiResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://codedript.corszero.com/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.codedript.corszero.com/api/v1';
 
 /**
  * Generic API Service Class

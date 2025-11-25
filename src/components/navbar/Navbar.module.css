@@ -38,13 +38,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    
 }
 
 .UserIcon {
    
     opacity: 0.8;
     margin-right: 80px;
-       
+    /* Reduce icon size by 20%: use scale to keep layout stable */
+    transform: scale(0.7);
+    transform-origin: center;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 .UserIcon:hover {
     opacity: 1;
@@ -52,10 +56,16 @@
     background-color: #ffffff27;
     border-radius: 50%;
     transition: all 0.3s ease; /* Added delay for the hover effect */
+    /* slightly increase on hover from the reduced size */
+    transform: scale(0.7);
 }
 
 .profileButton:hover .profileIcon {
     transform: scale(1.1);
+}
+/* Ensure hover on the button also affects the actual image when using .UserIcon */
+.profileButton:hover .UserIcon {
+    transform: scale(0.7);
 }
 
 .NavBarButtons {

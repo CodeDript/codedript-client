@@ -6,6 +6,7 @@ import Footer from '../../components/footer/Footer';
 import WorkFlow from '../../components/work flow/WorkFlow';
 import Button1 from '../../components/button/Button1/Button1';
 import Button5W from '../../components/button/Button5White1/Button5White1';
+import Button2 from '../../components/button/Button2/Button2';
 import HeaderText from '../../components/HeaderText/HeaderText';
 import About from '../../components/aboutSection/About';
 import SponsorSection from '../../components/SponsorSection/SponsorSection';
@@ -94,7 +95,7 @@ agreements " />
         <div className={styles.promoInner}>
           <div className={styles.promoText}>
             <div className={styles.topBtn}>
-              <Button5W text="View more →" onClick={() => console.log('View more')} />
+              <Button2 text="View more →" onClick={() => console.log('View more')} />
             </div>
 
             <h2>Earn With Us, Become a Developer</h2>
