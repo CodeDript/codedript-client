@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import styles from "./Navbar.module.css";
 import UserIconDropdown from '../dropedown/UserIcondd';
+import logo from '../../assets/Navimage/logo.svg';
+import userIcon from '../../assets/Navimage/userIcon.svg';
 import { useNavigate, useLocation } from "react-router-dom";
 import Button2 from '../../components/button/Button2/Button2';
 import { useAgreement } from '../../context/AgreementContext';
@@ -21,23 +23,48 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Keep Home and Marketplace, remove the old categories and add three anchors
+    // that point to sections on the home page (A feature, Work Flow, About)
     const navButtons = [
         { label: "Home", path: "/" },
         { label: "Marketplace", path: "/all-gigs" },
-        { label: "Live Auctions", path: "/liveauctions" },
-        { label: "Digital Arts", path: "/digitalarts" },
-        { label: "Photographs", path: "/photographs" },
+        { label: "Feature", path: "/#feature" },
+        { label: "Work Flow", path: "/#workflow" },
+        { label: "About", path: "/#about" },
     ];
 
     // Highlight the correct nav button based on current path, otherwise no highlight
     useEffect(() => {
-        // Only highlight if on a known nav button path, otherwise clear highlight
-        const found = navButtons.find(btn =>
-            location.pathname === btn.path ||
-            (btn.path !== "/" && location.pathname.startsWith(btn.path))
-        );
+        // Highlight based on pathname OR hash (for home anchors like /#feature)
+        const found = navButtons.find(btn => {
+            // support hash-based entries like '/#feature'
+            if (btn.path.includes('#')) {
+                const [base, hash] = btn.path.split('#');
+                // hash in location (e.g. '#feature')
+                if (location.pathname === base && location.hash === `#${hash}`) return true;
+                // if on the base path without hash, don't mark as active
+                return false;
+            }
+
+            if (btn.path === '/') return location.pathname === '/';
+            return location.pathname.startsWith(btn.path);
+        });
+
         setActiveButton(found ? found.label : "");
-    }, [location.pathname]);
+    }, [location.pathname, location.hash]);
+
+    // When the location hash changes, try to smoothly scroll to the element (works for anchors)
+    useEffect(() => {
+        if (!location.hash) return;
+        const id = location.hash.replace('#', '');
+        // Delay briefly so target exists after navigation
+        const t = setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
+
+        return () => clearTimeout(t);
+    }, [location.pathname, location.hash]);
 
     const handleDropDownClick = () => setIsDropdownOpen((prev) => !prev);
     const handleDropdownClose = () => setIsDropdownOpen(false);
@@ -76,7 +103,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
 
     return (
         <div className={styles.NavBar}>
-            <img src="src/assets/FooterImage/logo.svg" className={styles.pixoraIcon} alt="code dript Logo" />
+            <img src={logo} className={styles.pixoraIcon} alt="code dript Logo" />
             
             <button 
                 className={`${styles.burgerButton} ${isMobileMenuOpen ? styles.burgerOpen : ''}`}
@@ -94,6 +121,18 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
                         key={btn.label}
                         className={`${styles.NavButton} ${activeButton === btn.label ? styles.activeNavButton : ""}`}
                         onClick={() => {
+                            // If the button contains a hash (anchor) we try to navigate and set the hash
+                            if (btn.path.includes('#')) {
+                                // use window.location to update the hash and scroll to the anchor
+                                const [base, hash] = btn.path.split('#');
+                                // navigate to base first if needed
+                                if (location.pathname !== base) navigate(base);
+                                // then set the hash — this will update location.hash and cause browser to scroll
+                                window.location.hash = `#${hash}`;
+                                setIsMobileMenuOpen(false);
+                                return;
+                            }
+
                             navigate(btn.path);
                             setIsMobileMenuOpen(false);
                         }}
@@ -145,7 +184,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
                 ) : (
                     <div className={styles.profileContainer}>
                         <button className={styles.profileButton} onClick={handleDropDownClick}>
-                        <img src="src/assets/Navimage/userIcon.svg" className={styles.UserIcon} alt="Profile" />
+                        <img src={userIcon} className={styles.UserIcon} alt="Profile" />
                         </button>
                         {isDropdownOpen && (
                             <UserIconDropdown onClose={handleDropdownClose} onLogout={onLogout} userRole={userRole} />

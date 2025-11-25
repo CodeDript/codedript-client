@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
 import GigCard from '../../components/card/GigCard/GigCard';
 import HomeGameCard from '../../components/HomeGameCard/HomeGameCard';
@@ -16,9 +17,12 @@ import sponsored3 from '../../assets/Sponsors/Sponsored_3.png';
 import sponsored4 from '../../assets/Sponsors/Sponsored_4.png';
 import { GigService, type Gig } from '../../api/gigService';
 
+
 import styles from './Home.module.css';
 
+
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   const [featuredGigs, setFeaturedGigs] = useState<Gig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,10 +54,10 @@ const Home: React.FC = () => {
 
   return (
     <div className={styles.homePage}>
-      <HeroMain />
-      {/* <HeroSecondary />
-      <DeveloperHero />
-      <UserHero /> */}
+     
+      <div className={styles.homeContent}>
+        <HeroMain />
+     
       
       
         <div className={styles.centerButtonRow}>
@@ -77,9 +81,11 @@ const Home: React.FC = () => {
       <section className={styles.cardsSection}>
         <div className={styles.cardsContainer}>
          
-         
-         <HeaderText text="Built for Modern Freelancers" subHeader="Eliminate payment disputes, reduce fees, and build trust with blockchain-powered 
-agreements " />   
+        
+         <div id="feature">
+           <HeaderText text="Built for Modern Freelancers" subHeader="Eliminate payment disputes, reduce fees, and build trust with blockchain-powered 
+agreements " />
+         </div>
           <div className={styles.cardsGrid}>
             <HomeGameCard gameId={1} />
             <HomeGameCard gameId={2} />
@@ -88,6 +94,8 @@ agreements " />
             <HomeGameCard gameId={5} />
             <HomeGameCard gameId={6} />
           </div>
+
+
         </div>
       </section>
       {/* Promotional Strip */}
@@ -95,7 +103,7 @@ agreements " />
         <div className={styles.promoInner}>
           <div className={styles.promoText}>
             <div className={styles.topBtn}>
-              <Button2 text="View more →" onClick={() => console.log('View more')} />
+              <Button2 text="View more →" onClick={() => navigate('/all-gigs')} />
             </div>
 
             <h2>Earn With Us, Become a Developer</h2>
@@ -154,13 +162,15 @@ agreements " />
         </div>
       </section>
       {/* Workflow Section */}
-      
-         <HeaderText text="Trusted by Freelancers Worldwide" subHeader=" " />   
-      <WorkFlow />
+      <div id="workflow">
+        <HeaderText text="Trusted by Freelancers Worldwide" subHeader=" " />   
+        <WorkFlow />
+      </div>
 
       <About />
       <SponsorSection sponsors={sponsors} />      
       <Footer />
+      </div>
     </div>
   );
 };

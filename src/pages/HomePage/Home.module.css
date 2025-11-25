@@ -24,6 +24,12 @@
 .homePage {
   width: 100%;
   min-height: 100vh;
+  position: relative; /* allow absolutely positioned background to sit inside */
+}
+
+.homeContent {
+  position: relative;
+  z-index: 1; /* ensure content is above the background images */
 }
 
 .buttonSection {
@@ -156,6 +162,11 @@
   color: #cfcfcf;
   max-width: 760px;
   line-height: 1.4;
+}
+
+/* Use Jura font for the promotional paragraph to match heading */
+.promoText p {
+  font-family: 'Jura', sans-serif;
 }
 .promoButtons { display:flex; gap:12px; align-items:center; }
 .topBtn { padding-bottom: 70px; display:inline-block; margin-top: -40px; }

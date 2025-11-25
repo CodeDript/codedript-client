@@ -104,6 +104,15 @@
   color: #222;
   font-weight: 100;
   margin-bottom: 2px;
+  /* 5px left/right margins as requested */
+  margin-left: 5px;
+  margin-right: 5px;
+  /* limit to roughly 25 characters using 'ch' unit and truncate with an ellipsis */
+  max-width: 25ch;
+  display: inline-block; /* ensure max-width applies */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* single-line with ellipsis */
 }
 .reviewer {
   font-size: 18px;
@@ -111,6 +120,20 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* single-line ellipsis for reviewer name only (do NOT truncate order ID) */
+.reviewer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* keep orderNumber readable — allow natural wrapping / full display */
+.orderNumber {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 .userIcon {
   font-size: 14px;
@@ -155,6 +178,13 @@
   height: 100%;
   padding-top: 18px;
   
+}
+
+/* date cell single-line truncation */
+.dateCell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .reviewCell {
   flex: 2.5;

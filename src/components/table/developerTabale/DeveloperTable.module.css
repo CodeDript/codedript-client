@@ -13,6 +13,8 @@
 
 .tableWrapper {
   scale: 0.97;
+  /* make wrapper occupy full available width; keep internal fixed-size columns intact */
+  width: 100%;
   min-height: 200px;
 
 
@@ -20,7 +22,7 @@
   background-position: left top;
   background-size: 100% auto;
   border-radius: 16px;
- margin-left: -20px;
+ margin-left: 0; /* remove negative offset so it aligns with container edges */
 
  
   font-family: 'Jura', 'Zen Dots', Arial, sans-serif;
@@ -81,18 +83,41 @@
 .row + .row { margin-top: 2px; }
 
 .orderCell { min-width: 66px; text-align: center; color: #a9a9a9; font-family: 'Zen Dots';font-size: 22px; }
+.orderCell .orderNumber {
+  display: inline-block;
+  /* limit to ~6 characters visually and show ellipsis for overflow */
+  max-width: 6ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .titleCell { flex: 1; }
-.titleMain { font-weight: 100; font-size: 18px; color: #222;font-family: 'Zen Dots'; }
-.reviewer { font-size: 18px; color: #9a9a9a; margin-top: 4px; }
-.dateCell { min-width: 160px; color: #888; text-align: center; }
-.statusCell { min-width: 120px; display:flex; justify-content:center; }
+.titleMain { font-weight: 100; font-size: 18px; color: #222;font-family: 'Zen Dots';
+  /* single-line title with ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  /* add left/right spacing as requested */
+  margin: 0 10px;
+}
+.reviewer { font-size: 18px; color: #9a9a9a; margin-top: 4px; 
+  /* truncate reviewer on single line with ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 10px; /* same horizontal spacing */
+}
+.dateCell { min-width: 160px; color: #888; text-align: center; 
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.statusCell { min-width: 120px; display:flex; justify-content:center; overflow: hidden; }
 .pill { padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 700;}
 .pill-active { background: #c0f7d1; color: #14974a; }
 .pill-pending { background: #f8ddae; color: #b27b2a; }
 .pill-ongoing { background: #cbddfd; color: #2e69b7; }
 .pill-incoming { background: #c8e0fc; color: #2e6b9b; }
 .pill-paid { background: #bef8ee; color: #1a8b72; }
-.amountCell { min-width: 170px; font-family: 'Zen Dots'; font-size: 28px; text-align: right; font-weight: 500;}
+.amountCell { min-width: 170px; font-family: 'Zen Dots'; font-size: 28px; text-align: right; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 0px; }
 
 /* scrollbar */
 .body::-webkit-scrollbar { width: 10px; }

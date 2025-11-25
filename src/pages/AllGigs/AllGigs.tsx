@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import styles from './AllGigs.module.css';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import GigCard from '../../components/card/GigCard/GigCard';
@@ -15,6 +15,8 @@ const AllGigs: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -71,6 +73,37 @@ const AllGigs: React.FC = () => {
     fetchGigs();
   }, [page]);
 
+  // debounce search input for better performance
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // Client-side filtered list based on debounced query
+  const filteredGigs = useMemo(() => {
+    const q = (debouncedQuery || '').toLowerCase();
+    const tokens = q.split(/\s+/).filter(Boolean);
+
+    return gigs.filter((gig) => {
+      if (tokens.length === 0) return true;
+
+      // aggregate searchable text
+      const title = (gig.title || '').toLowerCase();
+      const desc = (gig.description || '').toLowerCase();
+      const devName = (gig.developer && (gig.developer as any).profile && (gig.developer as any).profile.name)
+        ? ((gig.developer as any).profile.name as string).toLowerCase()
+        : '';
+      const skills = Array.isArray((gig.developer as any)?.profile?.skills)
+        ? (gig.developer as any).profile.skills.map((s: string) => s.toLowerCase()).join(' ')
+        : '';
+
+      // All tokens must match somewhere (AND search)
+      return tokens.every((tkn) => {
+        return title.includes(tkn) || desc.includes(tkn) || skills.includes(tkn) || devName.includes(tkn);
+      });
+    });
+  }, [gigs, debouncedQuery]);
+
   return (
  <div className={styles.homePage}>
        <HeroSecondary />  
@@ -78,13 +111,25 @@ const AllGigs: React.FC = () => {
       <section className={styles.gameCardsSection}>
         <div className={styles.gameCardsContainer}>
           
+          {/* Search bar */}
+          <div className={styles.searchBar}>
+            <input
+              type="text"
+              placeholder="Search gigs by title, description or skill..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+            {/* single search input only; filtering runs automatically */}
+          </div>
+
           <div className={styles.gigCardsGrid}>
             {isLoading ? (
               <p>Loading gigs...</p>
             ) : error ? (
-              <p>Error loading gigs. Please try again later.</p>
-            ) : gigs.length > 0 ? (
-              gigs.map((gig) => {
+              <p></p>
+            ) : filteredGigs.length > 0 ? (
+              filteredGigs.map((gig) => {
                 // Defensive checks for null/undefined developer or profile
                 const dev = gig.developer || { profile: {}, reputation: { rating: 0, reviewCount: 0 } };
                 const profile = dev.profile || {};
@@ -117,7 +162,7 @@ const AllGigs: React.FC = () => {
                 );
               })
             ) : (
-              <p>No gigs available at the moment.</p>
+              null
             )}
           </div>
           {/* load more and create gig buttons */}
@@ -135,7 +180,7 @@ const AllGigs: React.FC = () => {
               )}
             </div>
             <div>
-              <Button1 text="Create Gige" onClick={() => navigate('/create-gig')} />
+             
             </div>
           </div>
         </div>

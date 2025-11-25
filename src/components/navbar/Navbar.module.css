@@ -20,6 +20,9 @@
     z-index: 5;
 }
 
+/* import Zen Dots font for nav labels */
+@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
+
 .pixoraIcon {
     background-color: transparent;
     height: 30px;
@@ -86,10 +89,10 @@
     width: fit-content;
 
     color: var(--white-4);
-    font-family: "Inter-Bold", Helvetica;
+    font-family: 'Zen Dots', "Inter-Bold", Helvetica;
     font-size: var(--font-size-s);
     font-style: normal;
-    font-weight: 600;
+    font-weight: 100; /* thin - matches request */
 
     cursor: pointer;
     transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
@@ -352,4 +355,35 @@
     .loginButton {
         margin-right: 40px;
     }
+}
+
+/* Active nav item state (applies when location matches) */
+.activeNavButton {
+    color: #ffffff; /* strong white */
+    font-weight: 400; /* slightly heavier for emphasis */
+    /* removed text-shadow and underline per request */
+    transform: scale(1.04);
+    transition: transform 160ms ease, color 160ms ease;
+    padding-bottom: 4px;
+
+    /* blinking animation to draw attention */
+    animation: navBlink 900ms linear infinite;
+}
+
+/* Ensure active state looks good in mobile menu as well */
+@media (max-width: 768px) {
+    .activeNavButton {
+        transform: none;
+        color: #ffffff;
+        /* keep the blink subtle on mobile */
+        animation: navBlink 1200ms linear infinite;
+    }
+}
+
+/* blinking animation keyframes */
+@keyframes navBlink {
+  0%   { opacity: 1; filter: none; }
+  45%  { opacity: 0.7; filter: brightness(0.9); }
+  55%  { opacity: 0.95; filter: brightness(1.05); }
+  100% { opacity: 1; filter: none; }
 }

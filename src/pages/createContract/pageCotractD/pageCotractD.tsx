@@ -19,6 +19,7 @@ import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
 import { useAgreement } from '../../../context/AgreementContext';
 import ChatWidget from '../../../components/chat/ChatWidget';
+import Footer from '../../../components/footer/Footer';
 
 const PageCotractD: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -483,6 +484,7 @@ const PageCotractD: React.FC = () => {
     : (rightIsCreate ? 'Create Contract' : (rightIsDeveloperAccept ? 'Accept & Submit to Client' : (rightIsClientApprove ? 'Approve & Pay' : (step < 5 ? 'Next' : 'Finish'))));
 
   return (
+    <div className={styles.container1}>
     <div className={styles.container}>
       <div className={styles.inner}>
         {/* reuse AuthForm card layout */}
@@ -624,8 +626,13 @@ const PageCotractD: React.FC = () => {
           </div>
         </div>
         <ChatWidget />
+        
       </div>
+      
     </div>
+    <Footer />
+    
+ </div>
   );
 };
 

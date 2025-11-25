@@ -10,7 +10,7 @@ of NFTs today
 Unleash your creativity and problem-solving skills with cutting-edge technology.`;
 
   return (
-    <section className={styles.aboutContainer}>
+    <section id="about" className={styles.aboutContainer}>
       <div className={styles.grayBackground} />
       <svg className={`${styles.backgroundSvg} ${styles.backgroundSvg1}`} width="1920" height="632" viewBox="0 0 1960 832" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
         <path d="M1959 2.5V197.5H1552.12L1551.6 199.301L1525.1 290.301L1524.68 291.737L1525.75 292.784L1659.25 423.784L1659.98 424.5H1988V488.5H1583.54L1490.54 395.5H1289.89L1289.23 396.961L1175.39 646H490.762L490.156 647.63L459.762 729.5H296.379L280.401 674.305L279.879 672.5H1.5V458.739L97.8594 310H245.822L292.572 366.592L293.322 367.5H796.953L797.672 366.238L980.453 45.5H1221.65L1273.47 85.4795L1274.15 86H1584.14L1584.8 84.4902L1620.14 2.5H1959Z" stroke="#53535354" strokeOpacity="1" strokeWidth="5"/>

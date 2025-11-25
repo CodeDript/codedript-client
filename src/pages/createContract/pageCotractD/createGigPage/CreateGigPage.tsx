@@ -13,6 +13,7 @@ import CreateReviewStep from './CreateReviewStep';
 import { useAgreement } from '../../../../context/AgreementContext';
 import { GigService } from '../../../../api/gigService';
 
+
 const CreateGigPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('Website Redesign Project');
@@ -170,7 +171,8 @@ const CreateGigPage: React.FC = () => {
     : (rightIsPublish ? 'Publish Gig' : (step < 4 ? 'Next' : 'Finish'));
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container1}>
+       <div className={styles.container}>
       <div className={styles.inner}>
         <div className={authStyles.formOuter}>
           <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
@@ -268,7 +270,10 @@ const CreateGigPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
     </div>
+    
+        </div>
   );
 };
 
