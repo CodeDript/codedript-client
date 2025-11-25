@@ -95,6 +95,13 @@ const CreateGigPage: React.FC = () => {
     setCreateError(null);
 
     try {
+      // Validate images
+      if (uploadedFiles.length > 5) {
+        setCreateError('Maximum 5 images allowed');
+        setIsCreatingGig(false);
+        return;
+      }
+
       // Get packages from context (set by CreatePriceing step)
       const packages = formData.gigData?.packages || [];
       
@@ -133,8 +140,15 @@ const CreateGigPage: React.FC = () => {
         images: uploadedFiles
       };
 
+      console.log('📝 Creating gig with data:', {
+        ...gigData,
+        images: uploadedFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      });
+
       // Call the API
       const result = await GigService.createGig(gigData);
+
+      console.log('✅ Gig creation result:', result);
 
       if (result.success && result.data) {
         // Success - navigate to the created gig or developer dashboard

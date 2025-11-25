@@ -6,6 +6,7 @@ import Button2 from '../../../../components/button/Button2/Button2';
 import MilestoneCard from '../../../../components/card/milestoneCard/MilestoneCard';
 import { mockMilestones } from '../../../../constants/milestonesMock';
 import { completeAgreement } from '../../../../services/ContractService';
+import { MilestoneService, type Milestone as APIMilestone } from '../../../../api/milestoneService';
 
 type Milestone = { title: string; due?: string; amount?: string; status?: string };
 
@@ -24,13 +25,68 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const navigate = useNavigate();
   const location = useLocation();
   const agreement = location.state?.agreement;
-  const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : mockMilestones);
+  const [localMilestones, setLocalMilestones] = useState<any[]>(milestones && milestones.length ? milestones : mockMilestones);
+  const [apiMilestones, setApiMilestones] = useState<APIMilestone[]>([]);
   const [isReleasingPayment, setIsReleasingPayment] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
+  const [isLoadingMilestones, setIsLoadingMilestones] = useState(false);
 
   useEffect(() => {
-    setLocalMilestones(milestones && milestones.length ? milestones : mockMilestones);
+    const initMilestones = milestones && milestones.length ? milestones : mockMilestones;
+    // Set first milestone to in_progress, rest to pending
+    const initializedMilestones = initMilestones.map((m, i) => ({
+      ...m,
+      status: i === 0 ? 'inprogress' : 'pending'
+    }));
+    setLocalMilestones(initializedMilestones);
   }, [milestones]);
+
+  // Fetch actual milestones from API if agreement exists
+  useEffect(() => {
+    const fetchMilestones = async () => {
+      if (agreement?._id) {
+        setIsLoadingMilestones(true);
+        try {
+          console.log('📊 Fetching milestones for agreement:', agreement._id);
+          const fetchedMilestones = await MilestoneService.getMilestonesByAgreement(agreement._id);
+          console.log('✅ Milestones loaded:', fetchedMilestones);
+          
+          // Set first milestone to in_progress if all are pending
+          const allPending = fetchedMilestones.every(m => m.status === 'pending');
+          if (allPending && fetchedMilestones.length > 0) {
+            try {
+              await MilestoneService.startMilestone(fetchedMilestones[0]._id);
+              const updatedMilestones = await MilestoneService.getMilestonesByAgreement(agreement._id);
+              setApiMilestones(updatedMilestones);
+            } catch (err) {
+              console.error('Failed to start first milestone:', err);
+              setApiMilestones(fetchedMilestones);
+            }
+          } else {
+            setApiMilestones(fetchedMilestones);
+          }
+        } catch (error) {
+          console.error('Error fetching milestones:', error);
+        } finally {
+          setIsLoadingMilestones(false);
+        }
+      }
+    };
+
+    fetchMilestones();
+  }, [agreement?._id]);
+
+  const handleMilestoneUpdated = async () => {
+    // Refresh milestones after upload
+    if (agreement?._id) {
+      try {
+        const fetchedMilestones = await MilestoneService.getMilestonesByAgreement(agreement._id);
+        setApiMilestones(fetchedMilestones);
+      } catch (error) {
+        console.error('Error refreshing milestones:', error);
+      }
+    }
+  };
 
   const total = localMilestones.reduce((s, m) => s + Number(m.amount || 0), 0);
   const progress = localMilestones.length ? Math.round((localMilestones.filter(m => m.status === 'done').length / localMilestones.length) * 100) : 0;
@@ -38,6 +94,20 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const handleUpdateMilestoneStatus = (index: number | undefined, newStatus: string) => {
     if (typeof index !== 'number') return;
     setLocalMilestones(prev => prev.map((m, i) => i === index ? { ...m, status: newStatus } : m));
+  };
+
+  // Check if a milestone can be completed (all previous milestones must be completed)
+  const canCompleteMilestone = (index: number, milestones: any[]) => {
+    if (index === 0) return true; // First milestone can always be completed
+    
+    // Check if all previous milestones are completed
+    for (let i = 0; i < index; i++) {
+      const status = milestones[i].status;
+      if (status !== 'completed' && status !== 'approved' && status !== 'done') {
+        return false;
+      }
+    }
+    return true;
   };
 
   const handleReleasePayment = async () => {
@@ -147,7 +217,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
 
         <div className={styles.milestoneFooter}>
           <div className={styles.totalLabel}>Total</div>
-          <div className={styles.totalValue}>{total} {currency}</div>
+          <div className={styles.totalValue}>{value} {currency}</div>
         </div>
 
        
@@ -161,15 +231,41 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
         <div className={styles.milestoneCard}>
         <div className={styles.milestoneHeader}>Milestone Breakdown</div>
           <div className={styles.milestoneList}>
-            {localMilestones.map((m, i) => (
-              <MilestoneCard
-                key={i}
-                index={i}
-                milestone={m}
-                editable={true}
-                onUpdateStatus={handleUpdateMilestoneStatus}
-              />
-            ))}
+            {isLoadingMilestones ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+                Loading milestones...
+              </div>
+            ) : apiMilestones.length > 0 ? (
+              apiMilestones.map((m, i) => (
+                <MilestoneCard
+                  key={m._id}
+                  index={i}
+                  milestone={{
+                    _id: m._id,
+                    title: m.title,
+                    due: m.timeline.dueDate ? new Date(m.timeline.dueDate).toLocaleDateString() : undefined,
+                    amount: m.financials.value.toString(),
+                    status: m.status,
+                    submission: m.submission
+                  }}
+                  editable={true}
+                  canComplete={canCompleteMilestone(i, apiMilestones)}
+                  onUpdateStatus={handleUpdateMilestoneStatus}
+                  onMilestoneUpdated={handleMilestoneUpdated}
+                />
+              ))
+            ) : (
+              localMilestones.map((m, i) => (
+                <MilestoneCard
+                  key={i}
+                  index={i}
+                  milestone={m}
+                  editable={true}
+                  canComplete={canCompleteMilestone(i, localMilestones)}
+                  onUpdateStatus={handleUpdateMilestoneStatus}
+                />
+              ))
+            )}
           </div>
         </div>
       

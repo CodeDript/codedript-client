@@ -95,6 +95,43 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
             <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formatId(formData?.developerReceivingAddress || developerReceivingAddress || developerWallet || '') || 'No receiving address'}</div>
           </div>
         </div>
+
+        {/* Uploaded Images Preview */}
+        {files && files.length > 0 && (
+          <>
+            <div className={styles.juraTitle} style={{paddingTop: '20px', fontFamily: 'Jura', fontWeight: 500}}>Gig Images ({files.length})</div>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
+              gap: '1rem',
+              marginTop: '1rem',
+              padding: '1rem',
+              backgroundColor: '#f9f9f9',
+              borderRadius: '8px'
+            }}>
+              {files.map((file, index) => (
+                <div key={index} style={{
+                  width: '100%',
+                  aspectRatio: '1',
+                  overflow: 'hidden',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  <img 
+                    src={URL.createObjectURL(file)} 
+                    alt={`Preview ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Packages summary - show if gigData packages exist, otherwise show N/A table */}
         <div className={styles.juraTitle} style={{paddingTop: '20px', fontFamily: 'Jura', fontWeight: 500}}>Packages</div>
         <div className={styles.reviewBox}>
