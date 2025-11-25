@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/HomePage/Home.tsx';
 import AllGigs from './pages/AllGigs/AllGigs.tsx';
 import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
+import NotFound from './pages/NotFound/NotFound';
 import GigView from './pages/GigView/gigview.tsx';
 // ContractProcessing was moved into components/ContractPages — update import path
 import ContractProcessing from './components/ContractPages/contractprocessing.tsx';
@@ -57,6 +58,7 @@ function AppContent() {
           <Route path="/create-contract/rules" element={<ContractView />} />
           <Route path="/create-contract/request-change" element={<RequestChange />} />
           <Route path="/create-contract/terms" element={<RulesAndConditions />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       <Alert />
