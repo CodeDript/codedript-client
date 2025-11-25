@@ -5,8 +5,7 @@ import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
 import { GigService, type Gig } from '../../api/gigService';
 import { ApiService } from '../../services/apiService';
-import { useNavigate } from 'react-router-dom';
-import Button1 from '../../components/button/Button1/Button1';
+
 
 const AllGigs: React.FC = () => {
   const [gigs, setGigs] = useState<Gig[]>([]);
@@ -14,7 +13,7 @@ const AllGigs: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
