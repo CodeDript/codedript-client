@@ -145,7 +145,7 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
                 ) : (
                     <div className={styles.profileContainer}>
                         <button className={styles.profileButton} onClick={handleDropDownClick}>
-                        <img src="src/assets/Navimage/User icon.png" className={styles.UserIcon} alt="Profile" />
+                        <img src="src/assets/Navimage/userIcon.svg" className={styles.UserIcon} alt="Profile" />
                         </button>
                         {isDropdownOpen && (
                             <UserIconDropdown onClose={handleDropdownClose} onLogout={onLogout} userRole={userRole} />
