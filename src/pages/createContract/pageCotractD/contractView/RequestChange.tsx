@@ -76,7 +76,7 @@ const RequestChange: React.FC = () => {
           
           // If blockchain transaction exists but no agreementId, extract it
           if (blockchainData?.transactionHash && !blockchainData?.agreementId) {
-            console.log('⚠️ Blockchain ID missing. Extracting from transaction:', blockchainData.transactionHash);
+            console.log('Blockchain ID missing. Extracting from transaction:', blockchainData.transactionHash);
             try {
               const ContractService = await import('../../../../services/ContractService') as any;
               const extractedId = await ContractService.getAgreementIdFromTransaction(blockchainData.transactionHash);
