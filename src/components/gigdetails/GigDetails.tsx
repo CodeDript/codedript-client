@@ -1,7 +1,12 @@
 import React, { useRef } from 'react';
 import styles from './GigDetails.module.css';
 import downBlackLine from '../../assets/svg/downBlackLine.svg';
-const GigDetails: React.FC = () => {
+
+type Props = {
+  images?: Array<{ url: string; publicId?: string }>;
+};
+
+const GigDetails: React.FC<Props> = ({ images = [] }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const handleScroll = (dir: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -13,7 +18,8 @@ const GigDetails: React.FC = () => {
     }
   };
 
-  const placeholders = Array.from({ length: 6 });
+  // Use actual images if available, otherwise show placeholders
+  const displayItems = images.length > 0 ? images : Array.from({ length: 6 }).map((_, i) => ({ url: '', publicId: `placeholder-${i}` }));
 
   return (
     <div className={styles.card}>
@@ -27,9 +33,29 @@ const GigDetails: React.FC = () => {
           </svg>
         </button>
         <div className={styles.imageRow} ref={scrollRef}>
-          {placeholders.map((_, i) => (
-            <div className={styles.imagePlaceholder} key={i}>
-              <span className={styles.imageIcon}>
+          {displayItems.map((item, i) => (
+            <div className={styles.imagePlaceholder} key={item.publicId || i}>
+              {item.url ? (
+                <img 
+                  src={item.url} 
+                  alt={`Gig reference ${i + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '8px'
+                  }}
+                  onError={(e) => {
+                    console.error('Failed to load gig image:', item.url);
+                    // Show placeholder icon on error
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <span className={styles.imageIcon} style={{ display: item.url ? 'none' : 'flex' }}>
                 <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#E0E0E0"/><path d="M8 13l2.5 3.5L15 11l4 6H5l3-4z" fill="#BDBDBD"/><circle cx="9" cy="9" r="2" fill="#BDBDBD"/></svg>
               </span>
             </div>

@@ -161,17 +161,31 @@ export class AgreementService {
   }
 
   /**
+   * Extract and save blockchain agreement ID from existing transaction
+   */
+  static async extractBlockchainId(
+    id: string,
+    blockchainAgreementId: number
+  ): Promise<ApiResponse<any>> {
+    return ApiService.post<any>(`/agreements/${id}/extract-blockchain-id`, {
+      blockchainAgreementId
+    });
+  }
+
+  /**
    * Client approves agreement after developer sets payment terms
    * Includes blockchain transaction hash from createAgreement call
    */
   static async clientApproveAgreement(
     id: string, 
     blockchainTxHash: string, 
-    ipfsHash?: string
+    ipfsHash?: string,
+    blockchainAgreementId?: number
   ): Promise<ApiResponse<Agreement>> {
     return ApiService.post<Agreement>(`/agreements/${id}/client-approve`, {
       blockchainTxHash,
-      ipfsHash
+      ipfsHash,
+      blockchainAgreementId
     });
   }
 

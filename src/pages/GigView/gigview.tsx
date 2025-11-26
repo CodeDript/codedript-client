@@ -78,7 +78,7 @@ const GigView: React.FC = () => {
       <div className={styles.detailsSection}>
         <h2>Gig Details</h2>
         <div className={styles.details}>
-          <GigDetails />
+          <GigDetails images={gig.images} />
         </div>
       </div>
  <div className={styles.descriptionSection}>
