@@ -55,7 +55,7 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
                 developerFromGig = gigData.developer;
                 walletToUse = developerFromGig.walletAddress || developerFromGig.wallet || '';
                 console.log('Extracted developer from gig:', developerFromGig);
-                console.log('Extracted wallet from gig:', walletToUse);
+                console.log('Extracted wallet from gig :', walletToUse);
                 
                 // Store gig data in context for global access
                 const gigDataForContext: GigData = {
