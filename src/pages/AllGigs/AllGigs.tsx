@@ -5,6 +5,7 @@ import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
 import { GigService, type Gig } from '../../api/gigService';
 import { ApiService } from '../../services/apiService';
+import BackgroundBasePlates2 from '../../components/BackgroundBasePlates/BackgroundBasePlates2';
 
 
 const AllGigs: React.FC = () => {
@@ -105,6 +106,7 @@ const AllGigs: React.FC = () => {
 
   return (
  <div className={styles.homePage}>
+       <BackgroundBasePlates2 />
        <HeroSecondary />  
      
       <section className={styles.gameCardsSection}>

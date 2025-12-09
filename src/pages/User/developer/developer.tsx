@@ -7,6 +7,7 @@ import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 
+
 const Developer: React.FC = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Developer: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      
       <DeveloperHero 
         userName={user.profile?.name || 'Anonymous'}
         userImage={user.profile?.avatar}

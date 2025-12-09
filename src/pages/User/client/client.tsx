@@ -7,12 +7,14 @@ import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 
+
 const Client: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   return (
     <div className={styles.container}>
+     
       <UserHero />
       
       {/* Client Contracts Section */}

@@ -7,6 +7,7 @@ import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
 import { GigService, type Gig } from '../../api/gigService';
 import Footer from '../../components/footer/Footer';
+import BackgroundBasePlates2 from '../../components/BackgroundBasePlates/BackgroundBasePlates2';
 
 const GigView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +50,7 @@ const GigView: React.FC = () => {
 
   return (
     <div className={styles.container}>
-         
+         <BackgroundBasePlates2 />
       <DeveloperHero 
         userName={profile.name || 'Anonymous'}
         userImage={profile.avatar || undefined}

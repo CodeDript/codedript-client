@@ -4,6 +4,7 @@ import styles from './contractsViewBase.module.css';
 import authStyles from '../../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
 import heroOutlinedown from '../../../../assets/Login/cardBackgrounddown.svg';
+import BackgroundBasePlates2 from '../../../../components/BackgroundBasePlates/BackgroundBasePlates2';
 
 // icons removed for contractView (project details and step icons)
 import ContractSummary from './ContractSummary';
@@ -67,6 +68,7 @@ const PageCotractD: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <BackgroundBasePlates2 />
       <div className={styles.inner}>
         {/* reuse AuthForm card layout */}
         <div className={authStyles.formOuter}>
