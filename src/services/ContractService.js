@@ -19,12 +19,12 @@ import {
 // ============================================
 
 const client = createThirdwebClient({
-  clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "2dbc75b40a8741be9d2d8354b7a63106",
+  clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
 });
 
 const wallet = createWallet("io.metamask");
 
-export const CONTRACT_ADDRESS = import.meta.env.VITE_AGREEMENT_CONTRACT || "0xAB75C3059bCF1d5D13AF231C2DaBb86ebbcB0867";
+export const CONTRACT_ADDRESS = import.meta.env.VITE_AGREEMENT_CONTRACT;
 
 // ============================================
 // CONTRACT ABI
