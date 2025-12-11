@@ -63,8 +63,7 @@ jobs:
           script: |
             cd ~/src/codedript-infra || exit 1
             docker compose pull client
-            docker compose up -d client
-            docker compose restart nginx
+            docker compose up -d
             docker image prune -f
             sleep 5
             docker compose ps client | grep -q "Up" || { docker compose logs --tail=50 client; exit 1; }
