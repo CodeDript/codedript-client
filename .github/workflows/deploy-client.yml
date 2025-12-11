@@ -34,8 +34,8 @@ jobs:
           script: |
             cd ~/src/codedript-client || exit 1
             git pull origin main
+            docker build -t codedript-client:local .
             cd ~/src/codedript-infra || exit 1
-            docker compose build client
             docker compose up -d
             docker image prune -f
             sleep 5
