@@ -48,6 +48,10 @@ jobs:
           cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
           platforms: linux/amd64
+          build-args: |
+            VITE_THIRDWEB_CLIENT_ID=${{ secrets.VITE_THIRDWEB_CLIENT_ID }}
+            VITE_AGREEMENT_CONTRACT=${{ secrets.VITE_AGREEMENT_CONTRACT }}
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
 
       - name: Deploy to EC2 Instance
         uses: appleboy/ssh-action@v1.0.3
