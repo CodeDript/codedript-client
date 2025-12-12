@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import authStyles from './AuthForm.module.css';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import { showAlert } from './Alert';
-import { useAuth } from '../../context/AuthContext';
 
 interface MetaMaskLoginProps {
   onLoginSuccess?: () => void;
@@ -11,17 +10,24 @@ interface MetaMaskLoginProps {
 }
 
 const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
-  const { loginWithWallet, clearError } = useAuth();
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Connect wallet and login
   const handleConnect = async () => {
     setIsConnecting(true);
-    clearError();
 
     try {
-      await loginWithWallet();
+      // Mock login - store user in localStorage
+      const mockUser = {
+        _id: 'user-001',
+        email: 'user@example.com',
+        role: 'client',
+        profile: { name: 'Mock User' },
+        walletAddress: '0x1234567890abcdef'
+      };
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
       showAlert('Login successful!', 'success');
       
       // Call success callback if provided
@@ -55,8 +61,6 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
     } catch (err: any) {
       console.error('Login error:', err);
       showAlert(err.message || 'Failed to connect wallet', 'error');
-      // clear context error so it doesn't linger
-      clearError();
     } finally {
       setIsConnecting(false);
     }

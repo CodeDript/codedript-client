@@ -10,8 +10,6 @@ import CreateDetailsStep from './CreateDetailsStep';
 import CreatePriceing from './CreatePriceing';
 import CreateFilesTermsStep from './CreateFilesTermsStep';
 import CreateReviewStep from './CreateReviewStep';
-import { useAgreement } from '../../../../context/AgreementContext';
-import { GigService } from '../../../../api/gigService';
 
 
 const CreateGigPage: React.FC = () => {
@@ -27,7 +25,8 @@ const CreateGigPage: React.FC = () => {
   const [isCreatingGig, setIsCreatingGig] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const { uploadFilesToIPFS, updateFormData, formData } = useAgreement();
+  // Mock form data
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -40,8 +39,6 @@ const CreateGigPage: React.FC = () => {
   const [milestones] = useState([{ title: 'Initial', amount: '0' }]);
 
   const [filesNote, setFilesNote] = useState('');
-  const uploadedFiles = formData.uploadedFiles;
-  const setUploadedFiles = (files: File[]) => updateFormData({ uploadedFiles: files });
   const [acceptError] = useState<string | null>(null);
   const [, setClientApproved] = useState(false);
 
@@ -63,7 +60,8 @@ const CreateGigPage: React.FC = () => {
       if (routeState.clientEmail) setClientEmail(routeState.clientEmail);
     }
 
-    updateFormData({
+    // Mock - log form data instead of storing
+    console.log('Mock: Form data from route state', {
       projectName: routeState?.title || title,
       projectDescription: routeState?.description || description,
       gigId: routeState?.gigId || gigId,
@@ -80,9 +78,10 @@ const CreateGigPage: React.FC = () => {
   const next = async () => {
     if (step === 3 && uploadedFiles.length > 0) {
       setIsUploadingFiles(true);
-      const result = await uploadFilesToIPFS();
+      // Mock file upload
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Mock: Files uploaded to IPFS');
       setIsUploadingFiles(false);
-      if (!result.success) { alert(`File upload failed: ${result.error || 'Unknown error'}`); return; }
     }
     setStep((s) => Math.min(4, s + 1));
   };
@@ -96,14 +95,14 @@ const CreateGigPage: React.FC = () => {
     setCreateError(null);
 
     try {
-      // Get packages from context (set by CreatePriceing step)
-      const packages = formData.gigData?.packages || [];
+      // Mock - packages would come from CreatePriceing step
+      const packages: any[] = [];
       
-      // Get category from context (set by CreateDetailsStep)
-      const category = formData.gigData?.category || 'other';
+      // Mock - category would come from CreateDetailsStep
+      const category = 'other';
 
       // Calculate pricing from packages (use first package as base pricing)
-      const basePackage = packages.find(p => p.name === 'Basic') || packages[0];
+      const basePackage = packages.find((p: any) => p.name === 'Basic') || packages[0];
       const pricingAmount = basePackage ? basePackage.price : 0;
       const pricingCurrency = basePackage ? basePackage.currency : 'ETH';
       const deliveryTime = basePackage ? basePackage.deliveryTime : 7;
@@ -134,16 +133,17 @@ const CreateGigPage: React.FC = () => {
         images: uploadedFiles
       };
 
-      // Call the API
-      const result = await GigService.createGig(gigData);
-
-      if (result.success && result.data) {
-        // Success - navigate to the created gig or developer dashboard
-        alert('Gig created successfully!');
-        navigate(`/gig/${result.data._id}`);
-      } else {
-        setCreateError(result.message || 'Failed to create gig');
-      }
+      // Call the mock API
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock success response
+      const mockGigId = `gig-${Date.now()}`;
+      console.log('Mock: Gig created successfully', { gigData, mockGigId });
+      
+      // Success - navigate to the created gig or developer dashboard
+      alert('Gig created successfully! (Mock Mode)');
+      navigate(`/gigview/${mockGigId}`);
     } catch (error: any) {
       console.error('Error creating gig:', error);
       setCreateError(error.message || 'An unexpected error occurred');

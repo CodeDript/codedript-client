@@ -3,8 +3,7 @@ import styles from './AllGigs.module.css';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
-import { GigService, type Gig } from '../../api/gigService';
-import { ApiService } from '../../services/apiService';
+import { getRecentGigs, type MockGig as Gig } from '../../mockData/gigData';
 import { useNavigate } from 'react-router-dom';
 import Button1 from '../../components/button/Button1/Button1';
 
@@ -22,41 +21,11 @@ const AllGigs: React.FC = () => {
     const fetchGigs = async () => {
       try {
         setIsLoading(true);
-        const response = await GigService.getRecentGigs(page, 10);
-        let fetchedGigs = response.data as Gig[];
-
-        // If developer is not populated (string id), fetch developer profiles for those gigs
-        const developerIdsToFetch: string[] = [];
-        fetchedGigs.forEach(g => {
-          if (g && g.developer && typeof g.developer === 'string') {
-            developerIdsToFetch.push(g.developer as unknown as string);
-          } else if (g && g.developer && !(g.developer as any).profile) {
-            // developer exists but not populated
-            const maybeId = (g.developer as any)._id || (g.developer as any).toString();
-            if (maybeId) developerIdsToFetch.push(maybeId);
-          }
-        });
-
-        if (developerIdsToFetch.length > 0) {
-          // fetch unique ids
-          const uniqueIds = Array.from(new Set(developerIdsToFetch));
-          const devPromises = uniqueIds.map(id => ApiService.get(`/users/${id}`).then(r => ({ id, data: r.data })).catch(() => null));
-          const devResults = await Promise.all(devPromises);
-          const devMap = new Map<string, any>();
-          devResults.forEach(res => { if (res && res.id) devMap.set(res.id, res.data); });
-
-          // attach developer objects
-          fetchedGigs = fetchedGigs.map(g => {
-            try {
-              const devField: any = g.developer as any;
-              const id = typeof devField === 'string' ? devField : (devField && devField._id) ? devField._id : null;
-              if (id && devMap.has(id)) {
-                return { ...g, developer: devMap.get(id) } as Gig;
-              }
-            } catch (e) {}
-            return g;
-          });
-        }
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const response = getRecentGigs(page, 10);
+        const fetchedGigs = response.data as Gig[];
 
         // append when loading additional pages
         setGigs((prev) => (page === 1 ? fetchedGigs : [...prev, ...fetchedGigs]));

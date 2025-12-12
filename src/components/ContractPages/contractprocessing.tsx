@@ -6,13 +6,10 @@ import Button2 from '../../components/button/Button2/Button2';
 import CardVector from '../../assets/svg/cardvector.svg';
 import Lottie from 'lottie-react';
 import blockchainAnimation from './blockchain.json';
-import { useAgreement } from '../../context/AgreementContext';
-import { connectWallet } from '../../services/ContractService';
 
 const ContractProcessing: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { updateFormData, formData } = useAgreement();
   const [isConnecting, setIsConnecting] = useState(false);
   const [walletError, setWalletError] = useState('');
 
@@ -44,30 +41,21 @@ const ContractProcessing: React.FC = () => {
       const clientName = userData.profile?.name || userData.email?.split('@')[0] || 'Client';
       const clientEmail = userData.email || '';
 
-      // Check if wallet is already connected (from navbar or previous connection)
-      let walletAddress = formData.clientWallet;
+      // Check if wallet is already connected
+      let walletAddress = localStorage.getItem('walletAddress');
 
       if (!walletAddress) {
         console.log('No wallet connected yet, connecting to MetaMask...');
         
-        // Use ContractService to connect wallet (handles ThirdWeb + MetaMask)
-        const account = await connectWallet();
-        walletAddress = account.address;
+        // Mock wallet connection
+        const mockWallet = '0x' + Math.random().toString(16).substring(2, 42);
+        walletAddress = mockWallet;
         console.log('✅ Connected wallet address:', walletAddress);
 
-        // Store client information in context
-        updateFormData({
-          clientWallet: walletAddress,
-          clientName: clientName,
-          clientEmail: clientEmail,
-        });
+        // Store wallet in localStorage
+        localStorage.setItem('walletAddress', walletAddress);
       } else {
         console.log('✅ Wallet already connected:', walletAddress);
-        // Ensure client info is stored even if wallet was already connected
-        updateFormData({
-          clientName: clientName,
-          clientEmail: clientEmail,
-        });
       }
 
       console.log('Client details:', { clientName, clientEmail, walletAddress });

@@ -5,8 +5,7 @@ import logo from '../../assets/Navimage/logo.svg';
 import userIcon from '../../assets/Navimage/userIcon.svg';
 import { useNavigate, useLocation } from "react-router-dom";
 import Button2 from '../../components/button/Button2/Button2';
-import { useAgreement } from '../../context/AgreementContext';
-import { connectWallet } from '../../services/ContractService';
+
 
 type NavBarProps = {
     isLoggedIn: boolean;
@@ -70,8 +69,6 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
     const handleDropDownClick = () => setIsDropdownOpen((prev) => !prev);
     const handleDropdownClose = () => setIsDropdownOpen(false);
 
-    const { updateFormData } = useAgreement();
-
     const handleConnectButton = async () => {
         // If user not authenticated, open login modal
         const stored = localStorage.getItem('user');
@@ -81,19 +78,10 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
         }
 
         try {
-            // Connect MetaMask via ContractService
-            const account = await connectWallet();
-            const walletAddress = account?.address;
-            const userData = JSON.parse(stored);
-
-            // Store client info into AgreementContext
-            updateFormData({
-                clientWallet: walletAddress,
-                clientName: userData?.profile?.name || userData?.email?.split('@')[0] || 'Client',
-                clientEmail: userData?.email || ''
-            });
-
-            // Do not navigate — keep the user on the same page
+            // Connect MetaMask - store wallet in localStorage
+            console.log('Navbar: connecting wallet');
+            const walletAddress = '0x' + Math.random().toString(16).substring(2, 42);
+            localStorage.setItem('walletAddress', walletAddress);
             console.log('Navbar: connected wallet', walletAddress);
         } catch (err: any) {
             console.error('Navbar connect wallet error:', err);

@@ -3,8 +3,19 @@ import styles from './UserHero.module.css';
 // heroGrid removed — not used in this variant
 import heroOutline from '../../../assets/svg/black base.svg';
 import calenderIcon from '../../../assets/svg/calander.svg';
-import { ApiService } from '../../../services/apiService';
-import type { User } from '../../../types';
+
+interface User {
+  _id: string;
+  email: string;
+  role: string;
+  walletAddress: string;
+  profile: {
+    name: string;
+    avatar?: string;
+    bio?: string;
+  };
+  createdAt: string;
+}
 
 const UserHero: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -14,8 +25,23 @@ const UserHero: React.FC = () => {
     const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        const response = await ApiService.get<User>('/auth/me');
-        setUser(response.data);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Mock user data - in a real app, this would come from auth context
+        const mockUser: User = {
+          _id: 'client-001',
+          email: 'john.client@example.com',
+          role: 'client',
+          walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
+          profile: {
+            name: 'John Client',
+            avatar: 'https://i.pravatar.cc/150?img=11',
+          },
+          createdAt: '2023-01-10T00:00:00Z',
+        } as User;
+        
+        setUser(mockUser);
       } catch (err: any) {
         console.error('Failed to fetch user data:', err);
       } finally{

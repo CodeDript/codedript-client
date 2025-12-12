@@ -7,12 +7,15 @@ import cartIcon from '../../assets/DropdownIcon/cart .png';
 import dashboardIcon from '../../assets/DropdownIcon/application.png';
 import signOutIcon from '../../assets/DropdownIcon/sign out option.png';
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '../../context/AuthContext';
+
 
 const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; userRole: string }> = ({ onClose, onLogout, userRole }) => {
     const [isHiding, setIsHiding] = useState(false);
     const navigate = useNavigate();
-    const { user } = useAuth();
+    
+    // Mock user from localStorage
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
 
     const handleClose = () => {
         setIsHiding(true);

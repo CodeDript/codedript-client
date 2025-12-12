@@ -2,14 +2,24 @@ import React from 'react';
 import styles from './developer.module.css';
 import DeveloperHero from '../../../components/hero/DeveloperHero/DeveloperHero';
 import DeveloperTable from '../../../components/table/developerTabale/DeveloperTable';
-import { useAuth } from '../../../context/AuthContext';
 import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 
 const Developer: React.FC = () => {
-  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  
+  // Mock user from localStorage
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : {
+    _id: 'dev-001',
+    role: 'developer',
+    profile: { name: 'Developer', skills: [] },
+    reputation: { rating: 0, reviewCount: 0 },
+    walletAddress: '0x0',
+    createdAt: new Date().toISOString()
+  };
+  const isLoading = false;
 
   if (isLoading) {
     return <div className={styles.container}><p>Loading profile...</p></div>;

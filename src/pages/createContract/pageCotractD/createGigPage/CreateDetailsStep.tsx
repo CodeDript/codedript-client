@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
 
 type Props = {
   title: string;
@@ -12,17 +11,7 @@ type Props = {
 };
 
 const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription, developerReceivingAddress, setDeveloperReceivingAddress }) => {
-  const { formData, updateFormData } = useAgreement();
-  const [category, setCategory] = useState<string>(formData?.gigData?.category || '');
-
-  useEffect(() => {
-    // keep context in sync when category or receiving address changes
-    const newGigData = { ...(formData.gigData || {}), category } as any;
-    updateFormData({ 
-      gigData: newGigData,
-      developerReceivingAddress
-    });
-  }, [category, developerReceivingAddress]);
+  const [category, setCategory] = useState<string>('');
   
   return (
     <>

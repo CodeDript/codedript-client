@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
-import type { GigData, DeveloperProfile } from '../../../../context/AgreementContext';
 
 type Props = {
   clientName: string;
@@ -22,8 +20,6 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
   const [fetchedDeveloperEmail, setFetchedDeveloperEmail] = useState('');
   const [fetchedDeveloperWallet, setFetchedDeveloperWallet] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { setGigData, setDeveloperProfile } = useAgreement();
 
   console.log('PartiesStep props:', { gigId, developerWallet, developerName, developerEmail });
 
@@ -57,48 +53,28 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
                 console.log('Extracted developer from gig:', developerFromGig);
                 console.log('Extracted wallet from gig:', walletToUse);
                 
-                // Store gig data in context for global access
-                const gigDataForContext: GigData = {
+                // Store gig data (mock - just logging)
+                console.log('Mock: Storing gig data', {
                   id: gigData._id || gigData.id || gigId,
                   title: gigData.title || '',
-                  description: gigData.description || '',
-                  category: gigData.category,
-                  deliveryTime: gigData.deliveryTime,
                   developer: {
-                    id: developerFromGig._id || developerFromGig.id,
                     name: developerFromGig.profile?.name || developerFromGig.username || '',
                     email: developerFromGig.email || '',
-                    walletAddress: walletToUse,
-                    avatar: developerFromGig.profile?.avatar,
-                    bio: developerFromGig.profile?.bio,
-                    skills: developerFromGig.profile?.skills,
-                    hourlyRate: developerFromGig.profile?.hourlyRate,
-                    rating: developerFromGig.reputation?.rating,
-                    reviewCount: developerFromGig.reputation?.reviewCount,
-                  },
-                  packages: gigData.packages,
-                };
-                setGigData(gigDataForContext);
+                    walletAddress: walletToUse
+                  }
+                });
                 
                 // If we have the full developer object from gig, use it directly
                 if (mounted && developerFromGig) {
                   const name = developerFromGig.profile?.name || developerFromGig.username || 'Unknown Developer';
                   const email = developerFromGig.email || '';
                   
-                  // Store developer profile in context
-                  const devProfileForContext: DeveloperProfile = {
-                    id: developerFromGig._id || developerFromGig.id,
+                  // Store developer profile (mock - just logging)
+                  console.log('Mock: Storing developer profile', {
                     name,
                     email,
-                    walletAddress: walletToUse,
-                    avatar: developerFromGig.profile?.avatar,
-                    bio: developerFromGig.profile?.bio,
-                    skills: developerFromGig.profile?.skills,
-                    hourlyRate: developerFromGig.profile?.hourlyRate,
-                    rating: developerFromGig.reputation?.rating,
-                    reviewCount: developerFromGig.reputation?.reviewCount,
-                  };
-                  setDeveloperProfile(devProfileForContext);
+                    walletAddress: walletToUse
+                  });
                   
                   setFetchedDeveloperName(name);
                   setFetchedDeveloperEmail(email);

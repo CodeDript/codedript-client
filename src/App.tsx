@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/HomePage/Home.tsx';
 import AllGigs from './pages/AllGigs/AllGigs.tsx';
 import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
@@ -21,14 +20,19 @@ import NavBar from './components/navbar/Navbar';
 import AuthForm from './components/auth/AuthForm';
 
 function AppContent() {
-  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  
+  // Mock user from localStorage
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const isAuthenticated = !!user;
 
   const handleLoginClick = () => setIsAuthOpen(true);
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem('user');
+    localStorage.removeItem('walletAddress');
     setIsAuthOpen(false);
     navigate('/');
   };
@@ -36,10 +40,10 @@ function AppContent() {
   return (
     <>
       <NavBar
-        isLoggedIn={isAuthenticated}
+        isLoggedIn={true}
         onLoginClick={handleLoginClick}
         onLogout={handleLogout}
-        userRole={user?.role || 'developer'}
+        userRole={'developer'}
       />
       {isAuthOpen && (
         <AuthForm onClose={() => setIsAuthOpen(false)} />
@@ -68,10 +72,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }

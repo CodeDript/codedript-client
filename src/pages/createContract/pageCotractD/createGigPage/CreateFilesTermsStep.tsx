@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from '../pageCotractD.module.css';
 import uploadIcon from '../../../../assets/contractSvg/file uploard.svg';
-import { useAgreement } from '../../../../context/AgreementContext';
 
 type Props = {
   filesNote: string;
@@ -12,7 +11,6 @@ type Props = {
 
 const CreateFilesTermsStep: React.FC<Props> = ({ filesNote, setFilesNote, files, setFiles }) => {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const { updateFormData } = useAgreement();
 
   const handleAreaClick = () => inputRef.current?.click();
 
@@ -27,11 +25,6 @@ const CreateFilesTermsStep: React.FC<Props> = ({ filesNote, setFilesNote, files,
     const next = files.filter((_, i) => i !== idx);
     setFiles(next);
   };
-
-  // Persist filesNote to context
-  React.useEffect(() => {
-    updateFormData({ filesNote });
-  }, [filesNote]);
 
   return (
     <>

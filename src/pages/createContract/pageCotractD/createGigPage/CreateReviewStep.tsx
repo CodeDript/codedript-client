@@ -1,6 +1,5 @@
 import React from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
 
 type Milestone = { title: string; amount: string };
 
@@ -31,17 +30,9 @@ type Props = {
 
 const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, value, currency, filesNote, files, isClientView }) => {
   const [approved, setApproved] = React.useState(false);
-  const { formData } = useAgreement();
 
-  // Try to source package data from context gigData if available
-  const packages: PackageSummary[] | undefined = formData?.gigData?.packages?.map((p: any) => ({
-    name: p.name,
-    price: p.price,
-    currency: p.currency,
-    deliveryTime: p.deliveryTime,
-    revisions: p.revisions,
-    features: p.features
-  }));
+  // Mock packages data
+  const packages: PackageSummary[] | undefined = [];
 
   React.useEffect(() => {
     if (isClientView && (window as any).__setClientApproved) {
@@ -82,17 +73,17 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
           {/* Category and Create Date replace Deadline */}
           <div className={styles.reviewRow}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Category :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formData?.gigData?.category || 'Uncategorized'}</div>
+            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>Uncategorized</div>
           </div>
           <div className={styles.reviewRow}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Created :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formData?.gigData?.id ? (formData.gigData as any).createdAt ? new Date((formData.gigData as any).createdAt).toLocaleString() : new Date().toLocaleString() : new Date().toLocaleString()}</div>
+            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{new Date().toLocaleString()}</div>
           </div>
 
           {/* Developer Receiving Address row (moved from Parties) */}
           <div className={styles.reviewRow}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Developer Receiving Ethereum Address :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formatId(formData?.developerReceivingAddress || developerReceivingAddress || developerWallet || '') || 'No receiving address'}</div>
+            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formatId(developerReceivingAddress || developerWallet || '') || 'No receiving address'}</div>
           </div>
         </div>
         {/* Packages summary - show if gigData packages exist, otherwise show N/A table */}

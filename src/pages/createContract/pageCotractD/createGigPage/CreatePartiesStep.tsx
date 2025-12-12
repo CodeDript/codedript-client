@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
-import type { GigData, DeveloperProfile } from '../../../../context/AgreementContext';
 
 type Props = {
   clientName: string;
@@ -22,8 +20,6 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
   const [fetchedDeveloperEmail, setFetchedDeveloperEmail] = useState('');
   const [fetchedDeveloperWallet, setFetchedDeveloperWallet] = useState('');
   const [, setLoading] = useState(false);
-
-  const { setGigData, setDeveloperProfile } = useAgreement();
 
   useEffect(() => {
     let mounted = true;
@@ -46,7 +42,9 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
               if (gigData.developer) {
                 developerFromGig = gigData.developer;
                 walletToUse = developerFromGig.walletAddress || developerFromGig.wallet || '';
-                const gigDataForContext: GigData = {
+                
+                // Mock - log gig data instead of storing in context
+                console.log('Mock: Gig data from API', {
                   id: gigData._id || gigData.id || gigId,
                   title: gigData.title || '',
                   description: gigData.description || '',

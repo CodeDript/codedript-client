@@ -15,7 +15,7 @@ import sponsored1 from '../../assets/Sponsors/Sponsered_1.png';
 import sponsored2 from '../../assets/Sponsors/Sponsored_2.png';
 import sponsored3 from '../../assets/Sponsors/Sponsored_3.png';
 import sponsored4 from '../../assets/Sponsors/Sponsored_4.png';
-import { GigService, type Gig } from '../../api/gigService';
+import { getFeaturedGigs, type MockGig as Gig } from '../../mockData/gigData';
 
 
 import styles from './Home.module.css';
@@ -38,8 +38,11 @@ const Home: React.FC = () => {
     const fetchFeaturedGigs = async () => {
       try {
         setIsLoading(true);
-        const response = await GigService.getFeaturedGigs(4);
-        setFeaturedGigs(response.data);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const gigs = getFeaturedGigs(4);
+        setFeaturedGigs(gigs);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch featured gigs:', err);

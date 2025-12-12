@@ -17,7 +17,6 @@ import partiesIcon from '../../../assets/contractSvg/parties.svg';
 import paymentIcon from '../../../assets/contractSvg/paymentTerms.svg';
 import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
-import { useAgreement } from '../../../context/AgreementContext';
 import ChatWidget from '../../../components/chat/ChatWidget';
 import Footer from '../../../components/footer/Footer';
 
@@ -37,7 +36,9 @@ const PageCotractD: React.FC = () => {
   // Track if viewing as client (from pending agreement) - shows review step
   const [isClientView, setIsClientView] = useState(false);
 
-  const { uploadFilesToIPFS, updateFormData, formData, createAgreement } = useAgreement();
+  // Mock form data
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFilesCids, setUploadedFilesCids] = useState<string[]>([]);
 
   // Parties
   const [clientName, setClientName] = useState('Devid kamron');
@@ -54,11 +55,6 @@ const PageCotractD: React.FC = () => {
 
   // Files & terms
   const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
-  // uploaded files - use context files
-  const uploadedFiles = formData.uploadedFiles;
-  const setUploadedFiles = (files: File[]) => {
-    updateFormData({ uploadedFiles: files });
-  };
   // payment confirmation (developer accepted contract)
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [isAcceptingAgreement, setIsAcceptingAgreement] = useState(false);
@@ -162,19 +158,6 @@ const PageCotractD: React.FC = () => {
         // do NOT auto-fill the receiving address from the developer profile; client must enter it
       }
     }
-    
-    // Sync context with route data
-    updateFormData({
-      projectName: routeState?.title || title,
-      projectDescription: routeState?.description 
-        ? (Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description)
-        : description,
-      gigId: routeState?.gigId || gigId,
-      developerWallet: routeState?.developerWallet || routeState?.developerId || developerWallet,
-      clientWallet: routeState?.clientWallet || clientWallet,
-      clientName: routeState?.clientName || clientName,
-      clientEmail: routeState?.clientEmail || clientEmail
-    });
   }, [routeState]);
 
   const navigate = useNavigate();
@@ -183,15 +166,12 @@ const PageCotractD: React.FC = () => {
     // If moving from step 3 (FilesTermsStep) to step 4, upload files to IPFS first
     if (step === 3 && uploadedFiles.length > 0) {
       setIsUploadingFiles(true);
-      const result = await uploadFilesToIPFS();
+      // Mock file upload
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const mockCids = uploadedFiles.map((_, i) => `Qm${Math.random().toString(36).substring(7)}`);
+      setUploadedFilesCids(mockCids);
       setIsUploadingFiles(false);
-      
-      if (!result.success) {
-        alert(`File upload failed: ${result.error || 'Unknown error'}`);
-        return; // Don't proceed to next step
-      }
-      
-      console.log('Files uploaded to IPFS. CIDs:', result.cids);
+      console.log('Mock files uploaded to IPFS. CIDs:', mockCids);
     }
     
     setStep((s) => Math.min(5, s + 1));
@@ -212,20 +192,15 @@ const PageCotractD: React.FC = () => {
     if (uploadedFiles.length > 0) {
       console.log('Uploading files to IPFS...');
       setIsUploadingFiles(true);
-      const result = await uploadFilesToIPFS();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      uploadedCids = uploadedFiles.map((_, i) => `Qm${Math.random().toString(36).substring(7)}`);
+      setUploadedFilesCids(uploadedCids);
       setIsUploadingFiles(false);
-      
-      if (!result.success) {
-        alert(`File upload failed: ${result.error || 'Unknown error'}`);
-        return; // Don't proceed if upload failed
-      }
-      
-      console.log('Files uploaded to IPFS. CIDs:', result.cids);
-      uploadedCids = result.cids;
+      console.log('Mock files uploaded to IPFS. CIDs:', uploadedCids);
     }
     
-    // Update context with ALL form data including uploaded CIDs
-    updateFormData({
+    // Mock agreement creation
+    console.log('Mock: Creating agreement with data:', {
       projectName: title,
       projectDescription: description,
       clientName,
@@ -237,25 +212,12 @@ const PageCotractD: React.FC = () => {
       deadline,
       milestones,
       filesNote,
-      uploadedFilesCids: uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids
+      uploadedFilesCids: uploadedCids
     });
     
-    // Wait for context to update
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    alert('Agreement created successfully! (Mock Mode)');
     
-    // Create agreement via API with the uploaded CIDs
-    console.log('Creating agreement with CIDs:', uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
-    setIsUploadingFiles(true);
-    const result = await createAgreement(uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
-    setIsUploadingFiles(false);
-    
-    if (!result.success) {
-      alert(`Agreement creation failed: ${result.error || 'Unknown error'}`);
-      return;
-    }
-    
-    console.log('Agreement created successfully with ID:', result.agreementId);
-
     // Navigate to client profile page after successful agreement creation
     navigate('/client');
   };
@@ -275,7 +237,7 @@ const PageCotractD: React.FC = () => {
       deadline,
       milestones,
       filesNote,
-      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+      files: uploadedFiles.map((f: any) => ({ name: f.name, size: f.size })),
     };
     // navigate to the contract rules page inside contractView
     navigate('/create-contract/rules', { state: payload });
@@ -291,24 +253,19 @@ const PageCotractD: React.FC = () => {
     setAcceptError(null);
 
     try {
-      const { AgreementService } = await import('../../../api/agreementService');
+      // Mock API call - simulate delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const result = await AgreementService.developerAcceptAgreement(
-        routeState.agreementId,
-        {
-          totalValue: parseFloat(value) || 0,
-          currency: currency
-        },
+      console.log('✅ Developer accepted agreement successfully (Mock Mode)');
+      console.log('Mock data:', {
+        agreementId: routeState.agreementId,
+        totalValue: parseFloat(value) || 0,
+        currency: currency,
         milestones
-      );
-
-      if (result.success) {
-        console.log('✅ Developer accepted agreement successfully');
-        // Navigate to developer profile
-        navigate('/developer');
-      } else {
-        setAcceptError('Failed to accept agreement');
-      }
+      });
+      
+      // Navigate to developer profile
+      navigate('/developer');
     } catch (error: any) {
       console.error('Error accepting agreement:', error);
       setAcceptError(error.message || 'Failed to accept agreement');
@@ -334,108 +291,27 @@ const PageCotractD: React.FC = () => {
     try {
       const agreement = routeState.agreement;
       
-      // Step 1: Create agreement on blockchain with developer-assigned payment terms
-      console.log('📝 Creating agreement on blockchain...');
+      // Mock blockchain agreement creation
+      console.log('📝 Creating agreement on blockchain... (Mock Mode)');
       
-      // Import blockchain service
-      const { createAgreement: createBlockchainAgreement } = await import('../../../services/ContractService');
-      const { uploadFileToIPFS } = await import('../../../services/agreementCreationService');
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Prepare agreement data for blockchain
-      const developerWalletAddr = (agreement.developerInfo?.walletAddress || '').toLowerCase().trim();
-      const projectName = agreement.project?.name || title;
-      const totalValueEth = agreement.financials?.totalValue?.toString() || value;
+      const mockTxHash = '0x' + Math.random().toString(16).substr(2, 64);
+      const mockIpfsHash = 'Qm' + Math.random().toString(36).substr(2, 44);
       
-      // Upload metadata to IPFS if not already uploaded
-      let ipfsHash = agreement.documents?.contractPdf?.ipfsHash || '';
-      
-      if (!ipfsHash) {
-        console.log('No IPFS hash found, creating metadata document...');
-        const metadataJson = {
-          projectName: projectName,
-          projectDescription: agreement.project?.description || description,
-          clientName: agreement.clientInfo?.name || clientName,
-          clientEmail: agreement.clientInfo?.email || clientEmail,
-          developerName: agreement.developerInfo?.name || developerName,
-          developerEmail: agreement.developerInfo?.email || developerEmail,
-          totalValue: totalValueEth,
-          currency: agreement.financials?.currency || currency,
-          milestones: milestones,
-          createdAt: new Date().toISOString(),
-        };
-        
-        const metadataBlob = new Blob([JSON.stringify(metadataJson, null, 2)], {
-          type: 'application/json',
-        });
-        const metadataFile = new File([metadataBlob], 'agreement-metadata.json', {
-          type: 'application/json',
-        });
-        
-        const metadataUpload = await uploadFileToIPFS(metadataFile);
-        ipfsHash = metadataUpload.ipfsHash;
-        console.log('✅ Metadata uploaded to IPFS:', ipfsHash);
-      }
-      
-      // Set dates for blockchain
-      // Use 5-minute buffer to account for MetaMask confirmation time and transaction mining
-      const startDate = Math.floor(Date.now() / 1000) + 300; // Current + 5 min buffer
-      const endDate = agreement.project?.expectedEndDate 
-        ? Math.floor(new Date(agreement.project.expectedEndDate).getTime() / 1000)
-        : Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000); // Default 30 days
-      
-      console.log('Blockchain params:', {
-        developer: developerWalletAddr,
-        projectName,
-        docCid: ipfsHash,
-        totalValue: totalValueEth,
-        startDate,
-        endDate
+      console.log('Mock blockchain transaction:', {
+        transactionHash: mockTxHash,
+        ipfsHash: mockIpfsHash,
+        projectName: agreement?.project?.name || title,
+        totalValue: agreement?.financials?.totalValue?.toString() || value,
       });
-
-      // Verify IPFS hash is present before sending to blockchain
-      if (!ipfsHash || ipfsHash.trim() === '') {
-        throw new Error('IPFS hash is required but missing. Please try again.');
-      }
       
-      console.log('✅ IPFS Hash verified and ready to send to blockchain:', ipfsHash);
+      console.log('✅ Agreement approved and activated successfully (Mock Mode)');
+      console.log('✅ ETH transferred to smart contract escrow (Mock Mode)');
       
-      // Create agreement on blockchain (this will charge ETH from client's wallet)
-      const blockchainTx = await createBlockchainAgreement(
-        developerWalletAddr,
-        projectName,
-        ipfsHash,
-        totalValueEth,
-        startDate,
-        endDate
-      );
-      
-      console.log('✅ Blockchain transaction submitted:', blockchainTx);
-      
-      if (!blockchainTx.transactionHash) {
-        throw new Error('Transaction hash not found in blockchain response');
-      }
-      
-      const blockchainTxHash = blockchainTx.transactionHash;
-      console.log('Transaction hash:', blockchainTxHash);
-      
-      // Step 2: Update agreement status on backend to 'active' with blockchain data
-      console.log('📝 Updating agreement status to active...');
-      
-      const { AgreementService } = await import('../../../api/agreementService');
-      const result = await AgreementService.clientApproveAgreement(
-        routeState.agreementId,
-        blockchainTxHash,
-        ipfsHash
-      );
-
-      if (result.success) {
-        console.log('✅ Agreement approved and activated successfully');
-        console.log('✅ ETH transferred to smart contract escrow');
-        // Navigate to client profile
-        navigate('/client');
-      } else {
-        setAcceptError('Failed to approve agreement');
-      }
+      // Navigate to client profile
+      navigate('/client');
     } catch (error: any) {
       console.error('Error approving agreement:', error);
       

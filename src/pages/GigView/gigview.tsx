@@ -5,7 +5,7 @@ import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
-import { GigService, type Gig } from '../../api/gigService';
+import { getGigById, type MockGig as Gig } from '../../mockData/gigData';
 import Footer from '../../components/footer/Footer';
 
 const GigView: React.FC = () => {
@@ -20,9 +20,16 @@ const GigView: React.FC = () => {
       
       try {
         setIsLoading(true);
-        const gigData = await GigService.getGigById(id);
-        setGig(gigData);
-        setError(null);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const gigData = getGigById(id);
+        if (gigData) {
+          setGig(gigData);
+          setError(null);
+        } else {
+          setError('Gig not found');
+        }
       } catch (err) {
         console.error('Failed to fetch gig:', err);
         setError('Failed to load gig details');
@@ -110,8 +117,8 @@ Best for businesses needing a full communication suite. Includes HD calling, scr
         {gig.packages && gig.packages.length > 0 && (
           gig.packages.map((pkg, index) => {
             const name = (pkg.name || '').toString().toLowerCase();
-            let description = (pkg.features || []).slice(0, 5);
-            let priceStr = `${pkg.price || 0} ${pkg.currency || 'USD'}`;
+            let description = (pkg.description || []).slice(0, 5);
+            let priceStr = `${pkg.price || 0} USD`;
 
             if (name.includes('basic')) {
               priceStr = '1800 USD';
@@ -143,7 +150,7 @@ Best for businesses needing a full communication suite. Includes HD calling, scr
                 description={description}
                 gameId={index + 1}
                 price={priceStr}
-                delivery={`${pkg.deliveryTime || 0} Days`}
+                delivery={pkg.delivery || '7 days'}
                 revisions={pkg.revisions || 0}
                 buttonLabel="Buy & Escrow"
                 gigId={gig._id}

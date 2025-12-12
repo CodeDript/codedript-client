@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
 
 const cellStyle: React.CSSProperties = {
   border: '1px solid #d3d3d3',
@@ -41,7 +40,6 @@ const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
 
   const [agreed, setAgreed] = useState(false);
   const prevBorder = React.useRef<Map<HTMLElement, string>>(new Map());
-  const { updateFormData, formData } = useAgreement();
 
   const handleFocus = (e: React.FocusEvent<HTMLElement>) => {
     const td = (e.currentTarget as HTMLElement).closest('td') as HTMLElement | null;
@@ -91,14 +89,8 @@ const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
       }
     ];
 
-    // merge into existing gigData if present
-    updateFormData({ gigData: { 
-      id: formData.gigData?.id || '', 
-      title: formData.gigData?.title || '', 
-      description: formData.gigData?.description || '', 
-      ...(formData.gigData || {}), 
-      packages 
-    } });
+    // Mock - log packages instead of storing
+    console.log('Mock: Packages data', packages);
   }, [basicPrice, standardPrice, premiumPrice, basicDelivery, standardDelivery, premiumDelivery, basicRevisions, standardRevisions, premiumRevisions, basicFeatures, standardFeatures, premiumFeatures]);
   return (
     <>

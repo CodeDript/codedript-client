@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './DeveloperTable.module.css';
-import { AgreementService, type Agreement } from '../../../api/agreementService';
-import { GigService, type Gig } from '../../../api/gigService';
-import { useAuth } from '../../../context/AuthContext';
+import { getAgreementsByUserId, type MockAgreement as Agreement } from '../../../mockData/agreementData';
+import { mockGigs, type MockGig as Gig } from '../../../mockData/gigData';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'myGigs' | 'incomingContract' | 'activeContract' | 'transactions' | 'ongoingContract';
@@ -75,9 +74,9 @@ const agreementToRow = (agreement: Agreement): DevRow => {
 
   return {
     id: agreement._id,
-    order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
+    order: String(agreement.agreementId || agreement._id.slice(-4).toUpperCase()),
     title: agreement.project.name,
-    client: agreement.client?.profile?.name || agreement.client?.email || agreement.clientInfo?.name || 'Unknown Client',
+    client: agreement.client?.profile?.name || agreement.client?.email || 'Unknown Client',
     date,
     status: getDisplayStatus(agreement.status),
     amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
@@ -94,8 +93,11 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
-  const auth = useAuth();
   const navigate = useNavigate();
+  
+  // Mock user from localStorage
+  const storedUser = localStorage.getItem('user');
+  const mockUser = storedUser ? JSON.parse(storedUser) : null;
 
   // prevent stale fetches overwriting UI — use a request token
   const requestRef = React.useRef(0);
@@ -148,26 +150,27 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
         setError(null);
 
         try {
-          // determine developer id from prop or auth context
-          const loggedInId = developerId || auth.user?._id;
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // determine developer id from prop or mock user
+          const loggedInId = developerId || mockUser?._id;
           if (!loggedInId) {
             setRows([]);
             return;
           }
 
-          // fetch gigs owned by the developer, include inactive so owner sees drafts
-          const response = await GigService.getAllGigs({ developer: loggedInId, page: 1, limit: 100, includeInactive: true });
+          // fetch gigs owned by the developer
+          const gigs: Gig[] = mockGigs.filter(g => g.developer._id === loggedInId);
           if (requestRef.current !== reqId) return;
-
-          const gigs: Gig[] = response.data || [];
 
           const displayRows = gigs.map(g => ({
             id: g._id,
-            order: (g.gigId ? g.gigId.toString() : g._id.slice(-4).toUpperCase()),
+            order: g._id.slice(-4).toUpperCase(),
             title: g.title,
-            client: g.developer.profile?.name || g.developer.email,
+            client: g.developer.profile?.name || g.developer.walletAddress,
             date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-            status: (g.status || '').replace(/^(.)/, s => s.toUpperCase()),
+            status: 'Active',
             amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
           }));
 
@@ -194,15 +197,16 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
         setError(null);
 
         try {
-          const resp = await AgreementService.getAllAgreements({ role: 'developer', limit: 200 });
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 500));
 
           if (requestRef.current !== reqId) return;
 
-          const allAgreements = resp.data || [];
-          const txAgreements = allAgreements.filter(a => (a as any).blockchain && (a as any).blockchain.transactionHash);
-          const displayRows = txAgreements.map(a => ({
+          const allAgreements = getAgreementsByUserId(developerId || mockUser?._id || 'dev-001');
+          const txAgreements = allAgreements.filter((a: any) => a.blockchainTxHash);
+          const displayRows = txAgreements.map((a: any) => ({
             ...agreementToRow(a),
-            transactionHash: (a as any).blockchain.transactionHash
+            transactionHash: a.blockchainTxHash
           }));
 
           setAgreements(txAgreements as Agreement[]);
@@ -227,25 +231,16 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       setError(null);
 
       try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Get the statuses for the current tab
         const statuses = getStatusesForTab(activeTab);
         
-        // Fetch agreements for each status
-        const promises = statuses.map(status =>
-          AgreementService.getAllAgreements({ 
-            role: 'developer',
-            status,
-            limit: 100 
-          })
-        );
-
-        const responses = await Promise.all(promises);
+        const allAgreements = getAgreementsByUserId(developerId || mockUser?._id || 'dev-001', statuses);
         
         // only set state if this request is the latest
         if (requestRef.current !== reqId) return;
-
-        // Combine all agreements from different statuses
-        const allAgreements = responses.flatMap(response => response.data || []);
         
         // Convert to display rows
         const displayRows = allAgreements.map(agreementToRow);

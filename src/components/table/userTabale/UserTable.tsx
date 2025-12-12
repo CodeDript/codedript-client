@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
-import { AgreementService, type Agreement } from '../../../api/agreementService';
+import { getAgreementsByUserId, type MockAgreement as Agreement } from '../../../mockData/agreementData';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'activeContract' | 'transactions' | 'ongoingContract';
@@ -69,9 +69,9 @@ const agreementToRow = (agreement: Agreement): DevRow => {
 
   return {
     id: agreement._id,
-    order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
-    title: agreement.project.name,
-    client: agreement.developer?.profile?.name || agreement.developer?.email || agreement.developerInfo?.name || 'Unknown Developer',
+    order: String(agreement.agreementId || (typeof agreement._id === 'string' ? agreement._id.slice(-4).toUpperCase() : String(agreement._id).slice(-4).toUpperCase())),
+    title: agreement.project?.name || 'Untitled Agreement',
+    client: agreement.developer?.profile?.name || agreement.developer?.email || 'Unknown Developer',
     date,
     status: getDisplayStatus(agreement.status),
     amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
@@ -131,21 +131,19 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       setError(null);
 
       try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Handle transactions tab separately: fetch agreements that have blockchain transaction hashes
         if (activeTab === 'transactions') {
-          const resp = await AgreementService.getAllAgreements({ 
-            role: 'client',
-            limit: 200
-          });
-
           if (requestRef.current !== reqId) return;
 
-          const allAgreements = resp.data || [];
+          const allAgreements = getAgreementsByUserId(userId || 'client-001');
           // keep only agreements that have a blockchain transaction hash
-          const txAgreements = allAgreements.filter(a => (a as any).blockchain && (a as any).blockchain.transactionHash);
+          const txAgreements = allAgreements.filter(a => (a as any).blockchainTxHash);
           const displayRows = txAgreements.map(a => ({
             ...agreementToRow(a),
-            transactionHash: (a as any).blockchain.transactionHash
+            transactionHash: (a as any).blockchainTxHash
           }));
 
           setAgreements(txAgreements as Agreement[]);
@@ -154,22 +152,14 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
           // Get the statuses for the current tab
           const statuses = getStatusesForTab(activeTab);
           
-          // Fetch agreements for each status
-          const promises = statuses.map(status =>
-            AgreementService.getAllAgreements({ 
-              role: 'client',
-              status,
-              limit: 100 
-            })
-          );
-
-          const responses = await Promise.all(promises);
+          // Fetch agreements with mock data
+          await new Promise(resolve => setTimeout(resolve, 500));
           
           // only set state if this request is the latest
           if (requestRef.current !== reqId) return;
 
-          // Combine all agreements from different statuses
-          const allAgreements = responses.flatMap(response => response.data || []);
+          // Get agreements from mock data
+          const allAgreements = getAgreementsByUserId(userId || 'client-001', statuses);
           
           // Convert to display rows
           const displayRows = allAgreements.map(agreementToRow);

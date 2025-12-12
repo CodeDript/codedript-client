@@ -2,14 +2,16 @@ import React from 'react';
 import styles from './client.module.css';
 import UserHero from '../../../components/hero/UserHero/UserHero';
 import UserTable from '../../../components/table/userTabale/UserTable';
-import { useAuth } from '../../../context/AuthContext';
 import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 
 const Client: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Mock user from localStorage
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : { role: 'client', _id: 'client-001' };
 
   return (
     <div className={styles.container}>

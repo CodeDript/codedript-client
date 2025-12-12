@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Table.module.css';
-import { ReviewService, type Review } from '../../../api/reviewService';
+import { getReviewsByDeveloperId, type MockReview as Review } from '../../../mockData/reviewData';
 
 interface TableProps {
   developerId?: string;
@@ -33,8 +33,11 @@ const Table: React.FC<TableProps> = ({ developerId }) => {
 
       try {
         setLoading(true);
-        const response = await ReviewService.getDeveloperReviews(developerId, 1, 20);
-        setReviews(response.reviews);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const reviews = getReviewsByDeveloperId(developerId);
+        setReviews(reviews);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch reviews:', err);
@@ -108,17 +111,17 @@ const Table: React.FC<TableProps> = ({ developerId }) => {
         {reviews.map((r) => (
           <div className={styles.row} key={r._id}>
             <div className={styles.orderCell}>
-              <span className={styles.orderNumber}>{r.gig?.gigId ? String(r.gig.gigId).padStart(4, '0') : '0000'}</span>
+              <span className={styles.orderNumber}>0000</span>
             </div>
             <div className={styles.titleCell}>
-              <div className={styles.titleMain}>{r.agreement?.project?.title || r.gig?.title || 'Project'}</div>
-              <div className={styles.reviewer}>
-                <span className={styles.userIcon}>👤</span> {r.reviewer?.profile?.name || 'Anonymous'}
+              <div className={styles.titleMain}>Project Review</div>
+              <div className={styles.clientName}>
+                <span className={styles.userIcon}>👤</span> {r.client?.profile?.name || 'Anonymous'}
               </div>
             </div>
             <div className={styles.ratingCell}>{renderStars(r.rating)}</div>
             <div className={styles.dateCell}>Created {formatDate(r.createdAt)}</div>
-            <div className={styles.reviewCell}>{r.review}</div>
+            <div className={styles.reviewCell}>{r.comment}</div>
           </div>
         ))}
       </div>
