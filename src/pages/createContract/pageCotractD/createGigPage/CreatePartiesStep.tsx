@@ -63,7 +63,7 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
                     reviewCount: developerFromGig.reputation?.reviewCount,
                   },
                   packages: gigData.packages,
-                };
+                });
                 setGigData(gigDataForContext);
                 if (mounted && developerFromGig) {
                   const name = developerFromGig.profile?.name || developerFromGig.username || 'Unknown Developer';
