@@ -244,6 +244,15 @@ codedript-client/
 │   │   │   ├── HomeGameCard.module.css
 │   │   │   └── HomeGameCard.tsx
 │   │   │
+│   │   ├── cardDetails/
+│   │   │   ├── BlockchainSecurity.tsx
+│   │   │   ├── IPFSFileStorage.tsx
+│   │   │   ├── EscrowProtection.tsx
+│   │   │   ├── MultiPartyContracts.tsx
+│   │   │   ├── ZeroKnowledgeVerification.tsx
+│   │   │   ├── InstantPayments.tsx
+│   │   │   └── cardDetails.module.css
+│   │   │
 │   │   ├── modal/
 │   │   │   └── TransactionModal/
 │   │   │       ├── TransactionModal.module.css

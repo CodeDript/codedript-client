@@ -1,0 +1,45 @@
+.pageContainer {
+    margin-top: 100px;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+ 
+  background: transparent;
+  color: #ffffff; /* default text color */
+}
+
+.content {
+  max-width: 1200px;
+  width: 100%;
+ 
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0);
+  color: #ffffff; /* ensure headings, paragraphs are white */
+}
+
+.detailSection {
+  margin-top: 1.5rem;
+}
+
+.detailSection ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+/* Ensure headings and paragraphs inherit white color inside cardDetails */
+.pageContainer h1,
+.pageContainer p,
+.pageContainer li {
+  color: #ffffff;
+}
+
+/* Font rules: h1 uses Zen Dots for title, all descriptions/paragraphs and lists use Jura */
+.pageContainer h1 {
+  font-family: "Zen Dots", sans-serif;
+}
+.pageContainer p,
+.pageContainer li,
+.pageContainer h2 {
+  font-family: "Jura", sans-serif;
+}
