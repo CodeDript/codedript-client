@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { navigation, ProtectedRoute } from './utils';
 import Home from './pages/HomePage/Home.tsx';
 import AllGigs from './pages/AllGigs/AllGigs.tsx';
 import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
@@ -22,6 +23,11 @@ import AuthForm from './components/auth/AuthForm';
 function AppContent() {
   const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  
+  // Initialize navigation service
+  useEffect(() => {
+    navigation.setNavigate(navigate);
+  }, [navigate]);
   
   // Mock user from localStorage
   const storedUser = localStorage.getItem('user');
@@ -50,18 +56,57 @@ function AppContent() {
       )}
       <div className="app">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
-           <Route path="/all-gigs" element={<AllGigs />} />
+          <Route path="/all-gigs" element={<AllGigs />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
-          <Route path="/client" element={<Client />} />
-          <Route path="/developer" element={<Developer />} />
           <Route path="/gigview/:id" element={<GigView />} />
-          <Route path="/contract-processing" element={<ContractProcessing />} />
-          <Route path="/create-contract" element={<PageCotractD />} />
-          <Route path="/create-gig" element={<CreateGigPage />} />
-          <Route path="/create-contract/rules" element={<ContractView />} />
-          <Route path="/create-contract/request-change" element={<RequestChange />} />
-          <Route path="/create-contract/terms" element={<RulesAndConditions />} />
+          
+          {/* Role-Based Protected Routes */}
+          <Route path="/client" element={
+            <ProtectedRoute allowedRoles={['client']}>
+              <Client />
+            </ProtectedRoute>
+          } />
+          <Route path="/developer" element={
+            <ProtectedRoute allowedRoles={['developer']}>
+              <Developer />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-contract" element={
+            <ProtectedRoute allowedRoles={['client']}>
+              <PageCotractD />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-gig" element={
+            <ProtectedRoute allowedRoles={['developer']}>
+              <CreateGigPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Auth-Only Protected Routes */}
+          <Route path="/contract-processing" element={
+            <ProtectedRoute>
+              <ContractProcessing />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-contract/rules" element={
+            <ProtectedRoute>
+              <ContractView />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-contract/request-change" element={
+            <ProtectedRoute>
+              <RequestChange />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-contract/terms" element={
+            <ProtectedRoute>
+              <RulesAndConditions />
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 Fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { navigation } from "../utils/navigation";
 
 /**
  * Base axios instance configured with environment variables
@@ -37,7 +38,7 @@ api.interceptors.response.use(
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      navigation.go("/login");
     }
     
     // Handle network errors
