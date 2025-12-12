@@ -161,6 +161,12 @@ codedript-client/
 │   │   │       ├── Squares.css
 │   │   │       └── Squares.jsx
 │   │   │
+│   │   ├── BackgroundBasePlates/
+│   │   │   ├── BackgroundBasePlates.module.css
+│   │   │   ├── BackgroundBasePlates.tsx
+│   │   │   ├── BackgroundBasePlates2.module.css
+│   │   │   └── BackgroundBasePlates2.tsx
+│   │   │
 │   │   ├── backgroundplate/
 │   │   │   └── BackgroundPlate.tsx
 │   │   │
@@ -289,33 +295,36 @@ codedript-client/
 │   │   ├── createContract/
 │   │   │   ├── pagesComponent/
 │   │   │   │   └── DetailsStep.tsx
-│   │   │   └── pageCotractD/
-│   │   │       ├── pageCotractD.module.css
-│   │   │       ├── pageCotractD.tsx
-│   │   │       ├── pageComponent/
-│   │   │       │   ├── DetailsStep.tsx
-│   │   │       │   ├── FilesTermsStep.tsx
-│   │   │       │   ├── PartiesStep.tsx
-│   │   │       │   ├── PaymentStep.tsx
-│   │   │       │   └── ReviewStep.tsx
-│   │   │       ├── createGigPage/
-│   │   │       │   ├── CreateDetailsStep.tsx
-│   │   │       │   ├── CreateFilesTermsStep.tsx
-│   │   │       │   ├── CreateGigPage.tsx
-│   │   │       │   ├── CreatePartiesStep.tsx
-│   │   │       │   ├── CreatePaymentStep.tsx
-│   │   │       │   ├── CreatePriceing.tsx
-│   │   │       │   └── CreateReviewStep.tsx
-│   │   │       └── contractView/
-│   │   │           ├── contractsViewBase.module.css
-│   │   │           ├── contractsViewBase.tsx
-│   │   │           ├── contractView.tsx
-│   │   │           ├── ContractSummary.tsx
-│   │   │           ├── RequestChange.module.css
-│   │   │           ├── RequestChange.tsx
-│   │   │           ├── RulesAndConditions.module.css
-│   │   │           ├── RulesAndConditions.tsx
-│   │   │           └── Rulrs.tsx
+│   │   │   ├── pageCotractD/
+│   │   │   │   ├── pageCotractD.module.css
+│   │   │   │   ├── pageCotractD.tsx
+│   │   │   │   ├── pageComponent/
+│   │   │   │   │   ├── DetailsStep.tsx
+│   │   │   │   │   ├── FilesTermsStep.tsx
+│   │   │   │   │   ├── PartiesStep.tsx
+│   │   │   │   │   ├── PaymentStep.tsx
+│   │   │   │   │   └── ReviewStep.tsx
+│   │   │   │   ├── createGigPage/
+│   │   │   │   │   ├── CreateDetailsStep.tsx
+│   │   │   │   │   ├── CreateFilesTermsStep.tsx
+│   │   │   │   │   ├── CreateGigPage.tsx
+│   │   │   │   │   ├── CreatePartiesStep.tsx
+│   │   │   │   │   ├── CreatePaymentStep.tsx
+│   │   │   │   │   ├── CreatePriceing.tsx
+│   │   │   │   │   └── CreateReviewStep.tsx
+│   │   │   │   └── contractView/
+│   │   │   │       ├── contractsViewBase.module.css
+│   │   │   │       ├── contractsViewBase.tsx
+│   │   │   │       ├── contractView.tsx
+│   │   │   │       ├── ContractSummary.tsx
+│   │   │   │       ├── RequestChange.module.css
+│   │   │   │       ├── RequestChange.tsx
+│   │   │   │       ├── RulesAndConditions.module.css
+│   │   │   │       ├── RulesAndConditions.tsx
+│   │   │   │       └── Rulrs.tsx
+│   │   │   └── pageCotriptD/
+│   │   │       └── createGigPage/
+│   │   │           └── CreatePriceing.tsx
 │   │   │
 │   │   ├── GigView/
 │   │   │   ├── gigview.module.css
@@ -380,9 +389,9 @@ codedript-client/
 
 ## Project Statistics
 
-- **Total Files**: 242
-- **TypeScript/TSX Files**: ~120
-- **CSS/Module.CSS Files**: ~50
+- **Total Files**: 246
+- **TypeScript/TSX Files**: ~122
+- **CSS/Module.CSS Files**: ~52
 - **SVG Assets**: ~45
 - **Configuration Files**: 10
 
@@ -396,9 +405,11 @@ All reusable React components organized by feature:
 - **hero**: 4 hero variants (Main, Secondary, Tertiary, Developer, User)
 - **navbar**: Navigation with dropdown
 - **Background**: 5 animated backgrounds (Aurora, Hyperspeed, LightRays, LiquidEther, Squares)
+- **BackgroundBasePlates**: Parallax scrolling background components (BackgroundBasePlates, BackgroundBasePlates2)
 - **table**: 3 table types (customer, developer, user)
 - **modal**: TransactionModal
 - **chat**: ChatWidget
+- **ContractPages**: Contract processing animations and components
 
 ### `/src/pages` (6 main pages)
 Application pages/views:
