@@ -19,25 +19,27 @@ import './App.css';
 import Alert from './components/auth/Alert';
 import NavBar from './components/navbar/Navbar';
 import AuthForm from './components/auth/AuthForm';
+import { useAuthContext } from './context/AuthContext';
 
 function AppContent() {
   const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const { user, setUser, setToken, isAuthenticated } = useAuthContext();
   
   // Initialize navigation service
   useEffect(() => {
     navigation.setNavigate(navigate);
   }, [navigate]);
-  
-  // Mock user from localStorage
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const isAuthenticated = !!user;
 
   const handleLoginClick = () => setIsAuthOpen(true);
 
   const handleLogout = () => {
+    // Clear auth context
+    setUser(null);
+    setToken(null);
+    // Clear localStorage
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     localStorage.removeItem('walletAddress');
     setIsAuthOpen(false);
     navigate('/');
@@ -46,10 +48,10 @@ function AppContent() {
   return (
     <>
       <NavBar
-        isLoggedIn={true}
+        isLoggedIn={isAuthenticated}
         onLoginClick={handleLoginClick}
         onLogout={handleLogout}
-        userRole={'developer'}
+        userRole={user?.role || 'developer'}
       />
       {isAuthOpen && (
         <AuthForm onClose={() => setIsAuthOpen(false)} />

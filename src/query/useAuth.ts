@@ -22,12 +22,10 @@ export const useRegister = () => {
 
   return useMutation({
     mutationFn: (data: RegisterRequest) => authApi.register(data),
-    onSuccess: (response) => {
-      // Save token to localStorage if present
-      if (response.token) {
-        localStorage.setItem("token", response.token);
-      }
-      // Invalidate auth queries to refetch user data
+    onSuccess: (response: any) => {
+      // Support both flat and nested response shapes
+      const token = response?.token || response?.data?.token;
+      if (token) localStorage.setItem("token", token);
       queryClient.invalidateQueries({ queryKey: ["auth"] });
     },
   });
@@ -41,12 +39,9 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
-    onSuccess: (response) => {
-      // Save token to localStorage if present
-      if (response.token) {
-        localStorage.setItem("token", response.token);
-      }
-      // Invalidate auth queries to refetch user data
+    onSuccess: (response: any) => {
+      const token = response?.token || response?.data?.token;
+      if (token) localStorage.setItem("token", token);
       queryClient.invalidateQueries({ queryKey: ["auth"] });
     },
   });
@@ -61,9 +56,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
-      // Remove token from localStorage
       localStorage.removeItem("token");
-      // Clear all cached queries
+      localStorage.removeItem("user");
       queryClient.clear();
     },
   });
@@ -78,7 +72,39 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: (data: Partial<any>) => authApi.updateProfile(data),
     onSuccess: () => {
-      // Invalidate auth queries to refetch user data
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+  });
+};
+
+/**
+ * Mutation hook to request OTP for email authentication
+ */
+export const useRequestOTP = () => {
+  return useMutation({
+    mutationFn: (data: { email: string }) => authApi.requestOTP(data),
+  });
+};
+
+/**
+ * Mutation hook to verify OTP for email authentication
+ */
+export const useVerifyOTP = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { email: string; otp: string }) => authApi.verifyOTP(data),
+    onSuccess: (response: any) => {
+      const token = response?.token || response?.data?.token;
+      const user = response?.user || response?.data?.user;
+
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
       queryClient.invalidateQueries({ queryKey: ["auth"] });
     },
   });

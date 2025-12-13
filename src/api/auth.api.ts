@@ -35,4 +35,16 @@ export const authApi = {
    */
   updateProfile: (data: Partial<User>) =>
     api.put<{ user: User }>("/auth/profile", data).then((r) => r.data),
+
+  /**
+   * Request OTP for email authentication
+   */
+  requestOTP: (data: { email: string }) =>
+    api.post<{ message: string; email: string }>("/auth/email/request-otp", data).then((r) => r.data),
+
+  /**
+   * Verify OTP for email authentication
+   */
+  verifyOTP: (data: { email: string; otp: string }) =>
+    api.post<AuthResponse>("/auth/email/verify-otp", data).then((r) => r.data),
 };

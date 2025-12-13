@@ -41,6 +41,10 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  token?: string;
-  user: User;
+  success: boolean;
+  message?: string;
+  data: {
+    token: string;
+    user: User;
+  };
 }

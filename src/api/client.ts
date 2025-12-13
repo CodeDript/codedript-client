@@ -6,7 +6,7 @@ import { navigation } from "../utils/navigation";
  * and default settings for all API calls
  */
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
