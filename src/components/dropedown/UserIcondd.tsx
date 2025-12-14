@@ -7,15 +7,14 @@ import cartIcon from '../../assets/DropdownIcon/cart .png';
 import dashboardIcon from '../../assets/DropdownIcon/application.png';
 import signOutIcon from '../../assets/DropdownIcon/sign out option.png';
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from '../../context/AuthContext';
+import { authApi } from '../../api';
 
 
 const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; userRole: string }> = ({ onClose, onLogout, userRole }) => {
     const [isHiding, setIsHiding] = useState(false);
     const navigate = useNavigate();
-    
-    // Mock user from localStorage
-    const storedUser = localStorage.getItem('user');
-    const user = storedUser ? JSON.parse(storedUser) : null;
+    const { user, setUser } = useAuthContext();
 
     const handleClose = () => {
         setIsHiding(true);
@@ -36,23 +35,49 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
     return (
         <div className={`${styles.dropdownMenu} ${isHiding ? styles.fadeOut : styles.fadeIn}`}>
             <div className={styles.userProfile}>
-                {user?.profile?.avatar ? (
-                    <img
-                        src={user.profile.avatar}
-                        alt={user.profile.name || 'profile'}
-                        className={styles.profileImage}
-                        onError={(e) => { e.currentTarget.src = fallbackImg; }}
-                    />
-                ) : null}
-                <p className={styles.dropdownToggle}>{user?.profile?.name || user?.email || 'Anonymous'}</p>
+                <img
+                    src={user?.avatar || fallbackImg}
+                    alt={user?.fullname || 'profile'}
+                    className={styles.profileImage}
+                    onError={(e) => { e.currentTarget.src = fallbackImg; }}
+                />
+                <p className={styles.dropdownToggle}>{user?.fullname || 'Anonymous'}</p>
             </div>
 
             <div className={styles.dropdownSection}>
                 <button
                     className={styles.dropdownItem}
-                    onClick={() => {
-                        navigate(userRole === 'developer' ? '/developer' : '/client');
-                        onClose();
+                    onClick={async () => {
+                        try {
+                            // Fetch latest user data from API
+                            const response = await authApi.getMe();
+                            const userData = response?.user;
+                            
+                            if (userData) {
+                                // Update user in context
+                                setUser(userData);
+                                
+                                // Navigate based on role
+                                const role = userData.role;
+                                if (role === 'developer') {
+                                    navigate('/developer');
+                                } else if (role === 'client') {
+                                    navigate('/client');
+                                } else {
+                                    navigate('/client'); // default
+                                }
+                            } else {
+                                // If no user data, navigate based on stored role
+                                navigate(userRole === 'developer' ? '/developer' : '/client');
+                            }
+                            
+                            onClose();
+                        } catch (error) {
+                            console.error('Error fetching user profile:', error);
+                            // Fallback to stored role
+                            navigate(userRole === 'developer' ? '/developer' : '/client');
+                            onClose();
+                        }
                     }}
                 >
                     <span className={styles.grayIcon}><img src={userIcon} alt="user" /></span> Your profile

@@ -47,4 +47,10 @@ export const authApi = {
    */
   verifyOTP: (data: { email: string; otp: string }) =>
     api.post<AuthResponse>("/auth/email/verify-otp", data).then((r) => r.data),
+
+  /**
+   * Login with wallet address
+   */
+  walletLogin: (data: { walletAddress: string }) =>
+    api.post<AuthResponse>("/auth/wallet-login", data).then((r) => r.data),
 };

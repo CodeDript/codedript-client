@@ -109,3 +109,27 @@ export const useVerifyOTP = () => {
     },
   });
 };
+
+/**
+ * Mutation hook for wallet login
+ */
+export const useWalletLogin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { walletAddress: string }) => authApi.walletLogin(data),
+    onSuccess: (response: any) => {
+      const token = response?.token || response?.data?.token;
+      const user = response?.user || response?.data?.user;
+
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+  });
+};

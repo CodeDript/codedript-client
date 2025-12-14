@@ -17,13 +17,22 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUserState] = useState<User | null>(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [token, setTokenState] = useState<string | null>(() => {
     return localStorage.getItem("token");
   });
+
+  const setUser = (newUser: User | null) => {
+    setUserState(newUser);
+    if (newUser) {
+      localStorage.setItem("user", JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem("user");
+    }
+  };
 
   const setToken = (newToken: string | null) => {
     setTokenState(newToken);
@@ -47,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     
     if (storedUser && !user) {
       try {
-        setUser(JSON.parse(storedUser));
+        setUserState(JSON.parse(storedUser));
       } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem("user");

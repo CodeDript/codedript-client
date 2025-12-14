@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import authStyles from './AuthForm.module.css';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import { showAlert } from './Alert';
+import { connectWallet } from '../../services/ContractService';
+import { useWalletLogin } from '../../query/useAuth';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface MetaMaskLoginProps {
   onLoginSuccess?: () => void;
@@ -12,21 +15,34 @@ interface MetaMaskLoginProps {
 const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const navigate = useNavigate();
+  const walletLoginMutation = useWalletLogin();
+  const { setUser, setToken } = useAuthContext();
 
   // Connect wallet and login
   const handleConnect = async () => {
     setIsConnecting(true);
 
     try {
-      // Mock login - store user in localStorage
-      const mockUser = {
-        _id: 'user-001',
-        email: 'user@example.com',
-        role: 'client',
-        profile: { name: 'Mock User' },
-        walletAddress: '0x1234567890abcdef'
-      };
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // Connect to MetaMask and get wallet address
+      const account = await connectWallet();
+      const walletAddress = account.address.toLowerCase();
+
+      // Call wallet login API
+      const response = await walletLoginMutation.mutateAsync({ walletAddress });
+      
+      // Extract data from response
+      const token = response?.token || response?.data?.token;
+      const user = response?.user || response?.data?.user;
+      const isNewUser = response?.isNewUser || response?.data?.isNewUser;
+      const profileComplete = response?.profileComplete || response?.data?.profileComplete;
+
+      // Update auth context
+      if (token) {
+        setToken(token);
+      }
+      if (user) {
+        setUser(user);
+      }
       
       showAlert('Login successful!', 'success');
       
@@ -41,11 +57,12 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
           onClose();
         }
 
-        // Route based on user role
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          const role = userData.role || 'client';
+        // Route based on profile completeness and role
+        if (isNewUser || !profileComplete) {
+          // Redirect to profile completion page
+          navigate('/user/profile');
+        } else {
+          const role = user?.role || 'client';
           
           // Route to appropriate dashboard
           if (role === 'developer') {
@@ -60,15 +77,12 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
       }, 1500);
     } catch (err: any) {
       console.error('Login error:', err);
-      showAlert(err.message || 'Failed to connect wallet', 'error');
+      const errorMessage = err.message || 'Failed to connect wallet';
+      showAlert(errorMessage, 'error');
     } finally {
       setIsConnecting(false);
     }
   };
-
-  // Show error from context if any
-  // Don't automatically show context error on every render here to avoid duplicate alerts.
-  // Errors are handled in the connect flow's catch block below.
 
   return (
     <div className={authStyles.metaMaskContainer}>

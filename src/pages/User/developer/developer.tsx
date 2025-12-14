@@ -5,42 +5,39 @@ import DeveloperTable from '../../../components/table/developerTabale/DeveloperT
 import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../../context/AuthContext';
 
 const Developer: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Mock user from localStorage
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : {
-    _id: 'dev-001',
-    role: 'developer',
-    profile: { name: 'Developer', skills: [] },
-    reputation: { rating: 0, reviewCount: 0 },
-    walletAddress: '0x0',
-    createdAt: new Date().toISOString()
-  };
-  const isLoading = false;
-
-  if (isLoading) {
-    return <div className={styles.container}><p>Loading profile...</p></div>;
-  }
+  const { user } = useAuthContext();
 
   if (!user) {
     return <div className={styles.container}><p>Please log in to view your profile</p></div>;
   }
 
+  // Map server user fields to DeveloperHero props
+  const userName = user.fullname || (user as any).profile?.name || 'Anonymous';
+  const userImage = user.avatar || (user as any).profile?.avatar;
+  const skills = user.skills || (user as any).profile?.skills || [];
+  const bio = user.bio || (user as any).profile?.bio || 'No bio available';
+  const memberSince = (user as any).memberSince || (user as any).createdAt;
+  const walletAddress = user.walletAddress;
+  const rating = (user as any).reputation?.rating || 0;
+  const reviewCount = (user as any).reputation?.reviewCount || 0;
+  const userRoleLabel = user.role ;
+
   return (
     <div className={styles.container}>
-      <DeveloperHero 
-        userName={user.profile?.name || 'Anonymous'}
-        userImage={user.profile?.avatar}
-        rating={user.reputation?.rating || 0}
-        reviewCount={user.reputation?.reviewCount || 0}
-        userRole={user.role === 'both' ? 'Freelance Client & Developer' : (user.role === 'developer' ? 'Freelance Developer' : 'Freelance Client')}
-        skills={user.profile?.skills || []}
-        bio={user.profile?.bio || 'No bio available'}
-        memberSince={user.createdAt}
-        walletAddress={user.walletAddress}
+      <DeveloperHero
+        userName={userName}
+        userImage={userImage}
+        rating={rating}
+        reviewCount={reviewCount}
+        userRole={userRoleLabel}
+        skills={skills}
+        bio={bio}
+        memberSince={memberSince}
+        walletAddress={walletAddress}
       />
       {/* removed top-level create title/desc — moved under Developer Dashboard below */}
       {/* Developer Dashboard Section */}
@@ -52,7 +49,7 @@ const Developer: React.FC = () => {
                 <p className={styles.createGigDesc}>
                   Describe your offering clearly and concisely so clients understand value. Set pricing and milestones that reflect the work required. Optimize title, tags and delivery details to improve discoverability.
                 </p>
-            {(user.role === 'developer' || user.role === 'both') && (
+            {(user.role === 'developer') && (
               <div className={styles.createGigBlock}>
                
                 <div className={styles.createGigButtonWrapper}>

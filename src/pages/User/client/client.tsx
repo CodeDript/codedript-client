@@ -5,13 +5,11 @@ import UserTable from '../../../components/table/userTabale/UserTable';
 import Button1 from '../../../components/button/Button1/Button1';
 import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../../context/AuthContext';
 
 const Client: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Mock user from localStorage
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : { role: 'client', _id: 'client-001' };
+  const { user } = useAuthContext();
 
   return (
     <div className={styles.container}>
@@ -20,7 +18,7 @@ const Client: React.FC = () => {
       {/* Client Contracts Section */}
       <div style={{ margin: '3rem auto', maxWidth: '1200px', padding: '0 2rem' }}>
         <h2 className={styles.dashboardTitle}>My Contracts</h2>
-        {(user?.role === 'client' || user?.role === 'both') && (
+        {(user?.role === 'client') && (
           <div className={styles.createGigBlock}>
             <h3 className={styles.createGigTitle}>Earn With Us, Become a Developer</h3>
             <p className={styles.createGigDesc}>
