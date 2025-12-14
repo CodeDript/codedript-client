@@ -73,20 +73,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
       {
         onSuccess: (response) => {
           showAlert(response.message || 'Email verified successfully!', 'success');
-          // Update auth context
+          // Update auth context (AuthContext already syncs localStorage)
           if (response.data?.user) {
             setUser(response.data.user);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
           }
           if (response.data?.token) {
             setToken(response.data.token);
-            localStorage.setItem('token', response.data.token);
           }
-          // Close modal and reload to update navbar
+          // Close modal but do NOT navigate or reload
           setTimeout(() => {
             onClose();
-            window.location.reload();
-          }, 1000);
+          }, 500);
         },
         onError: (error: any) => {
           console.error('Verify OTP Error:', error);

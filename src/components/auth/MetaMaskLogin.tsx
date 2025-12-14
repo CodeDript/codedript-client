@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import authStyles from './AuthForm.module.css';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import { showAlert } from './Alert';
@@ -14,7 +13,7 @@ interface MetaMaskLoginProps {
 
 const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const navigate = useNavigate();
+  
   const walletLoginMutation = useWalletLogin();
   const { setUser, setToken } = useAuthContext();
 
@@ -51,30 +50,12 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
         onLoginSuccess();
       }
 
-      // Close modal after short delay
+      // Close modal after short delay — do not navigate anywhere
       setTimeout(() => {
         if (onClose) {
           onClose();
         }
-
-        // Route based on profile completeness and role
-        if (isNewUser || !profileComplete) {
-          // Redirect to profile completion page
-          navigate('/user/profile');
-        } else {
-          const role = user?.role || 'client';
-          
-          // Route to appropriate dashboard
-          if (role === 'developer') {
-            navigate('/developer');
-          } else if (role === 'client') {
-            navigate('/client');
-          } else {
-            // Default to client dashboard
-            navigate('/client');
-          }
-        }
-      }, 1500);
+      }, 500);
     } catch (err: any) {
       console.error('Login error:', err);
       const errorMessage = err.message || 'Failed to connect wallet';

@@ -1,69 +1,37 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import styles from './AllGigs.module.css';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
-import { getRecentGigs, type MockGig as Gig } from '../../mockData/gigData';
-import { useNavigate } from 'react-router-dom';
-import Button1 from '../../components/button/Button1/Button1';
+import { useGigs } from '../../query/useGigs';
+import type { Gig } from '../../types';
 
 const AllGigs: React.FC = () => {
-  const [gigs, setGigs] = useState<Gig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  
+  // Fetch gigs from API
+  const { data, isLoading, error } = useGigs({ page, limit: 20, isActive: true });
+  
+  const gigs = data?.gigs || [];
+  const pagination = data?.pagination;
+  const hasMore = pagination ? pagination.page < pagination.pages : false;
 
-  useEffect(() => {
-    const fetchGigs = async () => {
-      try {
-        setIsLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const response = getRecentGigs(page, 10);
-        const fetchedGigs = response.data as Gig[];
-
-        // append when loading additional pages
-        setGigs((prev) => (page === 1 ? fetchedGigs : [...prev, ...fetchedGigs]));
-        setHasMore(response.pagination.page < response.pagination.totalPages);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch gigs:', err);
-        setError('Failed to load gigs');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGigs();
-  }, [page]);
-
-  // debounce search input for better performance
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
-  // Client-side filtered list based on debounced query
+  // Client-side filtered list based on search query
   const filteredGigs = useMemo(() => {
-    const q = (debouncedQuery || '').toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return gigs;
+    
     const tokens = q.split(/\s+/).filter(Boolean);
 
     return gigs.filter((gig) => {
-      if (tokens.length === 0) return true;
-
-      // aggregate searchable text
       const title = (gig.title || '').toLowerCase();
       const desc = (gig.description || '').toLowerCase();
-      const devName = (gig.developer && (gig.developer as any).profile && (gig.developer as any).profile.name)
-        ? ((gig.developer as any).profile.name as string).toLowerCase()
+      const devName = typeof gig.developer === 'object' 
+        ? ((gig.developer.fullname || gig.developer.username || '').toLowerCase())
         : '';
-      const skills = Array.isArray((gig.developer as any)?.profile?.skills)
-        ? (gig.developer as any).profile.skills.map((s: string) => s.toLowerCase()).join(' ')
+      const skills = typeof gig.developer === 'object' && Array.isArray(gig.developer.skills)
+        ? gig.developer.skills.map((s: string) => s.toLowerCase()).join(' ')
         : '';
 
       // All tokens must match somewhere (AND search)
@@ -71,7 +39,7 @@ const AllGigs: React.FC = () => {
         return title.includes(tkn) || desc.includes(tkn) || skills.includes(tkn) || devName.includes(tkn);
       });
     });
-  }, [gigs, debouncedQuery]);
+  }, [gigs, searchQuery]);
 
   return (
  <div className={styles.homePage}>
@@ -94,23 +62,31 @@ const AllGigs: React.FC = () => {
 
           <div className={styles.gigCardsGrid}>
             {isLoading ? (
-              <p>Loading gigs...</p>
+              <p style={{textAlign: 'center', padding: '2rem', color: '#666'}}>Loading gigs...</p>
             ) : error ? (
-              <p></p>
+              <div style={{textAlign: 'center', padding: '2rem', color: '#ff4444'}}>
+                <p>Failed to load gigs.</p>
+                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
+                  {error instanceof Error ? error.message : 'Unknown error'}
+                </p>
+                <p style={{fontSize: '0.8rem', color: '#999', marginTop: '0.5rem'}}>
+                  API URL: {import.meta.env.VITE_API_BASE_URL || 'Not configured'}
+                </p>
+              </div>
             ) : filteredGigs.length > 0 ? (
               filteredGigs.map((gig) => {
-                // Defensive checks for null/undefined developer or profile
-                const dev = gig.developer || { profile: {}, reputation: { rating: 0, reviewCount: 0 } };
-                const profile = dev.profile || {};
-                const avatar = profile.avatar || undefined;
-                const gigImage = (gig.images && gig.images[0] && gig.images[0].url) || undefined;
-
-                const ratingValue = (dev.reputation && typeof dev.reputation.rating === 'number')
-                  ? dev.reputation.rating
-                  : (gig.rating?.average ?? 0);
-                const reviewCountValue = (dev.reputation && typeof dev.reputation.reviewCount === 'number')
-                  ? dev.reputation.reviewCount
-                  : (gig.rating?.count ?? 0);
+                // Extract developer info (API returns populated developer object)
+                const dev = typeof gig.developer === 'object' ? gig.developer : null;
+                const avatar = dev?.avatar || undefined;
+                const userName = dev?.fullname || dev?.username || 'Anonymous';
+                const skills = Array.isArray(dev?.skills) ? dev.skills.slice(0, 3) : [];
+                
+                // Get first image from images array
+                const gigImage = gig.images && gig.images.length > 0 ? gig.images[0] : undefined;
+                
+                // Get pricing from first package (basic)
+                const basicPackage = gig.packages.find(p => p.name === 'basic') || gig.packages[0];
+                const price = basicPackage?.price || 0;
 
                 return (
                   <GigCard 
@@ -118,20 +94,20 @@ const AllGigs: React.FC = () => {
                     gigId={gig._id}
                     title={gig.title || 'Untitled Gig'}
                     description={gig.description || 'No description available'}
-                    rating={Math.round(ratingValue) ?? 0}
-                    reviewCount={reviewCountValue ?? 0}
+                    rating={0}
+                    reviewCount={0}
                     userImage={avatar}
-                    userName={profile.name || 'Anonymous'}
+                    userName={userName}
                     userRole="Freelance Developer"
-                    price={gig.pricing?.amount ?? 0}
-                    currency={gig.pricing?.currency ?? 'USD'}
-                    skills={Array.isArray(profile.skills) ? profile.skills.slice(0, 3) : []}
+                    price={price}
+                    currency="USD"
+                    skills={skills}
                     gigImage={gigImage}
                   />
                 );
               })
             ) : (
-              null
+              <p style={{textAlign: 'center', padding: '2rem', color: '#666', gridColumn: '1 / -1'}}>No gigs available at the moment.</p>
             )}
           </div>
           {/* load more and create gig buttons */}

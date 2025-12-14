@@ -6,6 +6,8 @@ import type { CreateGigRequest, UpdateGigRequest } from "../types";
  * Query hook to get all gigs with optional filters
  */
 export const useGigs = (params?: {
+  page?: number;
+  limit?: number;
   isActive?: boolean;
   search?: string;
 }) => {

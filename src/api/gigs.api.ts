@@ -10,16 +10,34 @@ export const gigsApi = {
    * Get all gigs with optional filters
    */
   getAll: (params?: {
+    page?: number;
+    limit?: number;
     isActive?: boolean;
     search?: string;
   }) =>
-    api.get<{ gigs: Gig[] }>("/gigs", { params }).then((r) => r.data),
+    api.get<{ 
+      success: boolean;
+      message: string;
+      data: {
+        gigs: Gig[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          pages: number;
+        };
+      };
+    }>("/gigs", { params }).then((r) => r.data.data),
 
   /**
    * Get a single gig by ID
    */
   getById: (id: string) =>
-    api.get<{ gig: Gig }>(`/gigs/${id}`).then((r) => r.data),
+    api.get<{ 
+      success: boolean;
+      message: string;
+      data: Gig;
+    }>(`/gigs/${id}`).then((r) => r.data.data),
 
   /**
    * Create a new gig

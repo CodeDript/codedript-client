@@ -12,7 +12,19 @@ export interface GigPackage {
 
 export interface Gig {
   _id: string;
-  developer: string;
+  developer: {
+    _id: string;
+    username?: string;
+    fullname?: string;
+    email?: string;
+    walletAddress?: string;
+    role?: string;
+    avatar?: string;
+    skills?: string[];
+    bio?: string;
+    profileCompleteness?: number;
+    isProfileComplete?: boolean;
+  } | string;
   title: string;
   description: string;
   gigID: string;
