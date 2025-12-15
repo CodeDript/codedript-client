@@ -55,12 +55,22 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
 
     // When the location hash changes, try to smoothly scroll to the element (works for anchors)
     useEffect(() => {
-        if (!location.hash) return;
+        if (!location.hash) {
+            // No hash - smooth scroll to top when navigating to a new page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
         const id = location.hash.replace('#', '');
         // Delay briefly so target exists after navigation
         const t = setTimeout(() => {
             const el = document.getElementById(id);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (el) {
+                // Offset so section header isn't hidden behind fixed navbars
+                const headerOffset = 80; // px, adjust if your navbar is taller
+                const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+                const offsetPosition = Math.max(elementPosition - headerOffset, 0);
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
         }, 60);
 
         return () => clearTimeout(t);
@@ -109,15 +119,43 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
                     <div
                         key={btn.label}
                         className={`${styles.NavButton} ${activeButton === btn.label ? styles.activeNavButton : ""}`}
-                        onClick={() => {
+                        onClick={(e) => {
+                            // Smooth scroll to top when clicking Home
+                            if (btn.path === '/') {
+                                e.preventDefault();
+                                if (location.pathname === '/') {
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    window.history.pushState(null, '', '/');
+                                    setIsMobileMenuOpen(false);
+                                    return;
+                                } else {
+                                    navigate('/');
+                                    setIsMobileMenuOpen(false);
+                                    return;
+                                }
+                            }
+
                             // If the button contains a hash (anchor) we try to navigate and set the hash
                             if (btn.path.includes('#')) {
-                                // use window.location to update the hash and scroll to the anchor
+                                e.preventDefault();
                                 const [base, hash] = btn.path.split('#');
-                                // navigate to base first if needed
-                                if (location.pathname !== base) navigate(base);
-                                // then set the hash — this will update location.hash and cause browser to scroll
-                                window.location.hash = `#${hash}`;
+                                const id = hash;
+                                
+                                // If we're on the right page, just scroll
+                                if (location.pathname === base) {
+                                    const el = document.getElementById(id);
+                                    if (el) {
+                                        const headerOffset = 80;
+                                        const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+                                        const offsetPosition = Math.max(elementPosition - headerOffset, 0);
+                                        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                                    }
+                                    // Update URL without triggering navigation
+                                    window.history.pushState(null, '', `${base}#${hash}`);
+                                } else {
+                                    // Navigate to base and let useEffect handle scrolling
+                                    navigate(`${base}#${hash}`);
+                                }
                                 setIsMobileMenuOpen(false);
                                 return;
                             }
