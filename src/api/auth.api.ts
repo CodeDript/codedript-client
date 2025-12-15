@@ -34,7 +34,15 @@ export const authApi = {
    * Update user profile
    */
   updateProfile: (data: Partial<User>) =>
-    api.put<{ user: User }>("/auth/profile", data).then((r) => r.data),
+    // Support JSON or multipart/form-data (when uploading avatar)
+    ((): Promise<any> => {
+      if (data instanceof FormData) {
+        return api.put<{ user: User }>("/auth/me", data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }).then((r) => r.data);
+      }
+      return api.put<{ user: User }>("/auth/me", data).then((r) => r.data);
+    })(),
 
   /**
    * Request OTP for email authentication

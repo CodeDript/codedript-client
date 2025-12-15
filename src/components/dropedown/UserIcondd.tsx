@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styles from './UserIcondd.module.css';
-import fallbackImg from '../../assets/Navimage/no_user.jpg';
+import userPlaceholder from '../../assets/svg/user-placeholder.svg';
 import userIcon from '../../assets/DropdownIcon/user.png';
 import nftIcon from '../../assets/DropdownIcon/nft icon.png';
-import cartIcon from '../../assets/DropdownIcon/cart .png';
+import settingsIcon from '../../assets/DropdownIcon/gear.svg';
 import dashboardIcon from '../../assets/DropdownIcon/application.png';
 import signOutIcon from '../../assets/DropdownIcon/sign out option.png';
 import { useNavigate } from "react-router-dom";
@@ -35,12 +35,14 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
     return (
         <div className={`${styles.dropdownMenu} ${isHiding ? styles.fadeOut : styles.fadeIn}`}>
             <div className={styles.userProfile}>
-                <img
-                    src={user?.avatar || fallbackImg}
-                    alt={user?.fullname || 'profile'}
-                    className={styles.profileImage}
-                    onError={(e) => { e.currentTarget.src = fallbackImg; }}
-                />
+                <div className={styles.avatarFrameSmall}>
+                    <img
+                        src={user?.avatar || userPlaceholder}
+                        alt={user?.fullname || 'profile'}
+                        className={styles.avatarImgSmall}
+                        onError={(e) => { const t = e.currentTarget as HTMLImageElement; t.onerror = null; t.src = userPlaceholder; }}
+                    />
+                </div>
                 <p className={styles.dropdownToggle}>{user?.fullname || 'Anonymous'}</p>
             </div>
 
@@ -87,8 +89,8 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
                     <span className={styles.grayIcon}><img src={nftIcon} alt="preview" /></span> Your NFTs
                 </button>
 
-                <button className={styles.dropdownItem}>
-                    <span className={styles.grayIcon}><img src={cartIcon} alt="shopping cart" /></span> You Bought
+                <button className={styles.dropdownItem} onClick={() => {handleClose(); navigate('/settings');}}>
+                    <span className={styles.grayIcon}><img src={settingsIcon} alt="settings" /></span> Settings
                 </button>
             </div>
 

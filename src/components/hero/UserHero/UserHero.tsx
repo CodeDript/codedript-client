@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './UserHero.module.css';
 import heroOutline from '../../../assets/svg/black base.svg';
+import userPlaceholder from '../../../assets/svg/user-placeholder.svg';
 import calenderIcon from '../../../assets/svg/calander.svg';
 import { useAuthContext } from '../../../context/AuthContext';
 
@@ -32,11 +33,14 @@ const UserHero: React.FC = () => {
         
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
-            <img 
-              src={user?.avatar || "https://i.pravatar.cc/150?img=47"} 
-              alt="Profile" 
-              className={styles.profileImage}
-            />
+            <div className={styles.avatarFrame}>
+              <img
+                src={user?.avatar || userPlaceholder}
+                alt="Profile"
+                className={styles.avatarImg}
+                onError={(e) => { const t = e.currentTarget as HTMLImageElement; t.onerror = null; t.src = userPlaceholder; }}
+              />
+            </div>
             <div className={styles.profileInfo}>
               <h2 className={styles.profileName}>
                 {user?.fullname || 'Pending'}

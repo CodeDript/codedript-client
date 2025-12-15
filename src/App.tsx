@@ -15,6 +15,7 @@ import RequestChange from './pages/createContract/pageCotractD/contractView/Requ
 import RulesAndConditions from './pages/createContract/pageCotractD/contractView/RulesAndConditions';
 import Client from './pages/User/client/client.tsx';
 import Developer from './pages/User/developer/developer.tsx';
+import Settings from './pages/Settings/Settings.tsx';
 import './App.css';
 import Alert from './components/auth/Alert';
 import NavBar from './components/navbar/Navbar';
@@ -87,6 +88,11 @@ function AppContent() {
           } />
           
           {/* Auth-Only Protected Routes */}
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
           <Route path="/contract-processing" element={
             <ProtectedRoute>
               <ContractProcessing />
