@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './DeveloperTable.module.css';
 import { getAgreementsByUserId, type MockAgreement as Agreement } from '../../../mockData/agreementData';
-import { mockGigs, type MockGig as Gig } from '../../../mockData/gigData';
+import { useGigsByDeveloper } from '../../../query/useGigs';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'myGigs' | 'incomingContract' | 'activeContract' | 'transactions' | 'ongoingContract';
@@ -99,6 +99,10 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const storedUser = localStorage.getItem('user');
   const mockUser = storedUser ? JSON.parse(storedUser) : null;
 
+  // developer id and query for gigs
+  const loggedInId = developerId || mockUser?._id;
+  const gigsQuery = useGigsByDeveloper(loggedInId);
+
   // prevent stale fetches overwriting UI — use a request token
   const requestRef = React.useRef(0);
 
@@ -144,48 +148,35 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   React.useEffect(() => {
     // Handle myGigs separately (fetch gigs owned by the logged-in developer)
     if (activeTab === 'myGigs') {
-      const fetchGigs = async () => {
-        const reqId = ++requestRef.current;
+      if (gigsQuery.isLoading) {
         setLoading(true);
         setError(null);
+        setRows([]);
+        return;
+      }
 
-        try {
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // determine developer id from prop or mock user
-          const loggedInId = developerId || mockUser?._id;
-          if (!loggedInId) {
-            setRows([]);
-            return;
-          }
+      if (gigsQuery.isError) {
+        setLoading(false);
+        setError('Failed to load gigs');
+        setRows([]);
+        return;
+      }
 
-          // fetch gigs owned by the developer
-          const gigs: Gig[] = mockGigs.filter(g => g.developer._id === loggedInId);
-          if (requestRef.current !== reqId) return;
+      const res = gigsQuery.data;
+      const gigsList = res?.gigs || [];
 
-          const displayRows = gigs.map(g => ({
-            id: g._id,
-            order: g._id.slice(-4).toUpperCase(),
-            title: g.title,
-            client: g.developer.profile?.name || g.developer.walletAddress,
-            date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-            status: 'Active',
-            amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
-          }));
+      const displayRows = gigsList.map((g: any) => ({
+        id: g._id,
+        order: String(g.gigID || g._id?.slice(-4)?.toUpperCase() || ''),
+        title: g.title,
+        client: g.developer?.username || g.developer?.email || g.developer?.walletAddress || 'Unknown',
+        date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: g.isActive ? 'Active' : 'Inactive',
+        amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
+      }));
 
-          setRows(displayRows);
-        } catch (err) {
-          if (requestRef.current !== reqId) return;
-          console.error('Error fetching gigs:', err);
-          setError('Failed to load gigs');
-          setRows([]);
-        } finally {
-          if (requestRef.current === reqId) setLoading(false);
-        }
-      };
-
-      fetchGigs();
+      setRows(displayRows);
+      setLoading(false);
       return;
     }
 
@@ -262,7 +253,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
     fetchAgreements();
 
     return () => { /* next call will bump requestRef.current */ };
-  }, [activeTab, developerId]);
+  }, [activeTab, developerId, gigsQuery.isLoading, gigsQuery.isError, gigsQuery.data]);
 
   return (
     <div className={styles.tableWrapper1}>

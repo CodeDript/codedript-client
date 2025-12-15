@@ -21,6 +21,7 @@ import Alert from './components/auth/Alert';
 import NavBar from './components/navbar/Navbar';
 import AuthForm from './components/auth/AuthForm';
 import { useAuthContext } from './context/AuthContext';
+import { TempDataProvider } from './context/TempDataContext';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ function AppContent() {
   };
 
   return (
-    <>
+    <TempDataProvider>
       <NavBar
         isLoggedIn={isAuthenticated}
         onLoginClick={handleLoginClick}
@@ -119,7 +120,7 @@ function AppContent() {
         </Routes>
       </div>
       <Alert />
-    </>
+    </TempDataProvider>
   );
 }
 

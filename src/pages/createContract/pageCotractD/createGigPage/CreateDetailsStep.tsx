@@ -6,11 +6,9 @@ type Props = {
   setTitle: (v: string) => void;
   description: string;
   setDescription: (v: string) => void;
-  developerReceivingAddress: string;
-  setDeveloperReceivingAddress: (v: string) => void;
 };
 
-const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription, developerReceivingAddress, setDeveloperReceivingAddress }) => {
+const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription }) => {
   const [category, setCategory] = useState<string>('');
   
   return (
@@ -28,15 +26,6 @@ const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setD
           <textarea id="gig-description" aria-label="Gig description" value={description} onChange={(e)=>setDescription(e.target.value)} rows={4} />
         </div>
 
-        <div className={styles.formRow}>
-          <label className={styles.zenThin} htmlFor="gig-category">Category :</label>
-          <input id="gig-category" aria-label="Gig category" value={category} onChange={(e)=>setCategory(e.target.value)} placeholder="Enter category (e.g. Web Development)" />
-        </div>
-
-        <div className={styles.formRow}>
-          <label className={styles.zenThin} htmlFor="developer-receiving">Developer Receiving Ethereum Address :</label>
-          <input id="developer-receiving" aria-label="Developer receiving ethereum address" value={developerReceivingAddress} onChange={(e)=>setDeveloperReceivingAddress(e.target.value)} placeholder="Enter receiving address (e.g. 0x...)" />
-        </div>
       </section>
     </>
   );

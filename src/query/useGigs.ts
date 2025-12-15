@@ -51,6 +51,8 @@ export const useCreateGig = () => {
     onSuccess: () => {
       // Invalidate gigs queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["gigs"] });
+      // Also invalidate developer-specific gigs queries
+      queryClient.invalidateQueries({ queryKey: ["gigs", "developer"] });
     },
   });
 };
@@ -68,6 +70,7 @@ export const useUpdateGig = () => {
       // Invalidate specific gig and all gigs queries
       queryClient.invalidateQueries({ queryKey: ["gigs", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["gigs"] });
+      queryClient.invalidateQueries({ queryKey: ["gigs", "developer"] });
     },
   });
 };
@@ -83,6 +86,7 @@ export const useDeleteGig = () => {
     onSuccess: () => {
       // Invalidate all gigs queries
       queryClient.invalidateQueries({ queryKey: ["gigs"] });
+      queryClient.invalidateQueries({ queryKey: ["gigs", "developer"] });
     },
   });
 };

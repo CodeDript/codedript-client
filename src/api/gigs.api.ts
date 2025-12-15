@@ -42,8 +42,12 @@ export const gigsApi = {
   /**
    * Create a new gig
    */
-  create: (data: CreateGigRequest) =>
-    api.post<{ gig: Gig }>("/gigs", data).then((r) => r.data),
+  create: (data: CreateGigRequest | FormData) =>
+    api.post<{ 
+      success: boolean;
+      message: string;
+      data: Gig;
+    }>("/gigs", data).then((r) => r.data),
 
   /**
    * Update an existing gig
@@ -61,5 +65,12 @@ export const gigsApi = {
    * Get gigs by developer ID
    */
   getByDeveloper: (developerId: string) =>
-    api.get<{ gigs: Gig[] }>(`/gigs/developer/${developerId}`).then((r) => r.data),
+    api.get<{ 
+      success: boolean;
+      message: string;
+      data: {
+        gigs: Gig[];
+        pagination: { page: number; limit: number; total: number; pages: number };
+      };
+    }>(`/gigs/developer/${developerId}`).then((r) => r.data.data),
 };
