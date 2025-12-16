@@ -20,8 +20,9 @@ export const transactionsApi = {
 
   /**
    * Create a new transaction
+   * Accepts partial payload because the server will fetch blockchain details itself.
    */
-  create: (data: CreateTransactionRequest) =>
+  create: (data: Partial<CreateTransactionRequest>) =>
     api.post<{ transaction: Transaction }>("/transactions", data).then((r) => r.data),
 
   /**

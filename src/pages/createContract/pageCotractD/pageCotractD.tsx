@@ -21,10 +21,13 @@ import ChatWidget from '../../../components/chat/ChatWidget';
 import Footer from '../../../components/footer/Footer';
 import { useAgreementData } from '../../../context/AgreementDataContext';
 import { agreementsApi } from '../../../api/agreements.api';
+import { transactionsApi } from '../../../api/transactions.api';
 import { showAlert } from '../../../components/auth/Alert';
 import { useGig } from '../../../query/useGigs';
 import { useUpdateAgreement, useUpdateAgreementStatus } from '../../../query/useAgreements';
 import { useCreateAgreement } from '../../../query/useAgreements';
+import { createAgreement as createBlockchainAgreement, getTransactionDetails } from '../../../services/ContractService';
+
 
 const PageCotractD: React.FC = () => {
   const { agreementData, setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
@@ -416,6 +419,36 @@ const PageCotractD: React.FC = () => {
     }
   };
 
+  // Normalize various date inputs to UNIX seconds.
+  // Accepts: ISO date strings, numeric seconds, numeric milliseconds.
+  function parseToUnixSeconds(input?: any): number {
+    if (!input) return Math.floor(Date.now() / 1000);
+
+    // If it's already a number
+    if (typeof input === 'number') {
+      // If value looks like seconds (<= 1e11), convert to ms then to seconds
+      if (input < 1e11) {
+        return Math.floor(input);
+      }
+      // If it's milliseconds (>= 1e11), convert to seconds
+      return Math.floor(input / 1000);
+    }
+
+    // If numeric string
+    if (typeof input === 'string' && /^\d+$/.test(input)) {
+      const n = parseInt(input, 10);
+      if (n < 1e11) return Math.floor(n);
+      return Math.floor(n / 1000);
+    }
+
+    // Otherwise try to parse as date string
+    const t = Date.parse(input);
+    if (!isNaN(t)) return Math.floor(t / 1000);
+
+    // Fallback to now
+    return Math.floor(Date.now() / 1000);
+  }
+
   const handleClientApprove = async () => {
     if (!routeState?.agreementId) {
       setAcceptError('Agreement ID not found');
@@ -433,27 +466,104 @@ const PageCotractD: React.FC = () => {
     try {
       const agreement = routeState.agreement;
       
+      // Extract agreement data
+      const developerWalletAddress = agreement?.developer?.walletAddress || developerReceivingAddress;
+      const projectName = agreement?.project?.name || title;
+      const documentsIpfsHash = agreement?.documents?.[0]?.ipfsHash || 'QmDefaultDocHash'; // Use first document's IPFS hash
+      const totalValue = agreement?.financials?.totalValue?.toString() || value;
+      
+      // Parse dates and ensure start date is in the future
+      const parsedStartDate = parseToUnixSeconds(agreement?.timeline?.startDate || agreement?.startDate || undefined);
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      // Add 60 seconds buffer to account for transaction mining time and ensure it's definitely in the future
+      const startDate = Math.max(parsedStartDate, currentTimestamp + 60);
+      const endDate = parseToUnixSeconds(agreement?.timeline?.endDate || agreement?.endDate || deadline);
 
-      
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockTxHash = '0x' + Math.random().toString(16).substr(2, 64);
-      const mockIpfsHash = 'Qm' + Math.random().toString(36).substr(2, 44);
-      
-      console.log('Mock blockchain transaction:', {
-        transactionHash: mockTxHash,
-        ipfsHash: mockIpfsHash,
-        projectName: agreement?.project?.name || title,
-        totalValue: agreement?.financials?.totalValue?.toString() || value,
+      console.log('🚀 Step 1: Creating blockchain agreement...');
+      console.log({
+        developerWalletAddress,
+        projectName,
+        documentsIpfsHash,
+        totalValue,
+        startDate,
+        endDate
       });
-        // Mock result available: { transactionHash: mockTxHash, ipfsHash: mockIpfsHash }
 
+      // Step 1: Call smart contract createAgreement function
+      const txResult = await createBlockchainAgreement(
+        developerWalletAddress,
+        projectName,
+        documentsIpfsHash,
+        totalValue,
+        startDate,
+        endDate
+      );
+
+      const transactionHash = txResult.transactionHash;
+      console.log('✅ Blockchain transaction successful:', transactionHash);
+      console.log('⏳ Waiting for transaction to be confirmed on blockchain...');
+
+      // Step 2: Create transaction record in database with retry logic
+      // Backend requires at least 1 confirmation before recording
+      console.log('💾 Step 2: Creating transaction record in database (waiting for confirmations)...');
+      const transactionData = {
+        type: 'creation' as const,
+        agreement: routeState.agreementId,
+        transactionHash: transactionHash,
+        network: 'sepolia' as const,
+      };
+
+      let txResponse;
+      let retries = 0;
+      const maxRetries = 30; // Wait up to ~90 seconds
       
-      // Navigate to client profile
-      navigate('/client');
+      while (retries < maxRetries) {
+        try {
+          console.log('📋 Attempting to create transaction record... (attempt', retries + 1, '/', maxRetries, ')');
+          txResponse = await transactionsApi.create(transactionData);
+
+          console.log('✅ Transaction record created:', txResponse);
+          break;
+        } catch (error: any) {
+          const errorMsg = error.response?.data?.error?.message || '';
+          // Retry if transaction is not found yet or needs confirmations
+          const shouldRetry = errorMsg.includes('confirmation') || 
+                             errorMsg.includes('not found') || 
+                             errorMsg.includes('not been mined');
+          
+          if (shouldRetry) {
+            retries++;
+            if (retries >= maxRetries) {
+              throw new Error('Transaction confirmation timeout. Please check Sepolia block explorer and try again later.');
+            }
+            console.log(`⏳ Waiting for blockchain confirmation... (${retries}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+          } else {
+            // Different error, throw immediately
+            throw error;
+          }
+        }
+      }
+
+      // Step 3: Update agreement status to "active" (client has paid, work can begin)
+      console.log('📝 Step 3: Updating agreement status to active...');
+      await updateStatusMutation.mutateAsync({
+        id: routeState.agreementId,
+        status: 'active'
+      });
+      console.log('✅ Agreement status updated to active');
+
+      showAlert('Payment successful! Agreement is now active on blockchain.', 'success');
+      
+      // Navigate to client profile after short delay
+      setTimeout(() => {
+        navigate('/client');
+      }, 2000);
     } catch (error: any) {
-      console.error('Error approving agreement:', error);
+      console.error('❌ Error during approval process:', error);
+      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error response status:', error.response?.status);
+      console.error('Error message from backend:', error.response?.data?.error?.message || error.response?.data?.message);
       
       // Provide user-friendly error messages
       let errorMessage = 'Failed to approve agreement';
@@ -471,6 +581,7 @@ const PageCotractD: React.FC = () => {
       }
       
       setAcceptError(errorMessage);
+      showAlert(errorMessage, 'error');
     } finally {
       setIsApprovingAgreement(false);
     }
