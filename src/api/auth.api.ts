@@ -22,7 +22,7 @@ export const authApi = {
    * Get current authenticated user
    */
   getMe: () =>
-    api.get<{ user: User }>("/auth/me").then((r) => r.data),
+    api.get<{ success: boolean; message: string; data: { user: User } }>("/auth/me").then((r) => r.data.data),
 
   /**
    * Logout current user

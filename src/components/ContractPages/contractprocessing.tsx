@@ -6,39 +6,85 @@ import Button2 from '../../components/button/Button2/Button2';
 import CardVector from '../../assets/svg/cardvector.svg';
 import Lottie from 'lottie-react';
 import blockchainAnimation from './blockchain.json';
+import { authApi } from '../../api/auth.api';
+import { showAlert } from '../auth/Alert';
 
 const ContractProcessing: React.FC = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [walletError, setWalletError] = useState('');
 
   // Default values in case page is opened directly
-  const { title = 'Package', price = '', delivery = '', revisions = 0, description = [], image = '', gigId, developerWallet } = (state || {}) as any;
+  const { title = 'Package', price = '', delivery = '', revisions = 0, description = [], image = '', gigId, packageId, developerWallet } = (state || {}) as any;
+  
+  console.log('📋 ContractProcessing received state:', { gigId, packageId, title });
+  
+  console.log('📋 ContractProcessing received state:', { gigId, packageId, title });
 
   const connectWalletAndStart = async () => {
     console.log('=== connectWalletAndStart called ===');
     try {
       setIsConnecting(true);
-      setWalletError('');
 
-      // Check if user is authenticated
-      const storedUser = localStorage.getItem('user');
-      console.log('Stored user in localStorage:', storedUser);
+      // Check if token exists in localStorage
+      const token = localStorage.getItem('token');
+      console.log('Token in localStorage:', token ? 'exists' : 'missing');
 
-      if (!storedUser) {
-        const errorMsg = 'You must be logged in to create a contract. Please login first.';
+      if (!token) {
+        const errorMsg = 'You need to connect to the system. Please login first.';
         console.error(errorMsg);
-        setWalletError(errorMsg);
+        showAlert(errorMsg, 'error');
         setIsConnecting(false);
         return;
       }
 
-      const userData = JSON.parse(storedUser);
-      console.log('Parsed user data:', userData);
+      // Verify token by calling /auth/me endpoint
+      console.log('Verifying token with API...');
+      let userData;
+      try {
+        const response = await authApi.getMe();
+        console.log('API response:', response);
+        
+        // The API returns { success, message, data: { user } }
+        userData = response.user;
+        
+        if (!userData) {
+          console.error('Response structure:', response);
+          throw new Error('User data not found in response');
+        }
 
-      // Use authenticated user data from localStorage
-      const clientName = userData.profile?.name || userData.email?.split('@')[0] || 'Client';
+        console.log('✅ Token verified, user data:', userData);
+
+        // Update localStorage with fresh user data
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        // Ensure the authenticated user is a client
+        if (userData.role !== 'client') {
+          const roleErr = 'Only clients can start contracts.';
+          console.warn(roleErr, 'user role:', userData.role);
+          showAlert(roleErr, 'error');
+          setIsConnecting(false);
+          return;
+        }
+      } catch (apiError: any) {
+        console.error('❌ Token verification failed:', apiError);
+
+        // Only clear token on authentication errors (401)
+        if (apiError.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          showAlert('Your session has expired. Please login again.', 'error');
+        } else {
+          // For other errors, don't clear the token - might be network issue
+          showAlert('Failed to verify credentials. Please try again.', 'error');
+        }
+
+        setIsConnecting(false);
+        return;
+      }
+
+      // Use authenticated user data from API response
+      const clientName = userData.fullname || userData.email?.split('@')[0] || 'Client';
       const clientEmail = userData.email || '';
 
       // Check if wallet is already connected
@@ -62,6 +108,7 @@ const ContractProcessing: React.FC = () => {
       console.log('Navigating to create contract...');
       
       // Navigate to create contract with all data
+      console.log('📦 Passing packageId to create-contract:', packageId);
       navigate('/create-contract', { 
         state: { 
           title, 
@@ -70,7 +117,8 @@ const ContractProcessing: React.FC = () => {
           revisions, 
           description, 
           image, 
-          gigId, 
+          gigId,
+          packageId,
           developerWallet,
           clientWallet: walletAddress,
           clientName: clientName,
@@ -90,7 +138,7 @@ const ContractProcessing: React.FC = () => {
         errorMsg = error.message || 'Failed to connect wallet';
       }
       
-      setWalletError(errorMsg);
+      showAlert(errorMsg, 'error');
       setIsConnecting(false);
     }
   };
@@ -133,18 +181,7 @@ const ContractProcessing: React.FC = () => {
             )}
           </ul>
 
-          {walletError && (
-            <div style={{ 
-              color: '#ff4444', 
-              background: '#fff0f0', 
-              padding: '12px', 
-              borderRadius: '8px', 
-              marginBottom: '16px',
-              fontSize: '14px'
-            }}>
-              {walletError}
-            </div>
-          )}
+          {/* Errors are shown via snackbar using showAlert() */}
 
           <div className={styles.actions}>
             <div style={{ display: 'flex', alignItems: 'center' }}>

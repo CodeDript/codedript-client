@@ -107,6 +107,12 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const requestRef = React.useRef(0);
 
   const handleAgreementClick = (rowId: string) => {
+    // Navigate to gig view when clicking a gig in 'My Gigs' tab
+    if (activeTab === 'myGigs') {
+      navigate(`/gigview/${rowId}`);
+      return;
+    }
+
     // Handle transactions tab separately - open modal
     if (activeTab === 'transactions') {
       const agreement = agreements.find(a => a._id === rowId);

@@ -21,8 +21,8 @@ export const agreementsApi = {
   /**
    * Create a new agreement
    */
-  create: (data: CreateAgreementRequest) =>
-    api.post<{ agreement: Agreement }>("/agreements", data).then((r) => r.data),
+  create: (data: CreateAgreementRequest | FormData) =>
+    api.post<{ success: boolean; message: string; data: { agreement: Agreement } }>("/agreements", data).then((r) => r.data),
 
   /**
    * Update an existing agreement

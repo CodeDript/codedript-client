@@ -19,17 +19,23 @@ import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
 import ChatWidget from '../../../components/chat/ChatWidget';
 import Footer from '../../../components/footer/Footer';
+import { useAgreementData } from '../../../context/AgreementDataContext';
+import { agreementsApi } from '../../../api/agreements.api';
+import { showAlert } from '../../../components/auth/Alert';
+import { useGig } from '../../../query/useGigs';
 
 const PageCotractD: React.FC = () => {
+  const { agreementData, setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
   const [step, setStep] = useState(1);
+  const [gigId, setGigId] = useState<string | undefined>(undefined);
+  const [packageId, setPackageId] = useState<string | undefined>(undefined);
+  const gigQuery = useGig(gigId || '');
   const [title, setTitle] = useState('Website Redesign Project');
   const [description, setDescription] = useState('Describe the project scope, deliverables, and requirement');
   // developerWallet: the developer's profile wallet (used to fetch developer info)
   const [developerWallet, setDeveloperWallet] = useState('');
   // developerReceivingAddress: the Ethereum address the client will send payments to
   const [developerReceivingAddress, setDeveloperReceivingAddress] = useState('');
-  // gigId: optional ID used to fetch the gig and obtain developer wallet
-  const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   // Track if viewing as developer (from incoming agreement) - disables previous button
   const [isDeveloperView, setIsDeveloperView] = useState(false);
@@ -76,6 +82,18 @@ const PageCotractD: React.FC = () => {
 
   useEffect(() => {
     if (routeState) {
+      console.log('📋 Route state received:', routeState);
+      
+      // Extract gigId and packageId from route state
+      if (routeState.gigId) {
+        console.log('🎯 Setting gigId from route:', routeState.gigId);
+        setGigId(routeState.gigId);
+      }
+      if (routeState.packageId) {
+        console.log('📦 Setting packageId from route:', routeState.packageId);
+        setPackageId(routeState.packageId);
+      }
+      
       // Check if this is a client viewing a pending agreement for review
       if (routeState.agreementId && routeState.isClientView) {
         setIsClientView(true);
@@ -186,40 +204,108 @@ const PageCotractD: React.FC = () => {
 
   const handleCreateContract = async () => {
     console.log('handleCreateContract called');
+    setIsUploadingFiles(true);
     
-    // Upload files to IPFS first if any files are present
-    let uploadedCids: string[] = [];
-    if (uploadedFiles.length > 0) {
-      console.log('Uploading files to IPFS...');
-      setIsUploadingFiles(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      uploadedCids = uploadedFiles.map((_, i) => `Qm${Math.random().toString(36).substring(7)}`);
-      setUploadedFilesCids(uploadedCids);
+    try {
+      // Sync all data to context before creating agreement
+      setProjectDetails(title, description);
+      setPartiesDetails(clientName, clientEmail, clientWallet, developerWallet);
+      setFilesAndTerms(uploadedFiles, filesNote);
+      setPaymentDetails(value, currency, deadline, milestones);
+      if (gigId) setContextGigId(gigId);
+      if (developerReceivingAddress) setContextDeveloperAddress(developerReceivingAddress);
+      
+      // Validate required data
+      if (!gigId) {
+        showAlert('Gig ID is required to create an agreement', 'error');
+        return;
+      }
+
+      if (!packageId) {
+        showAlert('Package ID is required to create an agreement', 'error');
+        return;
+      }
+
+      if (!gigQuery.data) {
+        showAlert('Gig data not loaded. Please wait and try again.', 'error');
+        return;
+      }
+
+      const gig = gigQuery.data as any;
+      const developerId = typeof gig.developer === 'object' ? gig.developer._id : gig.developer;
+      
+      console.log('🔍 Agreement Data Debug:');
+      console.log('  - Developer ID:', developerId);
+      console.log('  - Gig ID:', gigId);
+      console.log('  - Package ID:', packageId);
+      console.log('  - Title:', title);
+      console.log('  - Description:', description);
+      console.log('  - Milestones:', milestones);
+      
+      // Prepare FormData for file upload
+      const formData = new FormData();
+      
+      // Required fields per server validation
+      formData.append('developer', developerId);
+      formData.append('gig', gigId);
+      formData.append('packageId', packageId);
+      formData.append('title', title);
+      formData.append('description', description);
+      
+      // Milestones (stringify as JSON)
+      formData.append('milestones', JSON.stringify(milestones));
+      
+      // Append documents (not projectFiles)
+      uploadedFiles.forEach((file) => {
+        formData.append('documents', file);
+      });
+      
+      console.log('📤 Creating agreement via API...');
+      console.log('📋 FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: [File] ${value.name}`);
+        } else {
+          console.log(`  ${key}:`, value);
+        }
+      }
+      
+      // Call the API
+      const response = await agreementsApi.create(formData);
+      
+      console.log('✅ Agreement created successfully:', response);
+      
+      // Show success message
+      showAlert(response.message || 'Agreement created successfully!', 'success');
+      
+      // Reset context and navigate
+      resetAgreementData();
+      
+      // Navigate to client profile after short delay
+      setTimeout(() => {
+        navigate('/client');
+      }, 1500);
+      
+    } catch (error: any) {
+      console.error('❌ Failed to create agreement:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to create agreement';
+      
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        // Validation errors
+        errorMessage = error.response.data.errors.map((e: any) => e.msg).join(', ');
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showAlert(errorMessage, 'error');
+    } finally {
       setIsUploadingFiles(false);
-      console.log('Mock files uploaded to IPFS. CIDs:', uploadedCids);
     }
-    
-    // Mock agreement creation
-    console.log('Mock: Creating agreement with data:', {
-      projectName: title,
-      projectDescription: description,
-      clientName,
-      clientEmail,
-      clientWallet,
-      developerReceivingAddress,
-      totalValue: value,
-      currency,
-      deadline,
-      milestones,
-      filesNote,
-      uploadedFilesCids: uploadedCids
-    });
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    alert('Agreement created successfully! (Mock Mode)');
-    
-    // Navigate to client profile page after successful agreement creation
-    navigate('/client');
   };
 
   const handleFinish = () => {
@@ -423,8 +509,6 @@ const PageCotractD: React.FC = () => {
                 setTitle={setTitle}
                 description={description}
                 setDescription={setDescription}
-                developerReceivingAddress={developerReceivingAddress}
-                setDeveloperReceivingAddress={setDeveloperReceivingAddress}
               />
             )}
             {step === 2 && (

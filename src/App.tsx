@@ -22,6 +22,7 @@ import NavBar from './components/navbar/Navbar';
 import AuthForm from './components/auth/AuthForm';
 import { useAuthContext } from './context/AuthContext';
 import { TempDataProvider } from './context/TempDataContext';
+import { AgreementDataProvider } from './context/AgreementDataContext';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ function AppContent() {
 
   return (
     <TempDataProvider>
+      <AgreementDataProvider>
       <NavBar
         isLoggedIn={isAuthenticated}
         onLoginClick={handleLoginClick}
@@ -95,9 +97,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
           <Route path="/contract-processing" element={
-            <ProtectedRoute>
               <ContractProcessing />
-            </ProtectedRoute>
           } />
           <Route path="/create-contract/rules" element={
             <ProtectedRoute>
@@ -120,6 +120,7 @@ function AppContent() {
         </Routes>
       </div>
       <Alert />
+      </AgreementDataProvider>
     </TempDataProvider>
   );
 }

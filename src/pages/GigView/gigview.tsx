@@ -109,6 +109,7 @@ Best for businesses needing a full communication suite. Includes HD calling, scr
                 revisions={0}
                 buttonLabel="Buy & Escrow"
                 gigId={gig._id}
+                packageId={pkg._id}
                 developerWallet={developerWallet}
               />
             );
