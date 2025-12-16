@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '../pageCotractD.module.css';
 
-type Milestone = { title: string; amount: string };
+type Milestone = { title: string; amount?: string };
 
 type PackageSummary = {
   name: string;

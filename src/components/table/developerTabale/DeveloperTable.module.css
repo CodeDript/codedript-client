@@ -114,8 +114,13 @@
 .pill { padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 700;}
 .pill-active { background: #c0f7d1; color: #14974a; }
 .pill-pending { background: #f8ddae; color: #b27b2a; }
+.pill-priced { background: #d4e5ff; color: #2563eb; }
+.pill-rejected { background: #fecaca; color: #dc2626; }
+.pill-cancelled { background: #e5e7eb; color: #6b7280; }
 .pill-ongoing { background: #cbddfd; color: #2e69b7; }
 .pill-incoming { background: #c8e0fc; color: #2e6b9b; }
+.pill-in-progress { background: #fef3c7; color: #d97706; }
+.pill-completed { background: #d1fae5; color: #059669; }
 .pill-paid { background: #bef8ee; color: #1a8b72; }
 .amountCell { min-width: 170px; font-family: 'Zen Dots'; font-size: 28px; text-align: right; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 0px; }
 

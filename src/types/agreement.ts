@@ -9,11 +9,13 @@ export interface Preview {
 }
 
 export interface Milestone {
-  name: string;
-  description: string;
-  status: "pending" | "inProgress" | "completed";
-  previews: Preview[];
-  completedAt: Date | null;
+  // Flexible milestone shape: front-end uses `title`, server stores `name`.
+  name?: string;
+  title?: string;
+  description?: string;
+  status?: "pending" | "in-progress" | "completed" | "inProgress";
+  previews?: Preview[];
+  completedAt?: Date | null;
 }
 
 export interface Deliverable {
@@ -28,18 +30,37 @@ export interface Document {
   uploadedAt: Date;
 }
 
+export interface UserRef {
+  _id: string;
+  walletAddress?: string;
+  email: string;
+  fullname?: string;
+  avatar?: string;
+  profileCompleteness?: number;
+  isProfileComplete?: boolean;
+  id?: string;
+}
+
+export interface GigRef {
+  _id: string;
+  title: string;
+  gigID?: string;
+  id?: string;
+}
+
 export interface Agreement {
   _id: string;
   agreementID: string;
-  client: string;
-  developer: string;
-  gig: string;
+  client: string | UserRef;
+  developer: string | UserRef;
+  gig: string | GigRef;
   title: string;
   description: string;
-  status: "pending" | "rejected" | "cancelled" | "active" | "in-progress" | "completed" | "paid";
+  status: "pending" | "rejected" | "cancelled" | "active" | "in-progress" | "completed" | "paid" | "priced";
   deliverables: Deliverable[];
-  startDate: Date;
-  endDate: Date | null;
+  // Dates are strings from API (ISO) on the client-side
+  startDate: string;
+  endDate: string | null;
   financials: {
     totalValue: number;
     releasedAmount: number;
@@ -62,12 +83,15 @@ export interface CreateAgreementRequest {
     totalValue: number;
   };
   milestones?: Milestone[];
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string | Date;
+  endDate?: string | Date;
 }
 
 export interface UpdateAgreementRequest extends Partial<CreateAgreementRequest> {
   status?: Agreement["status"];
   deliverables?: Deliverable[];
   documents?: Document[];
+  // Allow updating totalValue/top-level milestones directly for convenience
+  totalValue?: number;
+  milestones?: Milestone[];
 }

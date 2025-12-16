@@ -25,7 +25,7 @@ export const protectedRoutes: RouteConfig[] = [
   { path: '/developer', label: 'Developer Dashboard', requireAuth: true, allowedRoles: ['developer'] },
   { path: '/settings', label: 'Settings', requireAuth: true },
   { path: '/contract-processing', label: 'Contract Processing', requireAuth: true },
-  { path: '/create-contract', label: 'Create Contract', requireAuth: true, allowedRoles: ['client'] },
+  { path: '/create-contract', label: 'Create Contract', requireAuth: true, allowedRoles: ['client', 'developer'] },
   { path: '/create-gig', label: 'Create Gig', requireAuth: true, allowedRoles: ['developer'] },
   { path: '/create-contract/rules', label: 'Contract Rules', requireAuth: true },
   { path: '/create-contract/request-change', label: 'Request Change', requireAuth: true },

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 interface Milestone {
   title: string;
-  amount: string;
+  amount?: string;
 }
 
 interface AgreementData {

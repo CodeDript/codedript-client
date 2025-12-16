@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../pageCotractD.module.css';
 import downloadIcon from '../../../../assets/svg/downloard-files.svg';
 
-type Milestone = { title: string; amount: string };
+type Milestone = { title: string };
 
 type Props = {
   title: string;
@@ -26,12 +26,12 @@ type Props = {
 };
 
 const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, clientName, clientEmail, value, setValue, currency, setCurrency, deadline, setDeadline, milestones, setMilestones, paymentConfirmed, setPaymentConfirmed, isDeveloperView, projectFilesIpfsHash }) => {
-  const updateMilestone = (idx: number, field: 'title'|'amount', v: string) => {
-    const next = milestones.map((m,i)=> i===idx ? {...m, [field]: v} : m);
+  const updateMilestone = (idx: number, v: string) => {
+    const next = milestones.map((m,i)=> i===idx ? {...m, title: v} : m);
     setMilestones(next);
   };
 
-  const addMilestone = () => setMilestones([...milestones, {title:'New Milestone', amount: '0'}]);
+  const addMilestone = () => setMilestones([...milestones, {title:'New Milestone'}]);
 
   const confirmButtonText = isDeveloperView ? 'I accept these payment terms and milestones' : 'I confirm the developer and accept these payment terms';
 
@@ -42,8 +42,8 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, dev
       return;
     }
     
-    // Pinata gateway URL format: copper-near-junglefowl-259.mypinata.cloud/ipfs/yourCID
-    const gatewayUrl = `https://copper-near-junglefowl-259.mypinata.cloud/ipfs/${projectFilesIpfsHash}`;
+    // Use public IPFS gateway (ipfs.io) for broad accessibility
+    const gatewayUrl = `https://ipfs.io/ipfs/${projectFilesIpfsHash}`;
     window.open(gatewayUrl, '_blank');
   };
 
@@ -68,10 +68,6 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, dev
             <span className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{value}</span>
             <span style={{marginLeft:6, fontFamily: 'Jura'}}>{currency}</span>
           </div>
-        </div>
-        <div className={styles.reviewRow}>
-          <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Deadline :</div>
-          <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{deadline}</div>
         </div>
       </div>
 
@@ -123,20 +119,19 @@ const PaymentStep: React.FC<Props> = ({ title, description, developerWallet, dev
 
         <div className={styles.formRow}>
           <label>Project Deadline :</label>
-          <input value={deadline} onChange={(e)=>setDeadline(e.target.value)} placeholder="Select Deadline" />
+          <input type="date" value={deadline} onChange={(e)=>setDeadline(e.target.value)} />
         </div>
 
         <h5 style={{fontWeight:700, marginTop:8}}>Milestone Breakdown</h5>
         <div style={{borderTop:'1px solid #e0e0e0', marginTop:8, paddingTop:8}}>
           {milestones.map((m, idx)=> (
             <div key={idx} className={styles.milestoneRow}>
-              <input className={styles.milestoneInput} value={m.title} onChange={(e)=>updateMilestone(idx,'title', e.target.value)} />
-              <input className={styles.amountInput} value={m.amount} onChange={(e)=>updateMilestone(idx,'amount', e.target.value)} />
+              <input className={styles.milestoneInput} value={m.title} onChange={(e)=>updateMilestone(idx, e.target.value)} />
             </div>
           ))}
           <div className={styles.milestoneTotalRow}>
             <div className={styles.totalLabel}>Total</div>
-            <div className={styles.totalValue}>{milestones.reduce((s, m)=> s + Number(m.amount||0), 0)} {currency}</div>
+            <div className={styles.totalValue}>{value} {currency}</div>
           </div>
           <div style={{marginTop:12}}>
             <button onClick={addMilestone} className={styles.addMilestoneBtn}>Add milestone</button>

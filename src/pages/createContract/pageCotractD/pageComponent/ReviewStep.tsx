@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '../pageCotractD.module.css';
 
-type Milestone = { title: string; amount: string };
+type Milestone = { title: string };
 
 type Props = {
   title: string;
@@ -79,13 +79,12 @@ const ReviewStep: React.FC<Props> = ({ title, description, developerWallet, deve
             {milestones.map((m, i) => (
               <div key={i} className={styles.reviewRow}>
                 <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{m.title}</div>
-                <div className={`${styles.milestonePrice}`}>{m.amount} {currency}</div>
               </div>
             ))}
           </div>
           <div className={styles.reviewRow} style={{marginTop:12}}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Total</div>
-            <div className={`${styles.totalPrice}`}>{milestones.reduce((s, m)=> s + Number(m.amount||0), 0)} {currency}</div>
+            <div className={`${styles.totalPrice}`}>{value} {currency}</div>
           </div>
         </div>
 

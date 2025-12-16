@@ -80,7 +80,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
           <Route path="/create-contract" element={
-            <ProtectedRoute allowedRoles={['client']}>
+            <ProtectedRoute allowedRoles={['client', 'developer']}>
               <PageCotractD />
             </ProtectedRoute>
           } />

@@ -13,6 +13,12 @@ export const agreementsApi = {
     api.get<{ agreements: Agreement[] }>("/agreements").then((r) => r.data),
 
   /**
+   * Get agreements for the authenticated user
+   */
+  getUserAgreements: () =>
+    api.get<{ success: boolean; message: string; data: { agreements: Agreement[]; count: number } }>("/agreements/user").then((r) => r.data),
+
+  /**
    * Get a single agreement by ID
    */
   getById: (id: string) =>
@@ -28,7 +34,7 @@ export const agreementsApi = {
    * Update an existing agreement
    */
   update: (id: string, data: UpdateAgreementRequest) =>
-    api.put<{ agreement: Agreement }>(`/agreements/${id}`, data).then((r) => r.data),
+    api.patch<{ success: boolean; message: string; data: { agreement: Agreement } }>(`/agreements/${id}`, data).then((r) => r.data),
 
   /**
    * Delete an agreement
@@ -39,8 +45,8 @@ export const agreementsApi = {
   /**
    * Update agreement status
    */
-  updateStatus: (id: string, status: string) =>
-    api.patch<{ agreement: Agreement }>(`/agreements/${id}/status`, { status }).then((r) => r.data),
+  updateStatus: (id: string, status: string, totalValue?: number) =>
+    api.patch<{ success: boolean; message: string; data: { agreement: Agreement } }>(`/agreements/${id}/status`, { status, totalValue }).then((r) => r.data),
 
   /**
    * Deploy agreement to blockchain

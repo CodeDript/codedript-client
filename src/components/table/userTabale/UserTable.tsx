@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
-import { getAgreementsByUserId, type MockAgreement as Agreement } from '../../../mockData/agreementData';
+import { useUserAgreements } from '../../../query/useAgreements';
+import type { Agreement } from '../../../types';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'activeContract' | 'transactions' | 'ongoingContract';
@@ -31,11 +32,11 @@ const TabLabel: Record<TabKey, string> = {
 const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
     case 'activeContract':
-      return ['active', 'in_progress', 'escrow_deposit'];
+      return ['active', 'in-progress', 'completed', 'paid'];
     case 'transactions':
       return []; // Transactions are fetched separately
     case 'ongoingContract':
-      return ['pending_developer', 'pending_client', 'awaiting_final_approval']; // Pending developer setup OR pending client review
+      return ['pending', 'priced', 'rejected', 'cancelled'];
     default:
       return [];
   }
@@ -44,17 +45,14 @@ const getStatusesForTab = (tab: TabKey): string[] => {
 // Map agreement status to display status
 const getDisplayStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
-    'draft': 'Draft',
-    'pending_developer': 'Incoming',
-    'pending_client': 'Pending',
-    'pending_signatures': 'Pending',
-    'escrow_deposit': 'Depositing',
-    'active': 'Active',
-    'in_progress': 'Active',
-    'awaiting_final_approval': 'Ongoing',
-    'completed': 'Completed',
+    'pending': 'Pending',
+    'priced': 'Priced',
+    'rejected': 'Rejected',
     'cancelled': 'Cancelled',
-    'disputed': 'Disputed'
+    'active': 'Active',
+    'in-progress': 'In Progress',
+    'completed': 'Completed',
+    'paid': 'Paid'
   };
   return statusMap[status] || status;
 };
@@ -67,14 +65,19 @@ const agreementToRow = (agreement: Agreement): DevRow => {
     year: 'numeric'
   });
 
+  // Get developer name from populated field
+  const partnerName = (agreement.developer && typeof agreement.developer === 'object') 
+    ? (agreement.developer.fullname || agreement.developer.email || 'Unknown')
+    : 'Unknown';
+
   return {
     id: agreement._id,
-    order: String(agreement.agreementId || (typeof agreement._id === 'string' ? agreement._id.slice(-4).toUpperCase() : String(agreement._id).slice(-4).toUpperCase())),
-    title: agreement.project?.name || 'Untitled Agreement',
-    client: agreement.developer?.profile?.name || agreement.developer?.email || 'Unknown Developer',
+    order: agreement.agreementID || agreement._id.slice(-4).toUpperCase(),
+    title: agreement.title || 'Untitled Agreement',
+    client: partnerName,
     date,
     status: getDisplayStatus(agreement.status),
-    amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
+    amount: `${agreement.financials.totalValue} ETH`
   };
 };
 
@@ -90,8 +93,46 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
-  // use a request id to avoid stale responses overwriting newer state
-  const requestRef = React.useRef(0);
+  // Fetch agreements using React Query
+  const { data: agreementsData, isLoading, error: apiError } = useUserAgreements();
+
+  // Filter and transform agreements based on active tab
+  const { filteredAgreements, displayRows } = useMemo(() => {
+    if (!agreementsData?.data?.agreements || !Array.isArray(agreementsData.data.agreements)) {
+      return { filteredAgreements: [], displayRows: [] };
+    }
+
+    const allAgreements = agreementsData.data.agreements;
+
+    // Handle transactions tab separately
+    if (activeTab === 'transactions') {
+      const txAgreements = allAgreements.filter(a => (a as any).blockchain?.transactionHash);
+      const rows = txAgreements.map(a => ({
+        ...agreementToRow(a),
+        transactionHash: (a as any).blockchain.transactionHash
+      }));
+      return { filteredAgreements: txAgreements, displayRows: rows };
+    }
+
+    // Get the statuses for the current tab
+    const statuses = getStatusesForTab(activeTab);
+    
+    // Filter agreements by status
+    const filtered = allAgreements.filter(a => statuses.includes(a.status));
+    
+    // Convert to display rows
+    const rows = filtered.map(agreementToRow);
+    
+    return { filteredAgreements: filtered, displayRows: rows };
+  }, [agreementsData, activeTab]);
+
+  // Update state when filtered data changes
+  React.useEffect(() => {
+    setAgreements(filteredAgreements);
+    setRows(displayRows);
+    setLoading(isLoading);
+    setError(apiError ? 'Failed to load agreements' : null);
+  }, [filteredAgreements, displayRows, apiError, isLoading]);
 
   const handleAgreementClick = (rowId: string) => {
     // Handle transactions tab separately - open modal
@@ -110,8 +151,8 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
     
-    // Only navigate if status is pending_client (ready for client review after developer set payment terms)
-    if (agreement.status === 'pending_client') {
+    // Only navigate if status is priced (developer proposed price)
+    if (agreement.status === 'priced') {
       // Navigate to contract review page
       navigate('/create-contract', {
         state: {
@@ -121,69 +162,8 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
         }
       });
     }
-    // pending_developer agreements are visible but not clickable (waiting for developer)
+    // rejected/cancelled agreements are visible but not clickable
   };
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const reqId = ++requestRef.current;
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Handle transactions tab separately: fetch agreements that have blockchain transaction hashes
-        if (activeTab === 'transactions') {
-          if (requestRef.current !== reqId) return;
-
-          const allAgreements = getAgreementsByUserId(userId || 'client-001');
-          // keep only agreements that have a blockchain transaction hash
-          const txAgreements = allAgreements.filter(a => (a as any).blockchainTxHash);
-          const displayRows = txAgreements.map(a => ({
-            ...agreementToRow(a),
-            transactionHash: (a as any).blockchainTxHash
-          }));
-
-          setAgreements(txAgreements as Agreement[]);
-          setRows(displayRows);
-        } else {
-          // Get the statuses for the current tab
-          const statuses = getStatusesForTab(activeTab);
-          
-          // Fetch agreements with mock data
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // only set state if this request is the latest
-          if (requestRef.current !== reqId) return;
-
-          // Get agreements from mock data
-          const allAgreements = getAgreementsByUserId(userId || 'client-001', statuses);
-          
-          // Convert to display rows
-          const displayRows = allAgreements.map(agreementToRow);
-          
-          setAgreements(allAgreements);
-          setRows(displayRows);
-        }
-      } catch (err) {
-        if (requestRef.current !== reqId) return;
-        console.error('Error fetching data:', err);
-        setError(activeTab === 'transactions' ? 'Failed to load transactions' : 'Failed to load contracts');
-        setRows([]);
-      } finally {
-        if (requestRef.current === reqId) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    // no-op cleanup: future requests will have a different reqId
-    return () => { /* keep requestRef.current as latest */ };
-  }, [activeTab, userId]);
 
   return (
     <div className={styles.tableWrapper1}>
@@ -212,7 +192,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
 
           {!loading && !error && rows.map(r => {
             const agreement = agreements.find(a => a._id === r.id);
-            const isClickable = activeTab === 'transactions' || (activeTab === 'ongoingContract' && agreement?.status === 'pending_client');
+            const isClickable = activeTab === 'transactions' || (activeTab === 'ongoingContract' && agreement?.status === 'priced');
             
             return (
               <div 

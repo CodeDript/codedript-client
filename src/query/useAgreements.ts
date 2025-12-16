@@ -14,6 +14,17 @@ export const useAgreements = () => {
 };
 
 /**
+ * Query hook to get agreements for the authenticated user
+ */
+export const useUserAgreements = () => {
+  return useQuery({
+    queryKey: ["agreements", "user"],
+    queryFn: agreementsApi.getUserAgreements,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+/**
  * Query hook to get a single agreement by ID
  */
 export const useAgreement = (id: string) => {
@@ -57,6 +68,8 @@ export const useCreateAgreement = () => {
     onSuccess: () => {
       // Invalidate agreements queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["agreements"] });
+      // Also invalidate user-specific agreements cache so tables refresh immediately
+      queryClient.invalidateQueries({ queryKey: ["agreements", "user"] });
     },
   });
 };
@@ -100,8 +113,8 @@ export const useUpdateAgreementStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      agreementsApi.updateStatus(id, status),
+    mutationFn: ({ id, status, totalValue }: { id: string; status: string; totalValue?: number }) =>
+      agreementsApi.updateStatus(id, status, totalValue),
     onSuccess: (_, variables) => {
       // Invalidate specific agreement and all agreements queries
       queryClient.invalidateQueries({ queryKey: ["agreements", variables.id] });

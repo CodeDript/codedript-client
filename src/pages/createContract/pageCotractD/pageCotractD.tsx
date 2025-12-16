@@ -23,6 +23,8 @@ import { useAgreementData } from '../../../context/AgreementDataContext';
 import { agreementsApi } from '../../../api/agreements.api';
 import { showAlert } from '../../../components/auth/Alert';
 import { useGig } from '../../../query/useGigs';
+import { useUpdateAgreement, useUpdateAgreementStatus } from '../../../query/useAgreements';
+import { useCreateAgreement } from '../../../query/useAgreements';
 
 const PageCotractD: React.FC = () => {
   const { agreementData, setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
@@ -30,6 +32,9 @@ const PageCotractD: React.FC = () => {
   const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [packageId, setPackageId] = useState<string | undefined>(undefined);
   const gigQuery = useGig(gigId || '');
+  const updateAgreementMutation = useUpdateAgreement();
+  const updateStatusMutation = useUpdateAgreementStatus();
+  const createAgreementMutation = useCreateAgreement();
   const [title, setTitle] = useState('Website Redesign Project');
   const [description, setDescription] = useState('Describe the project scope, deliverables, and requirement');
   // developerWallet: the developer's profile wallet (used to fetch developer info)
@@ -57,7 +62,7 @@ const PageCotractD: React.FC = () => {
   const [value, setValue] = useState('5000');
   const [currency, setCurrency] = useState('ETH');
   const [deadline, setDeadline] = useState('Sep 23, 2025');
-  const [milestones, setMilestones] = useState([{ title: 'Reasons', amount: '5000' }]);
+  const [milestones, setMilestones] = useState([{ title: 'Reasons' }]);
 
   // Files & terms
   const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
@@ -82,15 +87,12 @@ const PageCotractD: React.FC = () => {
 
   useEffect(() => {
     if (routeState) {
-      console.log('📋 Route state received:', routeState);
-      
+      // Route state received; populate fields when present
       // Extract gigId and packageId from route state
       if (routeState.gigId) {
-        console.log('🎯 Setting gigId from route:', routeState.gigId);
         setGigId(routeState.gigId);
       }
       if (routeState.packageId) {
-        console.log('📦 Setting packageId from route:', routeState.packageId);
         setPackageId(routeState.packageId);
       }
       
@@ -102,23 +104,44 @@ const PageCotractD: React.FC = () => {
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          setTitle(agreement.project?.name || '');
-          setDescription(agreement.project?.description || '');
+          
+          // Set basic agreement info (direct fields)
+          setTitle(agreement.title || '');
+          setDescription(agreement.description || '');
           setValue(agreement.financials?.totalValue?.toString() || '0');
-          setCurrency(agreement.financials?.currency || 'ETH');
-          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
-          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
-          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
-          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
-          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
-          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
-          setFilesNote(agreement.terms?.additionalTerms || '');
+          setCurrency('ETH'); // Default currency
+          
+          // Format deadline
+          if (agreement.endDate) {
+            const endDate = new Date(agreement.endDate);
+            setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
+          }
+          
+          // Extract client info (populated User object)
+          if (typeof agreement.client === 'object' && agreement.client) {
+            setClientName(agreement.client.fullname || agreement.client.username || '');
+            setClientEmail(agreement.client.email || '');
+            setClientWallet(agreement.client.walletAddress || '');
+          }
+          
+          // Extract developer info (populated User object)
+          if (typeof agreement.developer === 'object' && agreement.developer) {
+            setDeveloperWallet(agreement.developer.walletAddress || '');
+            setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
+          }
+          
+          // Extract terms/notes (if available)
+          setFilesNote(agreement.terms || agreement.additionalTerms || '');
+          
+          // Extract project files IPFS hash (documents is array)
+          if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
+            setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
+          }
           
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
-              title: m.title || '',
-              amount: m.financials?.value?.toString() || m.amount?.toString() || '0'
+              title: m.title || m.name || ''
             }));
             setMilestones(loadedMilestones);
           }
@@ -132,29 +155,41 @@ const PageCotractD: React.FC = () => {
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          setTitle(agreement.project?.name || '');
-          setDescription(agreement.project?.description || '');
-          setValue(agreement.financials?.totalValue?.toString() || '0');
-          setCurrency(agreement.financials?.currency || 'ETH');
-          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
-          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
-          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
-          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
-          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
-          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
           
-          // Extract project files IPFS hash for download functionality
-          if (agreement.documents?.projectFiles && agreement.documents.projectFiles.length > 0) {
-            setProjectFilesIpfsHash(agreement.documents.projectFiles[0].ipfsHash || '');
-          } else if (agreement.documents?.contractPdf?.ipfsHash) {
-            setProjectFilesIpfsHash(agreement.documents.contractPdf.ipfsHash);
+          // Set basic agreement info (direct fields)
+          setTitle(agreement.title || '');
+          setDescription(agreement.description || '');
+          setValue(agreement.financials?.totalValue?.toString() || '0');
+          setCurrency('ETH'); // Default currency
+          
+          // Format deadline
+          if (agreement.endDate) {
+            const endDate = new Date(agreement.endDate);
+            setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
+          }
+          
+          // Extract client info (populated User object)
+          if (typeof agreement.client === 'object' && agreement.client) {
+            setClientName(agreement.client.fullname || agreement.client.username || '');
+            setClientEmail(agreement.client.email || '');
+            setClientWallet(agreement.client.walletAddress || '');
+          }
+          
+          // Extract developer info (populated User object)
+          if (typeof agreement.developer === 'object' && agreement.developer) {
+            setDeveloperWallet(agreement.developer.walletAddress || '');
+            setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
+          }
+          
+          // Extract project files IPFS hash (documents is array)
+          if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
+            setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
           }
           
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
-              title: m.title || '',
-              amount: m.amount?.toString() || '0'
+              title: m.title || m.name || ''
             }));
             setMilestones(loadedMilestones);
           }
@@ -241,6 +276,7 @@ const PageCotractD: React.FC = () => {
       console.log('  - Title:', title);
       console.log('  - Description:', description);
       console.log('  - Milestones:', milestones);
+        // Agreement creation: prepare and send FormData
       
       // Prepare FormData for file upload
       const formData = new FormData();
@@ -269,12 +305,10 @@ const PageCotractD: React.FC = () => {
           console.log(`  ${key}:`, value);
         }
       }
-      
-      // Call the API
-      const response = await agreementsApi.create(formData);
-      
+      // Call the API via mutation so React Query invalidates caches
+      const response = await createAgreementMutation.mutateAsync(formData as any);
+
       console.log('✅ Agreement created successfully:', response);
-      
       // Show success message
       showAlert(response.message || 'Agreement created successfully!', 'success');
       
@@ -335,26 +369,48 @@ const PageCotractD: React.FC = () => {
       return;
     }
 
+    if (!paymentConfirmed) {
+      setAcceptError('Please confirm payment terms and milestones');
+      return;
+    }
+
     setIsAcceptingAgreement(true);
     setAcceptError(null);
 
     try {
-      // Mock API call - simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('✅ Developer accepted agreement successfully (Mock Mode)');
-      console.log('Mock data:', {
-        agreementId: routeState.agreementId,
-        totalValue: parseFloat(value) || 0,
-        currency: currency,
-        milestones
+      // Step 1: Update agreement with payment details
+      await updateAgreementMutation.mutateAsync({
+        id: routeState.agreementId,
+        data: {
+          totalValue: parseFloat(value) || 0,
+          endDate: deadline,
+          milestones: milestones.map(m => ({
+            title: m.title,
+            description: '',
+            status: 'pending' as const,
+            previews: [],
+            completedAt: null
+          }))
+        }
       });
+
+      // Step 2: Update status to "priced"
+      await updateStatusMutation.mutateAsync({
+        id: routeState.agreementId,
+        status: 'priced'
+      });
+
+      showAlert('Agreement pricing submitted successfully!', 'success');
       
       // Navigate to developer profile
-      navigate('/developer');
+      setTimeout(() => {
+        navigate('/developer');
+      }, 1500);
     } catch (error: any) {
       console.error('Error accepting agreement:', error);
-      setAcceptError(error.message || 'Failed to accept agreement');
+      const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to accept agreement';
+      setAcceptError(errorMessage);
+      showAlert(errorMessage, 'error');
     } finally {
       setIsAcceptingAgreement(false);
     }
@@ -377,8 +433,7 @@ const PageCotractD: React.FC = () => {
     try {
       const agreement = routeState.agreement;
       
-      // Mock blockchain agreement creation
-      console.log('📝 Creating agreement on blockchain... (Mock Mode)');
+
       
       // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -392,9 +447,8 @@ const PageCotractD: React.FC = () => {
         projectName: agreement?.project?.name || title,
         totalValue: agreement?.financials?.totalValue?.toString() || value,
       });
-      
-      console.log('✅ Agreement approved and activated successfully (Mock Mode)');
-      console.log('✅ ETH transferred to smart contract escrow (Mock Mode)');
+        // Mock result available: { transactionHash: mockTxHash, ipfsHash: mockIpfsHash }
+
       
       // Navigate to client profile
       navigate('/client');

@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../pageCotractD.module.css';
 import downloadIcon from '../../../../assets/svg/downloard-files.svg';
 
-type Milestone = { title: string; amount: string };
+type Milestone = { title: string; amount?: string };
 
 type Props = {
   title: string;
