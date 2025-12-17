@@ -3,7 +3,9 @@ import { useAuthContext } from '../../../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showAlert } from '../../../../components/auth/Alert';
 import { requestChangesApi } from '../../../../api/requestChanges.api';
+import { transactionsApi } from '../../../../api/transactions.api';
 import ConfirmModal from '../../../../components/modal/ConfirmModal/ConfirmModal';
+import { requestChange } from '../../../../services/ContractService';
 import styles from './RequestChange.module.css';
 import authStyles from '../../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
@@ -22,7 +24,7 @@ type ChangeRequest = {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'priced' | 'confirmed' | 'approved' | 'rejected';
+  status: 'pending' | 'priced' | 'confirmed' | 'paid' | 'rejected';
   amount?: string;
   details?: string;
   createdBy: 'client' | 'developer';
@@ -57,6 +59,7 @@ const RequestChange: React.FC = () => {
   const [pendingDeleteRawId, setPendingDeleteRawId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [paymentProcessingId, setPaymentProcessingId] = useState<string | null>(null);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [pendingRejectRawId, setPendingRejectRawId] = useState<string | null>(null);
   const [pendingRejectRequestId, setPendingRejectRequestId] = useState<string | null>(null);
@@ -158,17 +161,136 @@ const RequestChange: React.FC = () => {
       .finally(() => setModalProcessing(false));
   };
 
-  const handleClientApprove = (requestId: string) => {
-    const request = confirmedRequests.find(req => req.id === requestId);
-    if (!request) return;
+  const handleClientApprove = async (requestId: string) => {
+    const request = confirmedRequests.find(req => req.id === requestId) || pendingRequests.find(req => req.id === requestId);
+    if (!request || !request.amount) {
+      showAlert('Request or amount not found', 'error');
+      return;
+    }
 
-    setConfirmedRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: 'approved' as const } : req
-      )
-    );
-    // TODO: Call API to update contract price and request status
-    alert(`Request approved! Contract price will be updated by ${request.amount} ETH`);
+    const rawId = request.rawId || request.id;
+    
+    // Get blockchain agreement ID from the agreement object
+    console.log('Agreement object:', agreementObj);
+    const blockchainAgreementId = agreementObj?.blockchainId || agreementObj?.agreementId || agreementObj?.blockchain?.agreementId || agreementObj?.agreementID;
+    console.log('Extracted blockchain ID:', blockchainAgreementId);
+    
+    if (!blockchainAgreementId) {
+      console.error('Available agreement fields:', Object.keys(agreementObj || {}));
+      showAlert('Blockchain agreement ID not found. Cannot process payment.', 'error');
+      return;
+    }
+
+    setPaymentProcessingId(rawId);
+    
+    try {
+      // Step 1: Call smart contract requestChange function
+      console.log('Calling blockchain requestChange with:', {
+        blockchainAgreementId,
+        description: request.description,
+        amount: request.amount
+      });
+
+      const txResult = await requestChange(
+        blockchainAgreementId,
+        request.description,
+        request.amount
+      );
+
+      console.log('Blockchain transaction submitted:', txResult.transactionHash);
+
+      // Step 2: Update status to 'paid' immediately (transaction hash is proof of payment)
+      await requestChangesApi.updateStatus(rawId, 'paid');
+
+      // Step 3: Record transaction with retry logic - keep button disabled until complete
+      const recordTransaction = async (attempt = 1, maxAttempts = 24) => {
+        const waitTime = attempt === 1 ? 20000 : 15000; // First wait 20s, then 15s between retries
+        
+        setTimeout(async () => {
+          try {
+            console.log(`[Transaction Recording] Attempt ${attempt}/${maxAttempts}...`);
+            console.log('Payload:', {
+              type: 'modification',
+              agreement: agreementId,
+              transactionHash: txResult.transactionHash,
+              network: 'sepolia'
+            });
+            
+            await transactionsApi.create({
+              type: 'modification',
+              agreement: agreementId,
+              transactionHash: txResult.transactionHash,
+              network: 'sepolia'
+            });
+            
+            console.log('✓ Transaction successfully recorded in database!');
+            setPaymentProcessingId(null); // Clear processing state on success
+            await loadRequests(); // Refresh list after transaction is recorded
+            showAlert('Transaction recorded successfully!', 'success');
+          } catch (recordErr: any) {
+            console.error(`[Transaction Recording] Attempt ${attempt} failed`);
+            console.error('Full error:', recordErr);
+            console.error('Response data:', recordErr?.response?.data);
+            console.error('Response status:', recordErr?.response?.status);
+            
+            const errorMsg = recordErr?.response?.data?.message || recordErr?.response?.data?.error?.message || recordErr?.message;
+            console.error('Error message:', errorMsg);
+            
+            // Check if transaction hash already exists (which means it was already recorded)
+            if (errorMsg?.includes('Transaction with this hash already exists')) {
+              console.log('✓ Transaction already recorded in database (duplicate hash check)');
+              setPaymentProcessingId(null); // Clear processing state
+              await loadRequests(); // Refresh list
+              showAlert('Transaction already recorded!', 'success');
+              return;
+            }
+            
+            // Check if it's a duplicate key error on transactionID (server-side auto-increment issue)
+            if (errorMsg?.includes('E11000') && errorMsg?.includes('transactionID')) {
+              console.error('✗ Server-side transactionID generation conflict. Transaction hash:', txResult.transactionHash);
+              console.error('The transaction was submitted to blockchain but DB recording failed due to server ID conflict.');
+              console.error('Manual intervention needed: Record transaction hash manually or fix server transactionID generation.');
+              setPaymentProcessingId(null); // Clear processing state
+              await loadRequests(); // Refresh list to show paid status
+              showAlert('Payment completed but transaction recording failed. Please contact support.', 'error');
+              return;
+            }
+            
+            // Retry if not mined yet OR not confirmed yet
+            const shouldRetry = attempt < maxAttempts && (
+              errorMsg?.includes('not been mined') || 
+              errorMsg?.includes('not found') ||
+              errorMsg?.includes('confirmation')
+            );
+            
+            if (shouldRetry) {
+              console.log(`Will retry in 15 seconds... (${maxAttempts - attempt} retries left)`);
+              recordTransaction(attempt + 1, maxAttempts);
+            } else if (attempt >= maxAttempts) {
+              console.error('✗ Failed to record transaction after all retries.');
+              console.error('Transaction hash:', txResult.transactionHash);
+              console.error('Agreement ID:', agreementId);
+              setPaymentProcessingId(null); // Clear processing state even on failure
+              await loadRequests(); // Refresh list to show paid status
+              showAlert('Payment completed but transaction recording timed out.', 'error');
+            } else {
+              console.error('✗ Stopped retrying due to non-retryable error');
+              setPaymentProcessingId(null); // Clear processing state
+              await loadRequests(); // Refresh list to show paid status
+              showAlert('Payment completed but transaction recording failed.', 'error');
+            }
+          }
+        }, waitTime);
+      };
+      
+      // Start transaction recording (keeps button disabled until complete)
+      recordTransaction();
+    } catch (err: any) {
+      console.error('Payment failed:', err);
+      const errorMsg = err?.reason || err?.message || 'Payment failed. Please try again.';
+      showAlert(errorMsg, 'error');
+      setPaymentProcessingId(null); // Clear processing state on blockchain error
+    }
   };
 
   const handleClientReject = (requestId: string) => {
@@ -220,7 +342,7 @@ const RequestChange: React.FC = () => {
           // Normalize status into the ChangeRequest union type
           let normalizedStatus: ChangeRequest['status'];
           if (created?.status === 'priced') normalizedStatus = 'priced';
-          else if (created?.status === 'paid') normalizedStatus = 'approved';
+          else if (created?.status === 'paid') normalizedStatus = 'paid';
           else normalizedStatus = 'pending';
 
           const newRequest: ChangeRequest = {
@@ -260,7 +382,7 @@ const RequestChange: React.FC = () => {
         const mapped: ChangeRequest[] = items.map((rc) => {
           let status: ChangeRequest['status'];
           if (rc.status === 'priced') status = 'priced';
-          else if (rc.status === 'paid') status = 'approved';
+          else if (rc.status === 'paid') status = 'paid';
           else if (rc.status === 'rejected') status = 'rejected';
           else status = 'pending';
 
@@ -505,8 +627,9 @@ const RequestChange: React.FC = () => {
                                   e.stopPropagation();
                                   handleClientApprove(request.id);
                                 }}
+                                disabled={paymentProcessingId === request.rawId}
                               >
-                                Pay
+                                {paymentProcessingId === request.rawId ? 'Processing...' : 'Pay'}
                               </button>
                             )}
                             <button
@@ -520,8 +643,8 @@ const RequestChange: React.FC = () => {
                               {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
                             </button>
                           </>
-                        ) : request.status === 'approved' ? (
-                          <span className={styles.statusBadge}>Approved ✓</span>
+                        ) : request.status === 'paid' ? (
+                          <span className={`${styles.statusBadge} ${styles.statuspaid}`}>Paid ✓</span>
                         ) : request.status === 'rejected' ? (
                           <span className={styles.statusBadge}>Rejected ✗</span>
                         ) : null}
