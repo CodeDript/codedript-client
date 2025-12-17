@@ -23,6 +23,11 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
         };
     }, []);
 
+    // Keep displayText in sync when parent text prop changes
+    useEffect(() => {
+        setDisplayText(text);
+    }, [text]);
+
 
     const startScramble = () => {
         if (intervalRef.current) window.clearInterval(intervalRef.current);

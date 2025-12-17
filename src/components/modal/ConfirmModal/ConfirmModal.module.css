@@ -1,0 +1,9 @@
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:20000}
+.modal{width:480px;background:#fff;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;font-family:inherit}
+.header{padding:16px 20px;border-bottom:1px solid #eee}
+.title{margin:0;font-size:18px;font-weight:600}
+.body{padding:20px;color:#333;font-size:15px}
+.actions{display:flex;gap:12px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #f1f1f1;background:#fafafa}
+.cancel{background:transparent;border:1px solid #ddd;padding:8px 14px;border-radius:6px;cursor:pointer}
+.confirm{background:#111;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+.cancel[disabled],.confirm[disabled]{opacity:.6;cursor:not-allowed}

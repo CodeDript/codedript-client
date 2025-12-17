@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useAuthContext } from '../../../../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { showAlert } from '../../../../components/auth/Alert';
+import { requestChangesApi } from '../../../../api/requestChanges.api';
+import ConfirmModal from '../../../../components/modal/ConfirmModal/ConfirmModal';
 import styles from './RequestChange.module.css';
 import authStyles from '../../../../components/auth/AuthForm.module.css';
 import heroOutlineup from '../../../../assets/Login/cardBackgroundup.svg';
@@ -18,15 +22,21 @@ type ChangeRequest = {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'confirmed' | 'approved' | 'rejected';
+  status: 'pending' | 'priced' | 'confirmed' | 'approved' | 'rejected';
   amount?: string;
   details?: string;
   createdBy: 'client' | 'developer';
   attachedFiles?: AttachedFile[];
+  rawId?: string; // server _id for API calls
 };
 
 const RequestChange: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // agreement passed via navigation state from ContractSummary
+  const agreementObj: any = location.state?.agreement;
+  const agreementId: string | undefined = agreementObj?._id || agreementObj?.id || agreementObj?.agreementId;
 
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed'>('pending');
   const [showModal, setShowModal] = useState(false);
@@ -38,51 +48,34 @@ const RequestChange: React.FC = () => {
   const [newRequestTitle, setNewRequestTitle] = useState('');
   const [newRequestDescription, setNewRequestDescription] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const userRole = 'client'; // TODO: Get from auth context
+  const { user } = useAuthContext();
+  const userRole: string = user?.role ?? 'guest';
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [pendingDeleteRawId, setPendingDeleteRawId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [pendingRejectRawId, setPendingRejectRawId] = useState<string | null>(null);
+  const [pendingRejectRequestId, setPendingRejectRequestId] = useState<string | null>(null);
+
+  // If the user is a developer, ensure the confirmed tab is not active
+  useEffect(() => {
+    if ((userRole === 'developer' || userRole === 'client') && activeTab === 'confirmed') {
+      setActiveTab('pending');
+    }
+  }, [userRole, activeTab]);
 
   // View details modal
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [viewingRequest, setViewingRequest] = useState<ChangeRequest | null>(null);
+  const [modalProcessing, setModalProcessing] = useState(false);
 
-  // Mock data - replace with actual data from API/context
-  const [pendingRequests, setPendingRequests] = useState<ChangeRequest[]>([
-    {
-      id: 'REQ001',
-      title: 'Add new feature module',
-      description: 'Client requests additional authentication module',
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: [
-        { name: 'requirements-document.pdf', size: 245000, url: '#', type: 'application/pdf' },
-        { name: 'feature-specs.docx', size: 128000, url: '#', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
-      ],
-    },
-    {
-      id: 'REQ002',
-      title: 'Update design specs',
-      description: 'Change color scheme and typography',
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: [
-        { name: 'design-mockup.png', size: 1200000, url: '#', type: 'image/png' },
-      ],
-    },
-  ]);
-
-  const [confirmedRequests, setConfirmedRequests] = useState<ChangeRequest[]>([
-    {
-      id: 'REQ003',
-      title: 'Database optimization',
-      description: 'Optimize queries and add indexes',
-      status: 'confirmed',
-      amount: '500',
-      details: 'Will implement caching layer and optimize slow queries',
-      createdBy: 'developer',
-      attachedFiles: [
-        { name: 'performance-report.pdf', size: 340000, url: '#', type: 'application/pdf' },
-      ],
-    },
-  ]);
+  // Requests loaded from API
+  const [pendingRequests, setPendingRequests] = useState<ChangeRequest[]>([]);
+  const [confirmedRequests, setConfirmedRequests] = useState<ChangeRequest[]>([]);
 
   const handleConfirmClick = (request: ChangeRequest) => {
     setSelectedRequest(request);
@@ -92,25 +85,77 @@ const RequestChange: React.FC = () => {
   };
 
   const handleIgnore = (requestId: string) => {
+    console.log('handleIgnore called with', requestId);
+    const req = pendingRequests.find(r => r.id === requestId);
+    if (!req) return;
+
+    // Show modal confirmation aligned with frontend instead of native confirm()
+    if (userRole === 'client') {
+      const idToDelete = req.rawId || req.id;
+      console.log('client cancel; showing confirm modal for', idToDelete, req);
+      setPendingDeleteRawId(idToDelete);
+      setShowCancelConfirm(true);
+      return;
+    }
+
+    // For developer role, show confirmation then call API to mark rejected
+    const idToUpdate = req.rawId || req.id;
+    if (userRole === 'developer') {
+      setPendingRejectRawId(idToUpdate);
+      setPendingRejectRequestId(requestId);
+      setShowRejectConfirm(true);
+      return;
+    }
+
+    // Other roles: remove locally
     setPendingRequests(prev => prev.filter(req => req.id !== requestId));
-    // TODO: Call API to update request status
+  };
+
+  const confirmCancel = () => {
+    if (!pendingDeleteRawId) return;
+    setDeleting(true);
+    requestChangesApi.delete(pendingDeleteRawId)
+      .then((res) => {
+        const msg = (res as any).message || (res as any).data?.message || 'Request cancelled';
+        showAlert(msg, 'success');
+        loadRequests();
+      })
+      .catch((err) => {
+        console.error('Delete request error', err);
+        showAlert(err?.response?.data?.message || 'Failed to cancel request', 'error');
+      })
+      .finally(() => {
+        setDeleting(false);
+        setShowCancelConfirm(false);
+        setPendingDeleteRawId(null);
+      });
+  };
+
+  const cancelCancel = () => {
+    setShowCancelConfirm(false);
+    setPendingDeleteRawId(null);
   };
 
   const handleModalConfirm = () => {
     if (!selectedRequest || !modalAmount) return;
 
-    const confirmedRequest: ChangeRequest = {
-      ...selectedRequest,
-      status: 'confirmed',
-      amount: modalAmount,
-      details: modalDetails,
-    };
-
-    setConfirmedRequests(prev => [...prev, confirmedRequest]);
-    setPendingRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
-    setShowModal(false);
-    setSelectedRequest(null);
-    // TODO: Call API to save confirmed request
+    const rawId = selectedRequest.rawId || selectedRequest.id;
+    setModalProcessing(true);
+    requestChangesApi.updatePrice(rawId, modalAmount)
+      .then((res) => {
+        showAlert('Price set and request confirmed', 'success');
+        // refresh lists from server
+        loadRequests();
+        setShowModal(false);
+        setSelectedRequest(null);
+        setModalDetails('');
+        setModalAmount('');
+      })
+      .catch((err) => {
+        console.error('Failed to set price for request', err);
+        showAlert(err?.response?.data?.message || 'Failed to set price', 'error');
+      })
+      .finally(() => setModalProcessing(false));
   };
 
   const handleClientApprove = (requestId: string) => {
@@ -127,12 +172,13 @@ const RequestChange: React.FC = () => {
   };
 
   const handleClientReject = (requestId: string) => {
-    setConfirmedRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, status: 'rejected' as const } : req
-      )
-    );
-    // TODO: Call API to update request status
+    // Show confirm modal before rejecting (developer or client)
+    const req = confirmedRequests.find(r => r.id === requestId) || pendingRequests.find(r => r.id === requestId);
+    if (!req) return;
+    const idToUpdate = req.rawId || req.id;
+    setPendingRejectRawId(idToUpdate);
+    setPendingRejectRequestId(requestId);
+    setShowRejectConfirm(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,31 +197,100 @@ const RequestChange: React.FC = () => {
       alert('Please fill in both title and description');
       return;
     }
+    // Build FormData for multipart upload
+    if (!agreementId) {
+      alert('Agreement ID not available. Cannot submit request.');
+      return;
+    }
 
-    // Convert File objects to AttachedFile format
-    const convertedFiles: AttachedFile[] = attachedFiles.map(file => ({
-      name: file.name,
-      size: file.size,
-      url: URL.createObjectURL(file), // Create temporary URL for preview
-      type: file.type,
-    }));
+    const formData = new FormData();
+    formData.append('agreement', agreementId);
+    formData.append('title', newRequestTitle);
+    formData.append('description', newRequestDescription);
+    attachedFiles.forEach((file) => {
+      formData.append('files', file);
+    });
 
-    const newRequest: ChangeRequest = {
-      id: `REQ${String(pendingRequests.length + 1 + confirmedRequests.length).padStart(3, '0')}`,
-      title: newRequestTitle,
-      description: newRequestDescription,
-      status: 'pending',
-      createdBy: 'client',
-      attachedFiles: convertedFiles.length > 0 ? convertedFiles : undefined,
-    };
+    setIsSubmitting(true);
+    requestChangesApi.create(formData)
+        .then((res) => {
+          const created = (res as any).data?.requestChange || (res as any).requestChange || null;
+          // Convert server response into local ChangeRequest shape for display
+          const serverFiles = Array.isArray(created?.files) ? created.files.map((f: any) => ({ name: f.url?.split('/').pop() || 'file', size: 0, url: f.url })) : [];
+          // Normalize status into the ChangeRequest union type
+          let normalizedStatus: ChangeRequest['status'];
+          if (created?.status === 'priced') normalizedStatus = 'priced';
+          else if (created?.status === 'paid') normalizedStatus = 'approved';
+          else normalizedStatus = 'pending';
 
-    setPendingRequests(prev => [...prev, newRequest]);
-    setNewRequestTitle('');
-    setNewRequestDescription('');
-    setAttachedFiles([]);
-    // TODO: Call API to create new request with file uploads to IPFS/Supabase
-    alert('Change request submitted successfully!');
+          const newRequest: ChangeRequest = {
+            id: created?.requestID || created?._id || `REQ${String(pendingRequests.length + 1 + confirmedRequests.length).padStart(3, '0')}`,
+            rawId: created?._id,
+            title: created?.title || newRequestTitle,
+            description: created?.description || newRequestDescription,
+            status: normalizedStatus,
+            createdBy: 'client',
+            attachedFiles: serverFiles.length ? serverFiles : undefined,
+          };
+
+          setPendingRequests(prev => [...prev, newRequest]);
+          setNewRequestTitle('');
+          setNewRequestDescription('');
+          setAttachedFiles([]);
+          const successMsg = (res as any).message || 'Change request submitted successfully!';
+          showAlert(successMsg, 'success');
+          // refresh list from server
+          loadRequests();
+        })
+        .catch((err) => {
+          console.error('Create request error', err);
+          const msg = err?.response?.data?.message || err.message || 'Failed to create change request.';
+          showAlert(msg, 'error');
+        })
+        .finally(() => setIsSubmitting(false));
   };
+
+  // Load request changes for the agreement
+  const loadRequests = () => {
+    if (!agreementId) return;
+    setIsLoadingRequests(true);
+    requestChangesApi.getByAgreement(agreementId)
+      .then((res) => {
+        const items: any[] = (res as any).data?.requestChanges || (res as any).requestChanges || [];
+        const mapped: ChangeRequest[] = items.map((rc) => {
+          let status: ChangeRequest['status'];
+          if (rc.status === 'priced') status = 'priced';
+          else if (rc.status === 'paid') status = 'approved';
+          else if (rc.status === 'rejected') status = 'rejected';
+          else status = 'pending';
+
+          return {
+            id: rc.requestID || rc._id,
+            rawId: rc._id,
+            title: rc.title,
+            description: rc.description,
+            status,
+            amount: rc.price != null ? String(rc.price) : undefined,
+            details: rc.details || undefined,
+            createdBy: rc.createdBy || 'client',
+            attachedFiles: Array.isArray(rc.files) ? rc.files.map((f: any) => ({ name: f.url?.split('/').pop() || f.ipfsHash || 'file', size: 0, url: f.url })) : undefined,
+          } as ChangeRequest;
+        });
+
+        // Show all requests in the same table
+        setPendingRequests(mapped);
+        setConfirmedRequests([]); // Not used anymore
+      })
+      .catch((err) => {
+        console.error('Failed to fetch request changes', err);
+        showAlert(err?.response?.data?.message || 'Failed to load request changes', 'error');
+      })
+      .finally(() => setIsLoadingRequests(false));
+  };
+
+  useEffect(() => {
+    loadRequests();
+  }, [agreementId]);
 
   const handleRowClick = (request: ChangeRequest) => {
     setViewingRequest(request);
@@ -313,135 +428,103 @@ const RequestChange: React.FC = () => {
             </div>
 
             <div className={styles.submitBtnWrapper}>
-              <Button3Black1 text="Submit Request" onClick={handleSubmitNewRequest} />
+              <Button3Black1
+                text={isSubmitting ? 'Submitting...' : 'Submit Request'}
+                onClick={isSubmitting ? undefined : handleSubmitNewRequest}
+              />
             </div>
           </div>
         )}
 
-        <div className={styles.tabNav}>
-          <button
-            className={`${styles.tabBtn} ${activeTab === 'pending' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('pending')}
-          >
-            Pending Requests
-          </button>
-          <button
-            className={`${styles.tabBtn} ${activeTab === 'confirmed' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('confirmed')}
-          >
-            Confirmed Requests
-          </button>
-        </div>
-
-        {activeTab === 'pending' && (
-          <div className={styles.tableWrap}>
-            <h2 className={styles.tableTitle}>Pending Change Requests</h2>
+        {/* All requests shown in single table */}
+        <div className={styles.tableWrap}>
+            <h2 className={styles.tableTitle}>Request Changes</h2>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Request Title</th>
                   <th>Description</th>
+                  <th>Status</th>
+                  <th>Price</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pendingRequests.length === 0 ? (
+                {isLoadingRequests ? (
                   <tr>
-                    <td colSpan={4} className={styles.emptyState}>
+                    <td colSpan={5} className={styles.emptyState}>
+                      Loading requests...
+                    </td>
+                  </tr>
+                ) : pendingRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className={styles.emptyState}>
                       No pending requests
                     </td>
                   </tr>
                 ) : (
                   pendingRequests.map(request => (
                     <tr key={request.id} className={styles.clickableRow}>
-                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.id}</td>
                       <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
                       <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.description}</td>
-                      <td className={styles.actionsCell}>
-                        <button
-                          className={styles.confirmBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleConfirmClick(request);
-                          }}
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          className={styles.ignoreBtn}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleIgnore(request.id);
-                          }}
-                        >
-                          Ignore
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'confirmed' && (
-          <div className={styles.tableWrap}>
-            <h2 className={styles.tableTitle}>Confirmed Requests (Awaiting Client Approval)</h2>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Request Title</th>
-                  <th>Details</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Client Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {confirmedRequests.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className={styles.emptyState}>
-                      No confirmed requests
-                    </td>
-                  </tr>
-                ) : (
-                  confirmedRequests.map(request => (
-                    <tr key={request.id} className={styles.clickableRow}>
-                      <td className={styles.idCell} onClick={() => handleRowClick(request)}>{request.id}</td>
-                      <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
-                      <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.details || request.description}</td>
-                      <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.amount} ETH</td>
                       <td className={styles.statusCell} onClick={() => handleRowClick(request)}>
                         <span className={styles[`status${request.status}`]}>{request.status}</span>
                       </td>
+                      <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.amount ? `${request.amount} ETH` : '-'}</td>
                       <td className={styles.actionsCell}>
-                        {request.status === 'confirmed' && (
+                        {request.status === 'pending' ? (
                           <>
+                            {userRole !== 'client' && (
+                              <button
+                                className={styles.confirmBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConfirmClick(request);
+                                }}
+                              >
+                                Accept
+                              </button>
+                            )}
                             <button
-                              className={styles.approveBtn}
+                              className={styles.ignoreBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleClientApprove(request.id);
+                                handleIgnore(request.id);
                               }}
+                              disabled={updatingId === request.rawId}
                             >
-                              Approve
+                              {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
                             </button>
+                          </>
+                        ) : (request.status === 'confirmed' || request.status === 'priced') ? (
+                          <>
+                            {userRole === 'client' && (
+                              <button
+                                className={styles.approveBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClientApprove(request.id);
+                                }}
+                              >
+                                Pay
+                              </button>
+                            )}
                             <button
                               className={styles.rejectBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleClientReject(request.id);
                               }}
+                              disabled={updatingId === request.rawId}
                             >
-                              Reject
+                              {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
                             </button>
                           </>
-                        )}
-                        {request.status === 'approved' && <span className={styles.statusBadge}>Approved ✓</span>}
-                        {request.status === 'rejected' && <span className={styles.statusBadge}>Rejected ✗</span>}
+                        ) : request.status === 'approved' ? (
+                          <span className={styles.statusBadge}>Approved ✓</span>
+                        ) : request.status === 'rejected' ? (
+                          <span className={styles.statusBadge}>Rejected ✗</span>
+                        ) : null}
                       </td>
                     </tr>
                   ))
@@ -449,7 +532,6 @@ const RequestChange: React.FC = () => {
               </tbody>
             </table>
           </div>
-        )}
 
       {/* View Details Modal */}
       {showDetailsModal && viewingRequest && (
@@ -466,11 +548,6 @@ const RequestChange: React.FC = () => {
             </div>
 
             <div className={styles.detailsBody}>
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Request ID:</span>
-                <span className={styles.detailValue}>{viewingRequest.id}</span>
-              </div>
-
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Title:</span>
                 <span className={styles.detailValue}>{viewingRequest.title}</span>
@@ -502,31 +579,33 @@ const RequestChange: React.FC = () => {
                 </span>
               </div>
 
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Created By:</span>
-                <span className={styles.detailValue}>{viewingRequest.createdBy}</span>
-              </div>
+              {/* Created By removed per UI request */}
 
               {/* Attached Files */}
               {viewingRequest.attachedFiles && viewingRequest.attachedFiles.length > 0 && (
                 <div className={styles.detailSection}>
                   <span className={styles.detailLabel}>Attached Files:</span>
                   <div className={styles.attachedFilesList}>
-                    {viewingRequest.attachedFiles.map((file, index) => (
-                      <div key={index} className={styles.attachedFileItem}>
-                        <span className={styles.fileIcon}>{getFileIcon(file.name)}</span>
-                        <span className={styles.attachedFileName}>{file.name}</span>
-                        <span className={styles.attachedFileSize}>
-                          ({(file.size / 1024).toFixed(2)} KB)
-                        </span>
-                        <button 
-                          className={styles.downloadFileBtn}
-                          onClick={() => handleFileDownload(file)}
-                        >
-                          Download
-                        </button>
-                      </div>
-                    ))}
+                    {viewingRequest.attachedFiles.map((file, index) => {
+                      const raw = file.name || '';
+                      const displayName = raw.length > 36 ? `${raw.slice(0, 20)}...${raw.slice(-12)}` : raw;
+                      return (
+                        <div key={index} className={styles.attachedFileItem}>
+                          <span className={styles.fileIcon}>{getFileIcon(raw)}</span>
+                          <span className={styles.attachedFileName} title={raw}>{displayName}</span>
+                          <span className={styles.attachedFileSize}>
+                            ({(file.size / 1024).toFixed(2)} KB)
+                          </span>
+                          <button
+                            className={styles.downloadFileBtn}
+                            onClick={() => handleFileDownload(file)}
+                            aria-label={`Download ${raw}`}
+                          >
+                            Download
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -588,8 +667,8 @@ const RequestChange: React.FC = () => {
             <div className={styles.modalActions}>
               <Button2 text="Cancel" onClick={() => setShowModal(false)} />
               <Button3Black1 
-                text="Confirm" 
-                onClick={handleModalConfirm}
+                text={modalProcessing ? 'Processing...' : 'Confirm'} 
+                onClick={modalProcessing ? undefined : handleModalConfirm}
               />
             </div>
           </div>
@@ -598,8 +677,54 @@ const RequestChange: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirm Modal - must be at root level to render properly via portal */}
+      <ConfirmModal
+        open={showCancelConfirm}
+        title="Cancel Change Request"
+        message="Are you sure you want to cancel this change request? This action cannot be undone."
+        confirmText="Yes, Cancel"
+        cancelText="No, Keep"
+        loading={deleting}
+        onConfirm={confirmCancel}
+        onCancel={cancelCancel}
+      />
+      {/* Reject confirmation modal (for developer or client reject) */}
+      <ConfirmModal
+        open={showRejectConfirm}
+        title="Reject Change Request"
+        message="Are you sure you want to reject this change request? This action cannot be undone."
+        confirmText="Yes, Reject"
+        cancelText="No, Keep"
+        loading={updatingId === pendingRejectRawId}
+        onConfirm={() => {
+          if (!pendingRejectRawId) return;
+          setUpdatingId(pendingRejectRawId);
+          requestChangesApi.updateStatus(pendingRejectRawId, 'rejected')
+            .then(() => {
+              showAlert('Request rejected', 'success');
+              loadRequests();
+            })
+            .catch((err) => {
+              console.error('Failed to reject request', err);
+              showAlert(err?.response?.data?.message || 'Failed to reject request', 'error');
+            })
+            .finally(() => {
+              setUpdatingId(null);
+              setShowRejectConfirm(false);
+              setPendingRejectRawId(null);
+              setPendingRejectRequestId(null);
+            });
+        }}
+        onCancel={() => {
+          setShowRejectConfirm(false);
+          setPendingRejectRawId(null);
+          setPendingRejectRequestId(null);
+        }}
+      />
     </div>
   );
 };
 
 export default RequestChange;
+

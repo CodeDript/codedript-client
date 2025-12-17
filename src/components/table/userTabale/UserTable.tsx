@@ -144,13 +144,27 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
       }
       return;
     }
-    
-    // Only allow clicking for ongoing contracts tab
+    // For active contracts, navigate to rules view for client
+    if (activeTab === 'activeContract') {
+      const agreement = agreements.find(a => a._id === rowId);
+      if (!agreement) return;
+
+      navigate('/create-contract/rules', {
+        state: {
+          agreementId: agreement._id,
+          agreement: agreement,
+          isClientView: true
+        }
+      });
+      return;
+    }
+
+    // Only allow clicking for ongoing contracts tab (priced proposals)
     if (activeTab !== 'ongoingContract') return;
-    
+
     const agreement = agreements.find(a => a._id === rowId);
     if (!agreement) return;
-    
+
     // Only navigate if status is priced (developer proposed price)
     if (agreement.status === 'priced') {
       // Navigate to contract review page
@@ -192,7 +206,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
 
           {!loading && !error && rows.map(r => {
             const agreement = agreements.find(a => a._id === r.id);
-            const isClickable = activeTab === 'transactions' || (activeTab === 'ongoingContract' && agreement?.status === 'priced');
+            const isClickable = activeTab === 'transactions' || activeTab === 'activeContract' || (activeTab === 'ongoingContract' && agreement?.status === 'priced');
             
             return (
               <div 

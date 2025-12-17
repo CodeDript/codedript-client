@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './contractsViewBase.module.css';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 import Button2 from '../../../../components/button/Button2/Button2';
+import { useAuthContext } from '../../../../context/AuthContext';
 import MilestoneCard from '../../../../components/card/milestoneCard/MilestoneCard';
 
 type Milestone = { title: string; due?: string; amount?: string; status?: string };
@@ -14,14 +15,20 @@ type Props = {
   currency: string;
   deadline: string;
   clientName: string;
+  clientEmail?: string;
+  clientWallet?: string;
   developerName: string;
+  developerEmail?: string;
+  developerWallet?: string;
   milestones: Milestone[];
 };
 
-const ContractSummary: React.FC<Props> = ({ title, description, value, currency, deadline, clientName, developerName, milestones }) => {
+const ContractSummary: React.FC<Props> = ({ title, description, value, currency, deadline, clientName, clientEmail, clientWallet, developerName, developerEmail, developerWallet, milestones }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const agreement = location.state?.agreement;
+    const { user } = useAuthContext();
+    const userRole = user?.role || 'guest';
   const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : []);
 
   useEffect(() => {
@@ -29,6 +36,9 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   }, [milestones]);
 
   const total = localMilestones.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+  // If a value (agreement price) is provided prefer it, otherwise fallback to milestone sum
+  const agreedValue = Number(value) || 0;
+  const displayTotal = agreedValue > 0 ? agreedValue : total;
   const progress = localMilestones.length ? Math.round((localMilestones.filter((m: any) => m.status === 'done').length / localMilestones.length) * 100) : 0;
 
   const handleUpdateMilestoneStatus = (index: number | undefined, newStatus: string) => {
@@ -71,12 +81,14 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
             <div className={styles.partiesCol}>
               <div className={styles.partiesHeading}>Client</div>
               <div className={styles.partiesName}>{clientName}</div>
-              <div className={styles.partiesSub}>example@email.com</div>
+              <div className={styles.partiesSub}>{clientEmail || agreement?.client?.profile?.email || agreement?.client?.email || 'Loading...'}</div>
+              <div className={styles.partiesSub}>{clientWallet || agreement?.client?.walletAddress || agreement?.client?.wallet || 'Loading...'}</div>
             </div>
             <div className={styles.partiesCol}>
               <div className={styles.partiesHeading}>Developer</div>
               <div className={styles.partiesName}>{developerName}</div>
-              <div className={styles.partiesSub}>developer@email.com</div>
+              <div className={styles.partiesSub}>{developerEmail || agreement?.developer?.profile?.email || agreement?.developer?.email || 'Loading...'}</div>
+              <div className={styles.partiesSub}>{developerWallet || agreement?.developer?.walletAddress || agreement?.developer?.wallet || 'Loading...'}</div>
             </div>
             
           </div>
@@ -86,7 +98,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
 
         <div className={styles.milestoneFooter}>
           <div className={styles.totalLabel}>Total</div>
-          <div className={styles.totalValue}>{total} {currency}</div>
+          <div className={styles.totalValue}>{displayTotal} {currency}</div>
         </div>
 
        
@@ -120,8 +132,8 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
           <div className={styles.actionsRight}>
             <Button2 text="View payment" onClick={() => { /* navigate to payment */ }} />
             <Button3Black1 
-              text="Request Change" 
-              onClick={() => navigate('/create-contract/request-change', { state: { agreement } })} 
+              text={userRole === 'developer' ? 'Incoming Requests' : 'Request Change'} 
+              onClick={() => navigate('/create-contract/request-change', { state: { agreement, isDeveloperView: userRole === 'developer', isClientView: userRole === 'client' ? true : false } })} 
             />
           </div>
         </div>
