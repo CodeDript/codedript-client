@@ -30,7 +30,6 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
         { label: "Feature", path: "/#feature" },
         { label: "Work Flow", path: "/#workflow" },
         { label: "About", path: "/#about" },
-        { label: "Coming Soon", path: "/coming-soon" },
     ];
 
     // Highlight the correct nav button based on current path, otherwise no highlight

@@ -1,0 +1,125 @@
+.backgroundContainer {
+    margin-top: 200px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 2000px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+ 
+}
+
+/* Floating animation keyframes */
+@keyframes float1 {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes float2 {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes float3 {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float4 {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+.baseplate {
+  margin-top: 600px;
+  position: absolute;
+  width: 100%;
+  max-width: 1920px;
+  height: auto;
+  opacity: 0.8;
+  pointer-events: none;
+  transition: transform 0.1s ease-out;
+}
+
+/* Baseplate 1 - Top right area */
+.baseplate1 {
+  top: 0;
+  right: 0;
+  animation: float1 6s ease-in-out infinite;
+}
+
+/* Baseplate 2 - Left side, below hero */
+.baseplate2 {
+  top: 1000px;
+  left: 0;
+  animation: float2 8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Baseplate 3 - Right side, middle section */
+.baseplate3 {
+  top: 50px;
+  margin-left: 200px;
+  animation: float3 7s ease-in-out infinite;
+  animation-delay: 2s;
+  scale: 0.9;
+}
+
+/* Baseplate 4 - Left side, lower section */
+.baseplate4 {
+  top: 1050px;
+  margin-left: -200px;
+  animation: float4 9s ease-in-out infinite;
+  animation-delay: 0.5s;
+  scale: 0.8;
+}
+
+/* Baseplate 5 - Right side, positioned below baseplate 4 */
+.baseplate5 {
+  top: 1800px;
+  margin-left: 200px;
+  animation: float1 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+  scale: 0.85;
+}
+
+/* Baseplate 6 - Left side, positioned below baseplate 5 */
+.baseplate6 {
+  top: 2500px;
+  margin-left: -200px;
+  animation: float2 8.5s ease-in-out infinite;
+  animation-delay: 0.8s;
+  scale: 0.9;
+}
+
+@media (max-width: 1200px) {
+  .baseplate {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .baseplate {
+    opacity: 0.3;
+    display: none;
+  }
+}

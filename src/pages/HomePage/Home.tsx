@@ -11,6 +11,7 @@ import Button2 from '../../components/button/Button2/Button2';
 import HeaderText from '../../components/HeaderText/HeaderText';
 import About from '../../components/aboutSection/About';
 import SponsorSection from '../../components/SponsorSection/SponsorSection';
+import BackgroundBasePlates from '../../components/BackgroundBasePlates/BackgroundBasePlates';
 import sponsored1 from '../../assets/Sponsors/Sponsered_1.png';
 import sponsored2 from '../../assets/Sponsors/Sponsored_2.png';
 import sponsored3 from '../../assets/Sponsors/Sponsored_3.png';
@@ -55,7 +56,7 @@ const Home: React.FC = () => {
 
   return (
     <div className={styles.homePage}>
-     
+      <BackgroundBasePlates />
       <div className={styles.homeContent}>
         <HeroMain />
      

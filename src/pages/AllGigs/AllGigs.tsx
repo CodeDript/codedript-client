@@ -3,11 +3,15 @@ import styles from './AllGigs.module.css';
 import HeroSecondary from '../../components/hero/HeroSecondary/HeroSecondary';
 import GigCard from '../../components/card/GigCard/GigCard';
 import Footer from '../../components/footer/Footer';
+import BackgroundBasePlates2 from '../../components/BackgroundBasePlates/BackgroundBasePlates2';
+
 import { useGigs } from '../../query/useGigs';
 import type { Gig } from '../../types';
 
 const AllGigs: React.FC = () => {
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState('');
   
   // Fetch gigs from API
@@ -43,6 +47,7 @@ const AllGigs: React.FC = () => {
 
   return (
  <div className={styles.homePage}>
+       <BackgroundBasePlates2 />
        <HeroSecondary />  
      
       <section className={styles.gameCardsSection}>

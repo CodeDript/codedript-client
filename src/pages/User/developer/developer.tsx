@@ -7,6 +7,7 @@ import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../../context/AuthContext';
 
+
 const Developer: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();

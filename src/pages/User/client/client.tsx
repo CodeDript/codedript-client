@@ -7,12 +7,14 @@ import Footer from '../../../components/footer/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../../context/AuthContext';
 
+
 const Client: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
 
   return (
     <div className={styles.container}>
+     
       <UserHero />
       
       {/* Client Contracts Section */}

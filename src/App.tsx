@@ -4,6 +4,12 @@ import { navigation, ProtectedRoute } from './utils';
 import Home from './pages/HomePage/Home.tsx';
 import AllGigs from './pages/AllGigs/AllGigs.tsx';
 import ComingSoon from './pages/ComingSoon/ComingSoon.tsx';
+import BlockchainSecurity from './components/cardDetails/BlockchainSecurity';
+import IPFSFileStorage from './components/cardDetails/IPFSFileStorage';
+import EscrowProtection from './components/cardDetails/EscrowProtection';
+import MultiPartyContracts from './components/cardDetails/MultiPartyContracts';
+import ZeroKnowledgeVerification from './components/cardDetails/ZeroKnowledgeVerification';
+import InstantPayments from './components/cardDetails/InstantPayments';
 import NotFound from './pages/NotFound/NotFound';
 import GigView from './pages/GigView/gigview.tsx';
 // ContractProcessing was moved into components/ContractPages — update import path
@@ -19,6 +25,7 @@ import Settings from './pages/Settings/Settings.tsx';
 import './App.css';
 import Alert from './components/auth/Alert';
 import NavBar from './components/navbar/Navbar';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import AuthForm from './components/auth/AuthForm';
 import { useAuthContext } from './context/AuthContext';
 import { TempDataProvider } from './context/TempDataContext';
@@ -60,12 +67,20 @@ function AppContent() {
       {isAuthOpen && (
         <AuthForm onClose={() => setIsAuthOpen(false)} />
       )}
+      {/* Auto scroll to top on route changes */}
+      <ScrollToTop />
       <div className="app">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/all-gigs" element={<AllGigs />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
+          <Route path="/features/blockchain-security" element={<BlockchainSecurity />} />
+          <Route path="/features/ipfs-storage" element={<IPFSFileStorage />} />
+          <Route path="/features/escrow-protection" element={<EscrowProtection />} />
+          <Route path="/features/multi-party-contracts" element={<MultiPartyContracts />} />
+          <Route path="/features/zero-knowledge" element={<ZeroKnowledgeVerification />} />
+          <Route path="/features/instant-payments" element={<InstantPayments />} />
           <Route path="/gigview/:id" element={<GigView />} />
           
           {/* Role-Based Protected Routes */}

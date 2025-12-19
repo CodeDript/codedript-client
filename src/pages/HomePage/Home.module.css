@@ -137,7 +137,7 @@
 /* Promotional strip under gig cards */
 .promoStrip {
   margin: 2.5rem 0;
-  background: #070707;
+  background: transparent;
   color: #fff;
   padding: 46px 0;
   border-radius: 8px;
