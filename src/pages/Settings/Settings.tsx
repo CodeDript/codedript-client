@@ -85,7 +85,6 @@ const Settings: React.FC = () => {
         showAlert(response.message || 'Profile updated successfully!', 'success');
       }
     } catch (error: any) {
-      console.error('Error updating profile:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to update profile. Please try again.';
       showAlert(errorMessage, 'error');
     } finally {

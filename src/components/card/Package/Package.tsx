@@ -43,11 +43,8 @@ const PackageCard: React.FC<PackageCardProps> = ({
     route: '/game/default'
   });
 
- 
-
   const handleCardClick = () => {
     // navigate to the contract processing page and pass package details in state
-    console.log('📦 Navigating to contract with packageId:', packageId);
     navigate('/contract-processing', { state: { title, description, price, delivery, revisions, image: gameData.image, gigId, packageId, developerWallet } });
   };
 

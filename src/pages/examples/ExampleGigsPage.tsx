@@ -49,14 +49,6 @@ export default function ExampleGigsPage() {
           </div>
         ))}
       </div>
-
-      {gigData && (
-        <div>
-          <h2>Featured Gig</h2>
-          <h3>{gigData.gig.title}</h3>
-          <p>{gigData.gig.description}</p>
-        </div>
-      )}
     </div>
   );
 }

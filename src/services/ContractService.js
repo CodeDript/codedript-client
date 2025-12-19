@@ -171,7 +171,6 @@ export async function connectWallet() {
     await window.ethereum.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
   } catch (err) {
     // User cancelled or denied the permission request. Do not continue to wallet.connect()
-    console.log('Permission request cancelled or failed:', err);
     throw new Error('MetaMask permission request was cancelled');
   }
 
@@ -183,7 +182,6 @@ export async function connectWallet() {
     }
   } catch (e) {
     // ignore disconnect errors
-    console.warn('Error checking existing wallet session:', e);
   }
 
   // Connect to MetaMask (this will open the MetaMask connect popup if needed)
@@ -220,7 +218,6 @@ export async function createAgreement(developer, projectName, docCid, totalValue
   const txResult = await sendTransaction({ account, transaction });
   
   // Wait for transaction to be mined and extract the returned agreement ID
-  console.log('⏳ Waiting for transaction to be mined to extract agreement ID...');
   let agreementId = null;
   let retries = 0;
   const maxRetries = 30; // 30 attempts * 3 seconds = 90 seconds max wait
@@ -236,8 +233,6 @@ export async function createAgreement(developer, projectName, docCid, totalValue
       });
       
       if (receipt && receipt.status === 'success') {
-        console.log('✅ Transaction mined successfully');
-        
         // Parse logs to extract the agreement ID from the contract's return value
         // The createAgreement function returns uint256 agreementId
         // We need to get it from the transaction simulation or use getNextId() - 1 as fallback
@@ -246,10 +241,7 @@ export async function createAgreement(developer, projectName, docCid, totalValue
         const nextId = await getNextId();
         agreementId = nextId - 1;
         
-        console.log('⛓️ Extracted agreement ID:', agreementId);
-        
         if (agreementId <= 0) {
-          console.warn('⚠️ Invalid agreement ID, will retry...');
           agreementId = null;
           retries++;
           continue;
@@ -260,14 +252,11 @@ export async function createAgreement(developer, projectName, docCid, totalValue
         throw new Error('Transaction reverted on blockchain');
       }
       
-      console.log(`⏳ Transaction not yet mined, retrying... (${retries + 1}/${maxRetries})`);
       retries++;
     } catch (error) {
-      console.warn('Error checking transaction receipt:', error);
       retries++;
       
       if (retries >= maxRetries) {
-        console.error('❌ Failed to extract agreement ID after max retries');
         throw new Error('Failed to extract agreement ID from transaction. Transaction may still be pending.');
       }
     }
@@ -452,7 +441,7 @@ function decodeContractInput(inputData) {
             ipfsHash = ipfsMatch[1];
           }
         } catch (e) {
-          console.warn('Could not extract IPFS hash:', e);
+          // Ignore extraction errors
         }
         
         return {
@@ -464,7 +453,7 @@ function decodeContractInput(inputData) {
           hasIPFSHash: !!ipfsHash,
         };
       } catch (decodeError) {
-        console.warn('Could not decode parameters:', decodeError);
+        // Ignore decoding errors
       }
     }
     
@@ -474,7 +463,6 @@ function decodeContractInput(inputData) {
       inputDataLength: inputData.length,
     };
   } catch (error) {
-    console.error('Error decoding input:', error);
     return null;
   }
 }
@@ -567,7 +555,6 @@ export async function getTransactionDetails(txHash) {
       decodedInput: decodedInput
     };
   } catch (error) {
-    console.error('Error fetching transaction details:', error);
     throw new Error('Failed to fetch transaction details. Please check the transaction hash.');
   }
 }

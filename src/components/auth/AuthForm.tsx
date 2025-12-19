@@ -45,7 +45,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
           setShowOtpInput(true);
         },
         onError: (error: any) => {
-          console.error('Request OTP Error:', error);
           const errorMessage = 
             error?.response?.data?.error?.message || 
             error?.response?.data?.message || 
@@ -86,7 +85,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
           }, 500);
         },
         onError: (error: any) => {
-          console.error('Verify OTP Error:', error);
           const errorMessage = 
             error?.response?.data?.error?.message || 
             error?.response?.data?.message || 

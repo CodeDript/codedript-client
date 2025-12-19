@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from '../pageCotractD.module.css';
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
 };
 
 const CreateDetailsStep: React.FC<Props> = ({ title, setTitle, description, setDescription }) => {
-  const [category, setCategory] = useState<string>('');
   
   return (
     <>

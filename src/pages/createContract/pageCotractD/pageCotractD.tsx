@@ -20,7 +20,6 @@ import reviewIcon from '../../../assets/contractSvg/Review.svg';
 import ChatWidget from '../../../components/chat/ChatWidget';
 import Footer from '../../../components/footer/Footer';
 import { useAgreementData } from '../../../context/AgreementDataContext';
-import { agreementsApi } from '../../../api/agreements.api';
 import { transactionsApi } from '../../../api/transactions.api';
 import { showAlert } from '../../../components/auth/Alert';
 import { useGig } from '../../../query/useGigs';
@@ -30,7 +29,7 @@ import { createAgreement as createBlockchainAgreement, getTransactionDetails } f
 
 
 const PageCotractD: React.FC = () => {
-  const { agreementData, setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
+  const { setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
   const [step, setStep] = useState(1);
   const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [packageId, setPackageId] = useState<string | undefined>(undefined);
@@ -227,7 +226,6 @@ const PageCotractD: React.FC = () => {
       const mockCids = uploadedFiles.map((_, i) => `Qm${Math.random().toString(36).substring(7)}`);
       setUploadedFilesCids(mockCids);
       setIsUploadingFiles(false);
-      console.log('Mock files uploaded to IPFS. CIDs:', mockCids);
     }
     
     setStep((s) => Math.min(5, s + 1));
@@ -241,7 +239,6 @@ const PageCotractD: React.FC = () => {
   };
 
   const handleCreateContract = async () => {
-    console.log('handleCreateContract called');
     setIsUploadingFiles(true);
     
     try {
@@ -272,14 +269,7 @@ const PageCotractD: React.FC = () => {
       const gig = gigQuery.data as any;
       const developerId = typeof gig.developer === 'object' ? gig.developer._id : gig.developer;
       
-      console.log('🔍 Agreement Data Debug:');
-      console.log('  - Developer ID:', developerId);
-      console.log('  - Gig ID:', gigId);
-      console.log('  - Package ID:', packageId);
-      console.log('  - Title:', title);
-      console.log('  - Description:', description);
-      console.log('  - Milestones:', milestones);
-        // Agreement creation: prepare and send FormData
+      // Agreement creation: prepare and send FormData
       
       // Prepare FormData for file upload
       const formData = new FormData();
@@ -299,19 +289,8 @@ const PageCotractD: React.FC = () => {
         formData.append('documents', file);
       });
       
-      console.log('📤 Creating agreement via API...');
-      console.log('📋 FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`  ${key}: [File] ${value.name}`);
-        } else {
-          console.log(`  ${key}:`, value);
-        }
-      }
       // Call the API via mutation so React Query invalidates caches
       const response = await createAgreementMutation.mutateAsync(formData as any);
-
-      console.log('✅ Agreement created successfully:', response);
       // Show success message
       showAlert(response.message || 'Agreement created successfully!', 'success');
       
@@ -324,9 +303,6 @@ const PageCotractD: React.FC = () => {
       }, 1500);
       
     } catch (error: any) {
-      console.error('❌ Failed to create agreement:', error);
-      console.error('Error response:', error.response?.data);
-      
       // Extract detailed error message
       let errorMessage = 'Failed to create agreement';
       
@@ -410,7 +386,6 @@ const PageCotractD: React.FC = () => {
         navigate('/developer');
       }, 1500);
     } catch (error: any) {
-      console.error('Error accepting agreement:', error);
       const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to accept agreement';
       setAcceptError(errorMessage);
       showAlert(errorMessage, 'error');
@@ -479,16 +454,6 @@ const PageCotractD: React.FC = () => {
       const startDate = Math.max(parsedStartDate, currentTimestamp + 60);
       const endDate = parseToUnixSeconds(agreement?.timeline?.endDate || agreement?.endDate || deadline);
 
-      console.log('🚀 Step 1: Creating blockchain agreement...');
-      console.log({
-        developerWalletAddress,
-        projectName,
-        documentsIpfsHash,
-        totalValue,
-        startDate,
-        endDate
-      });
-
       // Step 1: Call smart contract createAgreement function
       const txResult = await createBlockchainAgreement(
         developerWalletAddress,
@@ -502,14 +467,8 @@ const PageCotractD: React.FC = () => {
       const transactionHash = txResult.transactionHash;
       const blockchainAgreementId = txResult.agreementId; // Now directly available from createAgreement return
       
-      console.log('✅ Blockchain transaction successful:', transactionHash);
-      console.log('🔗 Transaction Hash:', transactionHash);
-      console.log('⛓️ Blockchain Agreement ID:', blockchainAgreementId);
-      console.log('📋 Agreement ID (database):', routeState.agreementId);
-
       // Validate blockchain ID
       if (!blockchainAgreementId || blockchainAgreementId <= 0) {
-        console.error('❌ Invalid blockchain agreement ID:', blockchainAgreementId);
         showAlert('Error: Failed to get valid blockchain agreement ID. Transaction may have failed.', 'error');
         setIsApprovingAgreement(false);
         return;
@@ -517,13 +476,6 @@ const PageCotractD: React.FC = () => {
 
       // Always try to save blockchain data (even if we don't have the ID yet)
       try {
-        console.log('💾 Saving blockchain data to database...');
-        console.log('Blockchain data to save:', {
-          agreementId: blockchainAgreementId,
-          transactionHash: transactionHash,
-          contractAddress: import.meta.env.VITE_AGREEMENT_CONTRACT,
-        });
-        
         const updatePayload = {
           id: routeState.agreementId,
           data: {
@@ -535,26 +487,18 @@ const PageCotractD: React.FC = () => {
           }
         };
         
-        console.log('📤 Sending update request with payload:', JSON.stringify(updatePayload, null, 2));
-        
         const updateResponse = await updateAgreementMutation.mutateAsync(updatePayload as any);
-        
-        console.log('✅ Blockchain data saved successfully!');
-        console.log('📋 Update response:', updateResponse);
         
         if (blockchainAgreementId) {
           showAlert('Blockchain agreement created successfully!', 'success');
         }
       } catch (updateError: any) {
-        console.error('❌ Failed to save blockchain data to database:', updateError);
-        console.error('Error details:', updateError.response?.data);
         showAlert('Warning: Failed to save blockchain data to database. Transaction was successful but data sync failed.', 'error');
         // Continue with transaction recording even if blockchain data save failed
       }
 
       // Step 2: Create transaction record in database with retry logic
       // Backend requires at least 1 confirmation before recording
-      console.log('💾 Step 2: Creating transaction record in database (waiting for confirmations)...');
       const transactionData = {
         type: 'creation' as const,
         agreement: routeState.agreementId,
@@ -568,10 +512,8 @@ const PageCotractD: React.FC = () => {
       
       while (retries < maxRetries) {
         try {
-          console.log('📋 Attempting to create transaction record... (attempt', retries + 1, '/', maxRetries, ')');
           txResponse = await transactionsApi.create(transactionData);
 
-          console.log('✅ Transaction record created:', txResponse);
           break;
         } catch (error: any) {
           const errorMsg = error.response?.data?.error?.message || '';
@@ -585,7 +527,6 @@ const PageCotractD: React.FC = () => {
             if (retries >= maxRetries) {
               throw new Error('Transaction confirmation timeout. Please check Sepolia block explorer and try again later.');
             }
-            console.log(`⏳ Waiting for blockchain confirmation... (${retries}/${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
           } else {
             // Different error, throw immediately
@@ -595,12 +536,10 @@ const PageCotractD: React.FC = () => {
       }
 
       // Step 3: Update agreement status to "active" (client has paid, work can begin)
-      console.log('📝 Step 3: Updating agreement status to active...');
       await updateStatusMutation.mutateAsync({
         id: routeState.agreementId,
         status: 'active'
       });
-      console.log('✅ Agreement status updated to active');
 
       showAlert('Payment successful! Agreement is now active on blockchain.', 'success');
       
@@ -609,11 +548,6 @@ const PageCotractD: React.FC = () => {
         navigate('/client');
       }, 2000);
     } catch (error: any) {
-      console.error('❌ Error during approval process:', error);
-      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2));
-      console.error('Error response status:', error.response?.status);
-      console.error('Error message from backend:', error.response?.data?.error?.message || error.response?.data?.message);
-      
       // Provide user-friendly error messages
       let errorMessage = 'Failed to approve agreement';
       

@@ -31,9 +31,8 @@ export default function ExampleAuthPage() {
       const response = await loginMutation.mutateAsync(loginData);
       setUser(response.user);
       if (response.token) setToken(response.token);
-      console.log("Login successful!", response);
     } catch (error) {
-      console.error("Login failed:", error);
+      // Login error handled
     }
   };
 
@@ -52,9 +51,8 @@ export default function ExampleAuthPage() {
       const response = await registerMutation.mutateAsync(registerData);
       setUser(response.user);
       if (response.token) setToken(response.token);
-      console.log("Registration successful!", response);
     } catch (error) {
-      console.error("Registration failed:", error);
+      // Registration error handled
     }
   };
 

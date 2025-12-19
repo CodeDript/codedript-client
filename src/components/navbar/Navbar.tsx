@@ -88,12 +88,9 @@ function NavBar({ onLoginClick, isLoggedIn, onLogout, userRole }: NavBarProps) {
 
         try {
             // Connect MetaMask - store wallet in localStorage
-            console.log('Navbar: connecting wallet');
             const walletAddress = '0x' + Math.random().toString(16).substring(2, 42);
             localStorage.setItem('walletAddress', walletAddress);
-            console.log('Navbar: connected wallet', walletAddress);
         } catch (err: any) {
-            console.error('Navbar connect wallet error:', err);
             // fallback to open login modal
             onLoginClick();
         }

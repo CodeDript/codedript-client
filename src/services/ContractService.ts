@@ -69,3 +69,9 @@ export async function getNextId(): Promise<number> {
   // @ts-ignore
   return await JSService.getNextId();
 }
+
+// Expose wallet connect from JS implementation for TypeScript consumers
+export async function connectWallet(): Promise<any> {
+  // @ts-ignore
+  return await JSService.connectWallet();
+}

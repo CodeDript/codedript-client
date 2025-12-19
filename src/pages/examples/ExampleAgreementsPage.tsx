@@ -42,18 +42,16 @@ export default function ExampleAgreementsPage() {
 
     try {
       const result = await createAgreementMutation.mutateAsync(newAgreement);
-      console.log("Agreement created:", result);
     } catch (error) {
-      console.error("Failed to create agreement:", error);
+      // Agreement creation error handled
     }
   };
 
   const handleUpdateStatus = async (agreementId: string, newStatus: string) => {
     try {
       await updateStatusMutation.mutateAsync({ id: agreementId, status: newStatus });
-      console.log("Status updated successfully");
     } catch (error) {
-      console.error("Failed to update status:", error);
+      // Status update error handled
     }
   };
 

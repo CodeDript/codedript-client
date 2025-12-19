@@ -75,7 +75,6 @@ const UserIconDropdown: React.FC<{ onClose: () => void; onLogout: () => void; us
                             
                             onClose();
                         } catch (error) {
-                            console.error('Error fetching user profile:', error);
                             // Fallback to stored role
                             navigate(userRole === 'developer' ? '/developer' : '/client');
                             onClose();

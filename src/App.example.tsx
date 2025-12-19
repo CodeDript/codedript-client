@@ -13,10 +13,6 @@ function App() {
   const [userWallet, setUserWallet] = useState<string>('');
 
   const handleLoginSuccess = (walletAddress: string, signature: string) => {
-    console.log('Login successful!');
-    console.log('Wallet:', walletAddress);
-    console.log('Signature:', signature);
-    
     // Set logged in state
     setIsLoggedIn(true);
     setUserWallet(walletAddress);
@@ -55,7 +51,7 @@ function App() {
           </>
         ) : (
           <div style={styles.dashboard}>
-            <h2>Welcome! 🎉</h2>
+            <h2>Welcome!</h2>
             <p>You are now logged in with wallet: {userWallet}</p>
             <p>This is your protected content area.</p>
           </div>

@@ -26,9 +26,6 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
   // Use the gig query hook to fetch developer details
   const gigQuery = useGig(gigId || '');
 
-  console.log('PartiesStep props:', { gigId, developerWallet, developerName, developerEmail });
-  console.log('Gig query data:', gigQuery.data);
-
   // Fetch authenticated client details from API
   useEffect(() => {
     let mounted = true;
@@ -45,15 +42,13 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
           const apiWallet = userData.walletAddress || '';
           const apiName = userData.fullname || userData.email?.split('@')[0] || '';
           
-          console.log('✅ Fetched client details from API:', { apiName, apiEmail, apiWallet });
-          
           // Update with API data - email can be empty and editable, wallet is readonly
           setClientEmail(apiEmail);
           setClientWallet(apiWallet);
           if (!clientName || clientName === 'Devid kamron') setClientName(apiName);
         }
       } catch (error) {
-        console.error('Failed to fetch client details:', error);
+        // Error fetching client details
       } finally {
         if (mounted) setClientLoading(false);
       }
@@ -78,8 +73,6 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
           const devEmail = developer.email || '';
           const devWallet = developer.walletAddress || '';
 
-          console.log('✅ Extracted developer from gig (object):', { devName, devEmail, devWallet });
-
           setFetchedDeveloperName(devName);
           setFetchedDeveloperEmail(devEmail);
           setFetchedDeveloperWallet(devWallet);
@@ -98,15 +91,13 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
               const devEmail = dev.email || '';
               const devWallet = dev.walletAddress || '';
 
-              console.log('✅ Fetched developer by id:', { devName, devEmail, devWallet });
-
               setFetchedDeveloperName(devName);
               setFetchedDeveloperEmail(devEmail);
               setFetchedDeveloperWallet(devWallet);
               return;
             }
           } catch (err) {
-            console.warn('Failed to fetch developer by id:', err);
+            // Failed to fetch developer by id
           }
         }
 
@@ -115,7 +106,7 @@ const PartiesStep: React.FC<Props> = ({ clientName, setClientName, clientEmail, 
           setFetchedDeveloperWallet(developerWallet);
         }
       } catch (err) {
-        console.error('PartiesStep: error handling developer info', err);
+        // Error handling developer info
       }
     })();
   }, [gigQuery.data]);

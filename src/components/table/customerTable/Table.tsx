@@ -40,7 +40,6 @@ const Table: React.FC<TableProps> = ({ developerId }) => {
         setReviews(reviews);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch reviews:', err);
         setError('Failed to load reviews');
       } finally {
         setLoading(false);

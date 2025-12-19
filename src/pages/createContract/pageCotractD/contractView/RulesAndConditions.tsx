@@ -38,7 +38,6 @@ const RulesAndConditions: React.FC = () => {
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`Contract_Terms_${agreement?.project?.name || 'Document'}.pdf`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
     }
   };

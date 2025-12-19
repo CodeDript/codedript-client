@@ -88,14 +88,12 @@ const RequestChange: React.FC = () => {
   };
 
   const handleIgnore = (requestId: string) => {
-    console.log('handleIgnore called with', requestId);
     const req = pendingRequests.find(r => r.id === requestId);
     if (!req) return;
 
     // Show modal confirmation aligned with frontend instead of native confirm()
     if (userRole === 'client') {
       const idToDelete = req.rawId || req.id;
-      console.log('client cancel; showing confirm modal for', idToDelete, req);
       setPendingDeleteRawId(idToDelete);
       setShowCancelConfirm(true);
       return;
@@ -124,7 +122,6 @@ const RequestChange: React.FC = () => {
         loadRequests();
       })
       .catch((err) => {
-        console.error('Delete request error', err);
         showAlert(err?.response?.data?.message || 'Failed to cancel request', 'error');
       })
       .finally(() => {
@@ -155,7 +152,6 @@ const RequestChange: React.FC = () => {
         setModalAmount('');
       })
       .catch((err) => {
-        console.error('Failed to set price for request', err);
         showAlert(err?.response?.data?.message || 'Failed to set price', 'error');
       })
       .finally(() => setModalProcessing(false));
@@ -171,14 +167,11 @@ const RequestChange: React.FC = () => {
     const rawId = request.rawId || request.id;
     
     // Get blockchain agreement ID from the agreement object
-    console.log('Agreement object:', agreementObj);
     const blockchainAgreementId = agreementObj?.blockchain?.agreementId || 
                                    agreementObj?.blockchainId || 
                                    agreementObj?.agreementId;
-    console.log('Extracted blockchain ID:', blockchainAgreementId);
     
     if (!blockchainAgreementId) {
-      console.error('Available agreement fields:', Object.keys(agreementObj || {}));
       showAlert('Blockchain agreement ID not found. Cannot process payment.', 'error');
       return;
     }
@@ -187,19 +180,11 @@ const RequestChange: React.FC = () => {
     
     try {
       // Step 1: Call smart contract requestChange function
-      console.log('Calling blockchain requestChange with:', {
-        blockchainAgreementId,
-        description: request.description,
-        amount: request.amount
-      });
-
       const txResult = await requestChange(
         blockchainAgreementId,
         request.description,
         request.amount
       );
-
-      console.log('Blockchain transaction submitted:', txResult.transactionHash);
 
       // Step 2: Record transaction with retry logic - keep button disabled until complete
       const recordTransaction = async (attempt = 1, maxAttempts = 24) => {
@@ -207,14 +192,6 @@ const RequestChange: React.FC = () => {
         
         setTimeout(async () => {
           try {
-            console.log(`[Transaction Recording] Attempt ${attempt}/${maxAttempts}...`);
-            console.log('Payload:', {
-              type: 'modification',
-              agreement: agreementId,
-              transactionHash: txResult.transactionHash,
-              network: 'sepolia'
-            });
-            
             await transactionsApi.create({
               type: 'modification',
               agreement: agreementId,
@@ -222,49 +199,34 @@ const RequestChange: React.FC = () => {
               network: 'sepolia'
             });
             
-            console.log('✓ Transaction successfully recorded in database!');
             setPaymentProcessingId(null); // Clear processing state on success
             await loadRequests(); // Refresh list after transaction is recorded
             showAlert('Transaction recorded successfully!', 'success');
               // Now mark the request change as paid in the server (status change after DB record)
               try {
                 await requestChangesApi.updateStatus(rawId, 'paid');
-                console.log(`✓ RequestChange ${rawId} marked as paid on server`);
                 await loadRequests();
               } catch (statusErr) {
-                console.error('Failed to update request-change status after recording transaction:', statusErr);
               }
           } catch (recordErr: any) {
-            console.error(`[Transaction Recording] Attempt ${attempt} failed`);
-            console.error('Full error:', recordErr);
-            console.error('Response data:', recordErr?.response?.data);
-            console.error('Response status:', recordErr?.response?.status);
-            
             const errorMsg = recordErr?.response?.data?.message || recordErr?.response?.data?.error?.message || recordErr?.message;
-            console.error('Error message:', errorMsg);
             
             // Check if transaction hash already exists (which means it was already recorded)
             if (errorMsg?.includes('Transaction with this hash already exists')) {
-              console.log('✓ Transaction already recorded in database (duplicate hash check)');
               setPaymentProcessingId(null); // Clear processing state
               await loadRequests(); // Refresh list
               showAlert('Transaction already recorded!', 'success');
                 // Ensure request change status is 'paid' if transaction exists
                 try {
                   await requestChangesApi.updateStatus(rawId, 'paid');
-                  console.log(`✓ RequestChange ${rawId} marked as paid (duplicate transaction case)`);
                   await loadRequests();
                 } catch (statusErr) {
-                  console.error('Failed to update request-change status in duplicate case:', statusErr);
                 }
               return;
             }
             
             // Check if it's a duplicate key error on transactionID (server-side auto-increment issue)
             if (errorMsg?.includes('E11000') && errorMsg?.includes('transactionID')) {
-              console.error('✗ Server-side transactionID generation conflict. Transaction hash:', txResult.transactionHash);
-              console.error('The transaction was submitted to blockchain but DB recording failed due to server ID conflict.');
-              console.error('Manual intervention needed: Record transaction hash manually or fix server transactionID generation.');
               setPaymentProcessingId(null); // Clear processing state
               await loadRequests(); // Refresh list to show paid status
               showAlert('Payment completed but transaction recording failed. Please contact support.', 'error');
@@ -279,17 +241,12 @@ const RequestChange: React.FC = () => {
             );
             
             if (shouldRetry) {
-              console.log(`Will retry in 15 seconds... (${maxAttempts - attempt} retries left)`);
               recordTransaction(attempt + 1, maxAttempts);
             } else if (attempt >= maxAttempts) {
-              console.error('✗ Failed to record transaction after all retries.');
-              console.error('Transaction hash:', txResult.transactionHash);
-              console.error('Agreement ID:', agreementId);
               setPaymentProcessingId(null); // Clear processing state even on failure
               await loadRequests(); // Refresh list to show paid status
               showAlert('Payment completed but transaction recording timed out.', 'error');
             } else {
-              console.error('✗ Stopped retrying due to non-retryable error');
               setPaymentProcessingId(null); // Clear processing state
               await loadRequests(); // Refresh list to show paid status
               showAlert('Payment completed but transaction recording failed.', 'error');
@@ -301,7 +258,6 @@ const RequestChange: React.FC = () => {
       // Start transaction recording (keeps button disabled until complete)
       recordTransaction();
     } catch (err: any) {
-      console.error('Payment failed:', err);
       const errorMsg = err?.reason || err?.message || 'Payment failed. Please try again.';
       showAlert(errorMsg, 'error');
       setPaymentProcessingId(null); // Clear processing state on blockchain error
@@ -380,7 +336,6 @@ const RequestChange: React.FC = () => {
           loadRequests();
         })
         .catch((err) => {
-          console.error('Create request error', err);
           const msg = err?.response?.data?.message || err.message || 'Failed to create change request.';
           showAlert(msg, 'error');
         })
@@ -419,7 +374,6 @@ const RequestChange: React.FC = () => {
         setConfirmedRequests([]); // Not used anymore
       })
       .catch((err) => {
-        console.error('Failed to fetch request changes', err);
         showAlert(err?.response?.data?.message || 'Failed to load request changes', 'error');
       })
       .finally(() => setIsLoadingRequests(false));
@@ -844,7 +798,6 @@ const RequestChange: React.FC = () => {
               loadRequests();
             })
             .catch((err) => {
-              console.error('Failed to reject request', err);
               showAlert(err?.response?.data?.message || 'Failed to reject request', 'error');
             })
             .finally(() => {

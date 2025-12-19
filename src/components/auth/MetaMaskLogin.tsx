@@ -32,8 +32,6 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
       // Extract data from response
       const token = response?.token || response?.data?.token;
       const user = response?.user || response?.data?.user;
-      const isNewUser = response?.isNewUser || response?.data?.isNewUser;
-      const profileComplete = response?.profileComplete || response?.data?.profileComplete;
 
       // Update auth context
       if (token) {
@@ -57,7 +55,6 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
         }
       }, 500);
     } catch (err: any) {
-      console.error('Login error:', err);
       const errorMessage = err.message || 'Failed to connect wallet';
       showAlert(errorMessage, 'error');
     } finally {

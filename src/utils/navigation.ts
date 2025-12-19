@@ -26,7 +26,6 @@ class NavigationService {
       this.navigate(path, { replace });
     } else {
       // Fallback to window.location if navigate not set
-      console.warn('Navigation service not initialized, falling back to window.location');
       if (replace) {
         window.location.replace(path);
       } else {

@@ -35,7 +35,6 @@ const CreateGigPage: React.FC = () => {
   const [currency] = useState('ETH');
   const [deadline] = useState('');
   const [milestones] = useState([{ title: 'Initial', amount: '0' }]);
-  const [acceptError] = useState<string | null>(null);
   const [, setClientApproved] = useState(false);
 
   React.useEffect(() => {
@@ -165,11 +164,6 @@ const CreateGigPage: React.FC = () => {
 
             <section className={styles.cardArea}>
               <div className={authStyles.cardBadge} aria-hidden>Create Gig</div>
-              {acceptError && (
-                <div style={{padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00'}}>
-                  {acceptError}
-                </div>
-              )}
 
               <div className={styles.cardBody}>
                 {step === 1 && (

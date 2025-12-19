@@ -42,45 +42,10 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
               if (gigData.developer) {
                 developerFromGig = gigData.developer;
                 walletToUse = developerFromGig.walletAddress || developerFromGig.wallet || '';
-                
-                // Mock - log gig data instead of storing in context
-                console.log('Mock: Gig data from API', {
-                  id: gigData._id || gigData.id || gigId,
-                  title: gigData.title || '',
-                  description: gigData.description || '',
-                  category: gigData.category,
-                  deliveryTime: gigData.deliveryTime,
-                  developer: {
-                    id: developerFromGig._id || developerFromGig.id,
-                    name: developerFromGig.profile?.name || developerFromGig.username || '',
-                    email: developerFromGig.email || '',
-                    walletAddress: walletToUse,
-                    avatar: developerFromGig.profile?.avatar,
-                    bio: developerFromGig.profile?.bio,
-                    skills: developerFromGig.profile?.skills,
-                    hourlyRate: developerFromGig.profile?.hourlyRate,
-                    rating: developerFromGig.reputation?.rating,
-                    reviewCount: developerFromGig.reputation?.reviewCount,
-                  },
-                  packages: gigData.packages,
-                });
-                setGigData(gigDataForContext);
+
                 if (mounted && developerFromGig) {
                   const name = developerFromGig.profile?.name || developerFromGig.username || 'Unknown Developer';
                   const email = developerFromGig.email || '';
-                  const devProfileForContext: DeveloperProfile = {
-                    id: developerFromGig._id || developerFromGig.id,
-                    name,
-                    email,
-                    walletAddress: walletToUse,
-                    avatar: developerFromGig.profile?.avatar,
-                    bio: developerFromGig.profile?.bio,
-                    skills: developerFromGig.profile?.skills,
-                    hourlyRate: developerFromGig.profile?.hourlyRate,
-                    rating: developerFromGig.reputation?.rating,
-                    reviewCount: developerFromGig.reputation?.reviewCount,
-                  };
-                  setDeveloperProfile(devProfileForContext);
                   setFetchedDeveloperName(name);
                   setFetchedDeveloperEmail(email);
                   if (walletToUse) setFetchedDeveloperWallet(walletToUse);
@@ -90,7 +55,7 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
               }
             }
           } catch (err) {
-            console.warn('CreatePartiesStep: failed to fetch gig to get developer wallet', err);
+            // Failed to fetch gig to get developer wallet
           }
         }
         if (!walletToUse || walletToUse.length < 10) {
@@ -112,7 +77,7 @@ const CreatePartiesStep: React.FC<Props> = ({ clientName, setClientName, clientE
           }
         }
       } catch (err) {
-        console.error('CreatePartiesStep: failed to fetch developer details', err);
+        // Failed to fetch developer details
       } finally {
         if (mounted) setLoading(false);
       }

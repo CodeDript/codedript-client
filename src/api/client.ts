@@ -47,11 +47,6 @@ api.interceptors.response.use(
       navigation.go("/login");
     }
     
-    // Handle network errors
-    if (!error.response) {
-      console.error("Network error:", error.message);
-    }
-    
     return Promise.reject(error);
   }
 );

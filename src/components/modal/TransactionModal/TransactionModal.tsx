@@ -52,7 +52,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, bl
               setIpfsHashFromContract(agreementData.docCid);
             }
           } catch (err) {
-            console.warn('Could not fetch IPFS from contract:', err);
+            // Silently handle IPFS fetch errors
           }
         }
 
@@ -123,7 +123,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, bl
         
         setDisplayText(output);
       } catch (err) {
-        console.error('Error fetching transaction:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch transaction details');
         setDisplayText([
           '> ERROR: Failed to fetch transaction details',

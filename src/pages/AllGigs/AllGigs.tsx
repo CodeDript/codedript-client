@@ -6,7 +6,6 @@ import Footer from '../../components/footer/Footer';
 import BackgroundBasePlates2 from '../../components/BackgroundBasePlates/BackgroundBasePlates2';
 
 import { useGigs } from '../../query/useGigs';
-import type { Gig } from '../../types';
 
 const AllGigs: React.FC = () => {
   const [page, setPage] = useState(1);

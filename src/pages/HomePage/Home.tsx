@@ -64,19 +64,19 @@ const Home: React.FC = () => {
       
         <div className={styles.centerButtonRow}>
           <div className={styles.buttonSection}>
-            <Button5W text="Meta Mask" onClick={() => console.log('Meta Mask')} />
+            <Button5W text="Meta Mask" onClick={() => {}} />
           </div>
           <div className={styles.buttonSection}>
-            <Button5W text="Ethereum" onClick={() => console.log('Ethereum')} />
+            <Button5W text="Ethereum" onClick={() => {}} />
           </div>
           <div className={styles.buttonSection}>
-            <Button5W text="IPFS" onClick={() => console.log('IPFS')} />
+            <Button5W text="IPFS" onClick={() => {}} />
           </div>
           <div className={styles.buttonSection}>
-            <Button5W text="Chainlink" onClick={() => console.log('Chainlink')} />
+            <Button5W text="Chainlink" onClick={() => {}} />
           </div>
           <div className={styles.buttonSection}>
-            <Button5W text="WalletConnect" onClick={() => console.log('WalletConnect')} />
+            <Button5W text="WalletConnect" onClick={() => {}} />
           </div>
         </div>
       {/* Cards Section */}
@@ -168,7 +168,7 @@ agreements " />
             <p>Eliminate payment disputes, reduce fees, and build trust with blockchain-powered agreements</p>
 
             <div className={styles.bottomBtn}>
-              <Button1 text="Join " onClick={() => console.log('Join now')} />
+              <Button1 text="Join " onClick={() => {}} />
             </div>
           </div>
         </div>
