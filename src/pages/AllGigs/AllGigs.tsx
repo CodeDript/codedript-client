@@ -10,7 +10,6 @@ import type { Gig } from '../../types';
 
 const AllGigs: React.FC = () => {
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState('');
   
