@@ -18,9 +18,18 @@ import {
 // CONFIGURATION
 // ============================================
 
-const client = createThirdwebClient({
-  clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
-});
+// Lazily initialize Thirdweb client to avoid errors when env var is missing
+let client = null;
+try {
+  if (import.meta.env.VITE_THIRDWEB_CLIENT_ID) {
+    client = createThirdwebClient({
+      clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
+    });
+  }
+} catch (e) {
+  console.warn('Thirdweb client initialization failed:', e);
+  client = null;
+}
 
 const wallet = createWallet("io.metamask");
 
@@ -185,6 +194,9 @@ export async function connectWallet() {
   }
 
   // Connect to MetaMask (this will open the MetaMask connect popup if needed)
+  if (!client) {
+    throw new Error('Thirdweb client not initialized. Please configure VITE_THIRDWEB_CLIENT_ID');
+  }
   const account = await wallet.connect({ client });
   return account;
 }

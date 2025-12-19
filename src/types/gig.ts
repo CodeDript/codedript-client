@@ -4,6 +4,7 @@
 
 export interface GigPackage {
   name: "basic" | "standard" | "premium";
+  _id?: string;
   price: number;
   deliveryTime: number;
   features: string[];
