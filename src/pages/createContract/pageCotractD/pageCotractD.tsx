@@ -500,8 +500,57 @@ const PageCotractD: React.FC = () => {
       );
 
       const transactionHash = txResult.transactionHash;
+      const blockchainAgreementId = txResult.agreementId; // Now directly available from createAgreement return
+      
       console.log('✅ Blockchain transaction successful:', transactionHash);
-      console.log('⏳ Waiting for transaction to be confirmed on blockchain...');
+      console.log('🔗 Transaction Hash:', transactionHash);
+      console.log('⛓️ Blockchain Agreement ID:', blockchainAgreementId);
+      console.log('📋 Agreement ID (database):', routeState.agreementId);
+
+      // Validate blockchain ID
+      if (!blockchainAgreementId || blockchainAgreementId <= 0) {
+        console.error('❌ Invalid blockchain agreement ID:', blockchainAgreementId);
+        showAlert('Error: Failed to get valid blockchain agreement ID. Transaction may have failed.', 'error');
+        setIsApprovingAgreement(false);
+        return;
+      }
+
+      // Always try to save blockchain data (even if we don't have the ID yet)
+      try {
+        console.log('💾 Saving blockchain data to database...');
+        console.log('Blockchain data to save:', {
+          agreementId: blockchainAgreementId,
+          transactionHash: transactionHash,
+          contractAddress: import.meta.env.VITE_AGREEMENT_CONTRACT,
+        });
+        
+        const updatePayload = {
+          id: routeState.agreementId,
+          data: {
+            blockchain: {
+              agreementId: blockchainAgreementId,
+              transactionHash: transactionHash,
+              contractAddress: import.meta.env.VITE_AGREEMENT_CONTRACT,
+            }
+          }
+        };
+        
+        console.log('📤 Sending update request with payload:', JSON.stringify(updatePayload, null, 2));
+        
+        const updateResponse = await updateAgreementMutation.mutateAsync(updatePayload as any);
+        
+        console.log('✅ Blockchain data saved successfully!');
+        console.log('📋 Update response:', updateResponse);
+        
+        if (blockchainAgreementId) {
+          showAlert('Blockchain agreement created successfully!', 'success');
+        }
+      } catch (updateError: any) {
+        console.error('❌ Failed to save blockchain data to database:', updateError);
+        console.error('Error details:', updateError.response?.data);
+        showAlert('Warning: Failed to save blockchain data to database. Transaction was successful but data sync failed.', 'error');
+        // Continue with transaction recording even if blockchain data save failed
+      }
 
       // Step 2: Create transaction record in database with retry logic
       // Backend requires at least 1 confirmation before recording

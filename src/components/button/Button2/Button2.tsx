@@ -3,11 +3,12 @@ import styles from './Button2.module.css';
 
 interface ButtonProps {
     text?: string;
-    onClick?: () => void;
+    onClick?: (() => void) | undefined;
     className?: string;
+    disabled?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className }) => {
+const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className, disabled = false }) => {
     const [displayText, setDisplayText] = useState<string>(text);
     const [isHovering, setIsHovering] = useState(false);
     const intervalRef = useRef<number | null>(null);
@@ -22,6 +23,11 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
             }
         };
     }, []);
+
+    // Keep displayText in sync with prop changes when not hovering
+    useEffect(() => {
+        if (!isHovering) setDisplayText(text);
+    }, [text, isHovering]);
 
     const startScramble = () => {
         if (intervalRef.current) window.clearInterval(intervalRef.current);
@@ -70,14 +76,17 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
             className={`${styles.customButton} ${isWide ? styles.wide : ''} ${className || ''}`}
             style={{ width: `${computedWidth}px` }}
             onClick={onClick}
-            onMouseEnter={() => {
-                setIsHovering(true);
-                startScramble();
-            }}
-            onMouseLeave={() => {
-                setIsHovering(false);
-                resetText();
-            }}
+                    onMouseEnter={() => {
+                        if (disabled) return;
+                        setIsHovering(true);
+                        startScramble();
+                    }}
+                    onMouseLeave={() => {
+                        if (disabled) return;
+                        setIsHovering(false);
+                        resetText();
+                    }}
+                    disabled={disabled}
         >
             {/* Base background shape */}
             <svg className={styles.buttonBase} width="100%" height="100%" viewBox="0 0 308 99" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">

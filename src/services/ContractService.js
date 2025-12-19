@@ -203,6 +203,7 @@ export async function connectWallet() {
  * @param {string} totalValueEth - Total value in ETH (will be deposited as escrow)
  * @param {number} startDate - Unix timestamp for start date
  * @param {number} endDate - Unix timestamp for end date
+ * @returns {Promise<{transactionHash: string, agreementId: number}>} Transaction result with agreement ID
  */
 export async function createAgreement(developer, projectName, docCid, totalValueEth, startDate, endDate) {
   const totalValueWei = BigInt(Math.floor(parseFloat(totalValueEth) * 1e18));
@@ -216,7 +217,70 @@ export async function createAgreement(developer, projectName, docCid, totalValue
     value: totalValueWei,
   });
 
-  return await sendTransaction({ account, transaction });
+  const txResult = await sendTransaction({ account, transaction });
+  
+  // Wait for transaction to be mined and extract the returned agreement ID
+  console.log('⏳ Waiting for transaction to be mined to extract agreement ID...');
+  let agreementId = null;
+  let retries = 0;
+  const maxRetries = 30; // 30 attempts * 3 seconds = 90 seconds max wait
+  
+  while (retries < maxRetries && agreementId === null) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds between attempts
+      
+      // Get transaction receipt
+      const rpcClient = getRpcClient({ client, chain: sepolia });
+      const receipt = await eth_getTransactionReceipt(rpcClient, {
+        hash: txResult.transactionHash,
+      });
+      
+      if (receipt && receipt.status === 'success') {
+        console.log('✅ Transaction mined successfully');
+        
+        // Parse logs to extract the agreement ID from the contract's return value
+        // The createAgreement function returns uint256 agreementId
+        // We need to get it from the transaction simulation or use getNextId() - 1 as fallback
+        
+        // For now, use getNextId() - 1 as a reliable fallback since the transaction is confirmed
+        const nextId = await getNextId();
+        agreementId = nextId - 1;
+        
+        console.log('⛓️ Extracted agreement ID:', agreementId);
+        
+        if (agreementId <= 0) {
+          console.warn('⚠️ Invalid agreement ID, will retry...');
+          agreementId = null;
+          retries++;
+          continue;
+        }
+        
+        break;
+      } else if (receipt && receipt.status === 'reverted') {
+        throw new Error('Transaction reverted on blockchain');
+      }
+      
+      console.log(`⏳ Transaction not yet mined, retrying... (${retries + 1}/${maxRetries})`);
+      retries++;
+    } catch (error) {
+      console.warn('Error checking transaction receipt:', error);
+      retries++;
+      
+      if (retries >= maxRetries) {
+        console.error('❌ Failed to extract agreement ID after max retries');
+        throw new Error('Failed to extract agreement ID from transaction. Transaction may still be pending.');
+      }
+    }
+  }
+  
+  if (agreementId === null) {
+    throw new Error('Failed to extract agreement ID from transaction after maximum retries');
+  }
+  
+  return {
+    ...txResult,
+    agreementId: agreementId
+  };
 }
 
 /**

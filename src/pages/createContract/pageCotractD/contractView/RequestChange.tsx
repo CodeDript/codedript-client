@@ -172,7 +172,9 @@ const RequestChange: React.FC = () => {
     
     // Get blockchain agreement ID from the agreement object
     console.log('Agreement object:', agreementObj);
-    const blockchainAgreementId = agreementObj?.blockchainId || agreementObj?.agreementId || agreementObj?.blockchain?.agreementId || agreementObj?.agreementID;
+    const blockchainAgreementId = agreementObj?.blockchain?.agreementId || 
+                                   agreementObj?.blockchainId || 
+                                   agreementObj?.agreementId;
     console.log('Extracted blockchain ID:', blockchainAgreementId);
     
     if (!blockchainAgreementId) {
@@ -199,10 +201,7 @@ const RequestChange: React.FC = () => {
 
       console.log('Blockchain transaction submitted:', txResult.transactionHash);
 
-      // Step 2: Update status to 'paid' immediately (transaction hash is proof of payment)
-      await requestChangesApi.updateStatus(rawId, 'paid');
-
-      // Step 3: Record transaction with retry logic - keep button disabled until complete
+      // Step 2: Record transaction with retry logic - keep button disabled until complete
       const recordTransaction = async (attempt = 1, maxAttempts = 24) => {
         const waitTime = attempt === 1 ? 20000 : 15000; // First wait 20s, then 15s between retries
         
@@ -227,6 +226,14 @@ const RequestChange: React.FC = () => {
             setPaymentProcessingId(null); // Clear processing state on success
             await loadRequests(); // Refresh list after transaction is recorded
             showAlert('Transaction recorded successfully!', 'success');
+              // Now mark the request change as paid in the server (status change after DB record)
+              try {
+                await requestChangesApi.updateStatus(rawId, 'paid');
+                console.log(`✓ RequestChange ${rawId} marked as paid on server`);
+                await loadRequests();
+              } catch (statusErr) {
+                console.error('Failed to update request-change status after recording transaction:', statusErr);
+              }
           } catch (recordErr: any) {
             console.error(`[Transaction Recording] Attempt ${attempt} failed`);
             console.error('Full error:', recordErr);
@@ -242,6 +249,14 @@ const RequestChange: React.FC = () => {
               setPaymentProcessingId(null); // Clear processing state
               await loadRequests(); // Refresh list
               showAlert('Transaction already recorded!', 'success');
+                // Ensure request change status is 'paid' if transaction exists
+                try {
+                  await requestChangesApi.updateStatus(rawId, 'paid');
+                  console.log(`✓ RequestChange ${rawId} marked as paid (duplicate transaction case)`);
+                  await loadRequests();
+                } catch (statusErr) {
+                  console.error('Failed to update request-change status in duplicate case:', statusErr);
+                }
               return;
             }
             
