@@ -74,13 +74,23 @@
   margin-bottom: 1.5rem;
 }
 
-.profileImage {
-  width: 200px; /* 20% larger */
-  height: 200px; /* 20% larger */
+.avatarFrame {
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  object-fit: cover;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: inline-block;
   border: 8px solid #adadad;
- 
+  background-color: #0e0e0e;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background-color: #0e0e0e;
 }
 
 .profileInfo {

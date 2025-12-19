@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
 
 const cellStyle: React.CSSProperties = {
   border: '1px solid #d3d3d3',
@@ -18,11 +17,20 @@ const headerStyle: React.CSSProperties = {
   textAlign: 'left'
 };
 
+interface Package {
+  name: 'basic' | 'standard' | 'premium';
+  price: number;
+  deliveryTime: number;
+  features: string[];
+  description: string;
+}
+
 type Props = {
   onAgreeChange?: (v: boolean) => void;
+  onPackagesChange?: (packages: Package[]) => void;
 };
 
-const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
+const CreatePriceing: React.FC<Props> = ({ onAgreeChange, onPackagesChange }) => {
   const [basicPrice, setBasicPrice] = useState('5300');
   const [standardPrice, setStandardPrice] = useState('7000');
   const [premiumPrice, setPremiumPrice] = useState('9500');
@@ -41,7 +49,6 @@ const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
 
   const [agreed, setAgreed] = useState(false);
   const prevBorder = React.useRef<Map<HTMLElement, string>>(new Map());
-  const { updateFormData, formData } = useAgreement();
 
   const handleFocus = (e: React.FocusEvent<HTMLElement>) => {
     const td = (e.currentTarget as HTMLElement).closest('td') as HTMLElement | null;
@@ -62,44 +69,36 @@ const CreatePriceing: React.FC<Props> = ({ onAgreeChange }) => {
 
   useEffect(() => { onAgreeChange && onAgreeChange(agreed); }, [agreed, onAgreeChange]);
   
-  // Persist package data into AgreementContext so Review step can read it
+  // Send package data to parent via onPackagesChange
   useEffect(() => {
-    const packages = [
+    const packages: Package[] = [
       {
-        name: 'Basic',
+        name: 'basic',
         price: parseFloat(basicPrice) || 0,
-        currency: 'ETH',
         deliveryTime: parseInt(basicDelivery, 10) || 0,
-        revisions: parseInt(basicRevisions, 10) || 0,
-        features: basicFeatures ? basicFeatures.split(/\r?\n/) : []
+        features: basicFeatures ? basicFeatures.split(/\r?\n/).filter(f => f.trim()) : [],
+        description: 'Basic package with essential features'
       },
       {
-        name: 'Standard',
+        name: 'standard',
         price: parseFloat(standardPrice) || 0,
-        currency: 'ETH',
         deliveryTime: parseInt(standardDelivery, 10) || 0,
-        revisions: parseInt(standardRevisions, 10) || 0,
-        features: standardFeatures ? standardFeatures.split(/\r?\n/) : []
+        features: standardFeatures ? standardFeatures.split(/\r?\n/).filter(f => f.trim()) : [],
+        description: 'Standard package with more features'
       },
       {
-        name: 'Premium',
+        name: 'premium',
         price: parseFloat(premiumPrice) || 0,
-        currency: 'ETH',
         deliveryTime: parseInt(premiumDelivery, 10) || 0,
-        revisions: parseInt(premiumRevisions, 10) || 0,
-        features: premiumFeatures ? premiumFeatures.split(/\r?\n/) : []
+        features: premiumFeatures ? premiumFeatures.split(/\r?\n/).filter(f => f.trim()) : [],
+        description: 'Premium package with all features'
       }
     ];
 
-    // merge into existing gigData if present
-    updateFormData({ gigData: { 
-      id: formData.gigData?.id || '', 
-      title: formData.gigData?.title || '', 
-      description: formData.gigData?.description || '', 
-      ...(formData.gigData || {}), 
-      packages 
-    } });
-  }, [basicPrice, standardPrice, premiumPrice, basicDelivery, standardDelivery, premiumDelivery, basicRevisions, standardRevisions, premiumRevisions, basicFeatures, standardFeatures, premiumFeatures]);
+    if (onPackagesChange) {
+      onPackagesChange(packages);
+    }
+  }, [basicPrice, standardPrice, premiumPrice, basicDelivery, standardDelivery, premiumDelivery, basicRevisions, standardRevisions, premiumRevisions, basicFeatures, standardFeatures, premiumFeatures, onPackagesChange]);
   return (
     <>
       <h4 className={styles.sectionTitle}>Priceing</h4>

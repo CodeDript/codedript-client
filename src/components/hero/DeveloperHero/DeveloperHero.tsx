@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './DeveloperHero.module.css';
 // heroGrid removed — not used in this variant
 import heroOutline from '../../../assets/svg/heroOutline.svg';
+import userPlaceholder from '../../../assets/svg/user-placeholder.svg';
 import calenderIcon from '../../../assets/svg/calander.svg';
 import hierarchyIcon from '../../../assets/svg/hierarchy.svg';
 import starIcon from '../../../assets/svg/starIcon.svg';
@@ -21,7 +22,7 @@ interface DeveloperHeroProps {
 
 const DeveloperHero: React.FC<DeveloperHeroProps> = ({
   userName = 'Sia Croven',
-  userImage = 'https://i.pravatar.cc/150?img=47',
+  userImage = userPlaceholder,
   rating = 4.9,
   reviewCount = 127,
   userRole = 'Freelance Developer',
@@ -47,15 +48,25 @@ const DeveloperHero: React.FC<DeveloperHeroProps> = ({
       <img src={heroOutline} alt="decorative outline" className={styles.outline} />
       <div className={styles.overlay}></div>
       <div className={styles.content}>
-        <p className={styles.overline}>{userRole.includes('Freelance') ? 'Freelancer' : 'Client'}</p>
+        {/* show Developer when role suggests developer/freelance, otherwise Client */}
+        <p className={styles.overline}>{
+          (() => {
+            const role = (userRole || '').toString().toLowerCase();
+            if (role.includes('developer') || role.includes('dev') || role.includes('freelance')) return 'Developer';
+            return 'Client';
+          })()
+        }</p>
         
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
-            <img 
-              src={userImage} 
-              alt="Developer profile" 
-              className={styles.profileImage}
-            />
+            <div className={styles.avatarFrame}>
+              <img
+                src={userImage}
+                alt="Developer profile"
+                className={styles.avatarImg}
+                onError={(e) => { const t = e.currentTarget as HTMLImageElement; t.onerror = null; t.src = userPlaceholder; }}
+              />
+            </div>
             <div className={styles.profileInfo}>
               <h2 className={styles.profileName}>{userName}</h2>
               <div className={styles.profileMeta}>

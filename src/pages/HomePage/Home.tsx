@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeroMain from '../../components/hero/HeroMain/HeroMain';
 import GigCard from '../../components/card/GigCard/GigCard';
@@ -16,7 +16,7 @@ import sponsored1 from '../../assets/Sponsors/Sponsered_1.png';
 import sponsored2 from '../../assets/Sponsors/Sponsored_2.png';
 import sponsored3 from '../../assets/Sponsors/Sponsored_3.png';
 import sponsored4 from '../../assets/Sponsors/Sponsored_4.png';
-import { GigService, type Gig } from '../../api/gigService';
+import { useGigs } from '../../query/useGigs';
 
 
 import styles from './Home.module.css';
@@ -24,9 +24,7 @@ import styles from './Home.module.css';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const [featuredGigs, setFeaturedGigs] = useState<Gig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: gigsData, isLoading: gigsLoading, error: gigsError } = useGigs({ limit: 100 });
 
   const sponsors = [
     { image: sponsored1, name: 'Sponsor 1' },
@@ -35,23 +33,26 @@ const Home: React.FC = () => {
     { image: sponsored4, name: 'Sponsor 4' },
   ];
 
-  useEffect(() => {
-    const fetchFeaturedGigs = async () => {
-      try {
-        setIsLoading(true);
-        const response = await GigService.getFeaturedGigs(4);
-        setFeaturedGigs(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch featured gigs:', err);
-        setError('Failed to load gigs');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Derive gigs array from API response
+  const gigsList: any[] = Array.isArray(gigsData)
+    ? gigsData
+    : Array.isArray(gigsData?.gigs)
+    ? gigsData.gigs
+    : [];
 
-    fetchFeaturedGigs();
-  }, []);
+  // Compute top 4 gigs by rating (primary) then review count (secondary)
+  const topGigs = React.useMemo(() => {
+    return [...gigsList]
+      .sort((a, b) => {
+        const aRating = a?.developer?.reputation?.rating ?? a?.rating?.average ?? 0;
+        const bRating = b?.developer?.reputation?.rating ?? b?.rating?.average ?? 0;
+        if (bRating !== aRating) return bRating - aRating;
+        const aReviews = a?.developer?.reputation?.reviewCount ?? a?.rating?.count ?? 0;
+        const bReviews = b?.developer?.reputation?.reviewCount ?? b?.rating?.count ?? 0;
+        return bReviews - aReviews;
+      })
+      .slice(0, 4);
+  }, [gigsList]);
 
   return (
     <div className={styles.homePage}>
@@ -99,6 +100,62 @@ agreements " />
 
         </div>
       </section>
+
+      {/* How CodeDript Works - Workflow Steps */}
+      <section id="workflow" className={styles.workflowSection}>
+        <HeaderText text="How CodeDript Works" subHeader="Simple steps to secure agreements" />
+        <WorkFlow />
+      </section>
+
+      {/* Top Rated Gigs Section */}
+      <section className={styles.gameCardsSection}>
+        <div className={styles.gameCardsContainer}>
+          <HeaderText text="Trusted by Freelancers Worldwide" subHeader=" " /> 
+          <div className={styles.gigCardsGrid}>
+            {gigsLoading ? (
+              <p>Loading featured gigs...</p>
+            ) : gigsError ? (
+              <p>Error loading gigs. Please try again later.</p>
+            ) : topGigs && topGigs.length > 0 ? (
+              topGigs.map((gig: any) => {
+                const dev = typeof gig.developer === 'object' ? gig.developer : null;
+                const avatar = dev?.avatar || undefined;
+                const userName = dev?.fullname || dev?.username || 'Anonymous';
+                const skills = Array.isArray(dev?.skills) ? dev.skills.slice(0, 3) : [];
+                const gigImage = gig.images && gig.images.length > 0 ? gig.images[0] : undefined;
+                const rating = dev?.reputation?.rating ?? gig.rating?.average ?? 0;
+                const reviewCount = dev?.reputation?.reviewCount ?? gig.rating?.count ?? 0;
+                const basicPackage = Array.isArray(gig.packages)
+                  ? (gig.packages.find((p: any) => p.name === 'basic') || gig.packages[0])
+                  : undefined;
+                const price = basicPackage?.price ?? gig.pricing?.amount ?? 0;
+                const currency = basicPackage?.currency ?? gig.pricing?.currency ?? 'USD';
+
+                return (
+                  <GigCard
+                    key={gig._id}
+                    gigId={gig._id}
+                    title={gig.title || 'Untitled Gig'}
+                    description={gig.description || 'No description available'}
+                    rating={rating}
+                    reviewCount={reviewCount}
+                    userImage={avatar}
+                    userName={userName}
+                    userRole="Freelance Developer"
+                    price={price}
+                    currency={currency}
+                    skills={skills}
+                    gigImage={gigImage}
+                  />
+                );
+              })
+            ) : (
+              <p>No gigs available at the moment.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Promotional Strip */}
       <section className={styles.promoStrip} aria-label="Earn with us promotional">
         <div className={styles.promoInner}>
@@ -116,57 +173,6 @@ agreements " />
           </div>
         </div>
       </section>
-
-     
-      
-      {/* Game Cards Section */}
-      <section className={styles.gameCardsSection}>
-        <div className={styles.gameCardsContainer}>
-         
-          <HeaderText text="How CodeDript Works" subHeader="Simple steps to secure agreements " /> 
-          <div className={styles.gigCardsGrid}>
-            {isLoading ? (
-              <p>Loading featured gigs...</p>
-            ) : error ? (
-              <p>Error loading gigs. Please try again later.</p>
-            ) : featuredGigs.length > 0 ? (
-              featuredGigs.map((gig) => {
-                // Defensive checks: developer or profile may be null
-                const dev = gig.developer || { profile: {}, reputation: { rating: 0, reviewCount: 0 } };
-                const profile = dev.profile || {};
-                const reputation = dev.reputation || { rating: 0, reviewCount: 0 };
-                const avatar = profile.avatar || undefined;
-                const gigImage = (gig.images && gig.images[0] && gig.images[0].url) || undefined;
-
-                return (
-                  <GigCard 
-                    key={gig._id}
-                    gigId={gig._id}
-                    title={gig.title || 'Untitled Gig'}
-                    description={gig.description || 'No description available'}
-                    rating={reputation.rating ?? gig.rating?.average ?? 0}
-                    reviewCount={reputation.reviewCount ?? gig.rating?.count ?? 0}
-                    userImage={avatar}
-                    userName={profile.name || 'Anonymous'}
-                    userRole="Freelance Developer"
-                    price={gig.pricing?.amount ?? 0}
-                    currency={gig.pricing?.currency ?? 'USD'}
-                    skills={Array.isArray(profile.skills) ? profile.skills.slice(0, 3) : []}
-                    gigImage={gigImage}
-                  />
-                );
-              })
-            ) : (
-              <p>No gigs available at the moment.</p>
-            )}
-          </div>
-        </div>
-      </section>
-      {/* Workflow Section */}
-      <div id="workflow">
-        <HeaderText text="Trusted by Freelancers Worldwide" subHeader=" " />   
-        <WorkFlow />
-      </div>
 
       <About />
       <SponsorSection sponsors={sponsors} />      

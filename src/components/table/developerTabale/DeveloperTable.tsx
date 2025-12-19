@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './DeveloperTable.module.css';
-import { AgreementService, type Agreement } from '../../../api/agreementService';
-import { GigService, type Gig } from '../../../api/gigService';
-import { useAuth } from '../../../context/AuthContext';
+import { useUserAgreements } from '../../../query/useAgreements';
+import { useGigsByDeveloper } from '../../../query/useGigs';
+import type { Agreement } from '../../../types';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
 export type TabKey = 'myGigs' | 'incomingContract' | 'activeContract' | 'transactions' | 'ongoingContract';
@@ -35,13 +35,13 @@ const TabLabel: Record<TabKey, string> = {
 const getStatusesForTab = (tab: TabKey): string[] => {
   switch (tab) {
     case 'incomingContract':
-      return ['pending_developer'];
+      return ['pending'];
     case 'activeContract':
-      return ['active', 'in_progress', 'escrow_deposit'];
+      return ['active', 'in-progress', 'completed', 'paid'];
     case 'transactions':
       return []; // Transactions are fetched separately
     case 'ongoingContract':
-      return ['awaiting_final_approval'];
+      return ['priced', 'rejected', 'cancelled'];
     default:
       return [];
   }
@@ -50,20 +50,17 @@ const getStatusesForTab = (tab: TabKey): string[] => {
 // Map agreement status to display status
 const getDisplayStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
-    'draft': 'Draft',
-    'pending_developer': 'Incoming',
-    'pending_client': 'Pending',
-    'pending_signatures': 'Pending',
-    'escrow_deposit': 'Depositing',
-    'active': 'Active',
-    'in_progress': 'Active',
-    'awaiting_final_approval': 'Ongoing',
-    'completed': 'Completed',
+    'pending': 'Incoming',
+    'priced': 'Priced',
+    'rejected': 'Rejected',
     'cancelled': 'Cancelled',
-    'disputed': 'Disputed'
+    'active': 'Active',
+    'in-progress': 'In Progress',
+    'completed': 'Completed',
+    'paid': 'Paid'
   };
   return statusMap[status] || status;
-};
+}
 
 // Convert Agreement to DevRow for display
 const agreementToRow = (agreement: Agreement): DevRow => {
@@ -73,14 +70,19 @@ const agreementToRow = (agreement: Agreement): DevRow => {
     year: 'numeric'
   });
 
+  // Get client name from populated field
+  const clientName = (agreement.client && typeof agreement.client === 'object') 
+    ? (agreement.client.fullname || agreement.client.email || 'Unknown')
+    : 'Unknown';
+
   return {
     id: agreement._id,
-    order: agreement.agreementId || agreement._id.slice(-4).toUpperCase(),
-    title: agreement.project.name,
-    client: agreement.client?.profile?.name || agreement.client?.email || agreement.clientInfo?.name || 'Unknown Client',
+    order: agreement.agreementID || agreement._id.slice(-4).toUpperCase(),
+    title: agreement.title || 'Untitled Agreement',
+    client: clientName,
     date,
     status: getDisplayStatus(agreement.status),
-    amount: `${agreement.financials.totalValue} ${agreement.financials.currency}`
+    amount: `${agreement.financials.totalValue} ETH`
   };
 };
 
@@ -94,16 +96,59 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
-  const auth = useAuth();
   const navigate = useNavigate();
+  
+  // Mock user from localStorage
+  const storedUser = localStorage.getItem('user');
+  const mockUser = storedUser ? JSON.parse(storedUser) : null;
 
-  // prevent stale fetches overwriting UI — use a request token
-  const requestRef = React.useRef(0);
+  // developer id and query for gigs
+  const loggedInId = developerId || mockUser?._id;
+  const gigsQuery = useGigsByDeveloper(loggedInId);
+
+  // Fetch agreements using React Query
+  const { data: agreementsData, isLoading: agreementsLoading, error: apiError } = useUserAgreements();
+
+  // Filter and transform agreements based on active tab
+  const { filteredAgreements, displayRows: agreementRows } = useMemo(() => {
+    if (!agreementsData?.data?.agreements || !Array.isArray(agreementsData.data.agreements)) {
+      return { filteredAgreements: [], displayRows: [] };
+    }
+
+    const allAgreements = agreementsData.data.agreements;
+
+    // Handle transactions tab separately
+    if (activeTab === 'transactions') {
+      const txAgreements = allAgreements.filter(a => (a as any).blockchain?.transactionHash);
+      const rows = txAgreements.map(a => ({
+        ...agreementToRow(a),
+        transactionHash: (a as any).blockchain.transactionHash
+      }));
+      return { filteredAgreements: txAgreements, displayRows: rows };
+    }
+
+    // Get the statuses for the current tab
+    const statuses = getStatusesForTab(activeTab);
+    
+    // Filter agreements by status
+    const filtered = allAgreements.filter(a => statuses.includes(a.status));
+    
+    // Convert to display rows
+    const rows = filtered.map(agreementToRow);
+    
+    return { filteredAgreements: filtered, displayRows: rows };
+  }, [agreementsData, activeTab]);
 
   const handleAgreementClick = (rowId: string) => {
+    // Navigate to gig view when clicking a gig in 'My Gigs' tab
+    if (activeTab === 'myGigs') {
+      navigate(`/gigview/${rowId}`);
+      return;
+    }
+
     // Handle transactions tab separately - open modal
     if (activeTab === 'transactions') {
-      const agreement = agreements.find(a => a._id === rowId);
+      const agreement = filteredAgreements.find(a => a._id === rowId);
       if (agreement && (agreement as any).blockchain?.transactionHash) {
         setSelectedTxHash((agreement as any).blockchain.transactionHash);
         setSelectedBlockchainId((agreement as any).blockchain?.agreementId);
@@ -111,15 +156,39 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       return;
     }
     
-    const agreement = agreements.find(a => a._id === rowId);
-    if (!agreement) return;
+    // Use filteredAgreements instead of agreements state for more reliable data
+    const agreement = filteredAgreements.find(a => a._id === rowId);
+    if (!agreement) {
+      return;
+    }
 
     // For incoming contracts, navigate to payment step (developer sets payment terms)
     if (activeTab === 'incomingContract') {
+      // Transform agreement data to match expected structure in contract creation page
+      const transformedAgreement = {
+        ...agreement,
+        project: {
+          name: agreement.title,
+          description: agreement.description,
+          expectedEndDate: agreement.endDate
+        },
+        clientInfo: typeof agreement.client === 'object' ? {
+          name: agreement.client.fullname || '',
+          email: agreement.client.email || '',
+          walletAddress: agreement.client.walletAddress || ''
+        } : undefined,
+        developerInfo: typeof agreement.developer === 'object' ? {
+          name: agreement.developer.fullname || '',
+          email: agreement.developer.email || '',
+          walletAddress: agreement.developer.walletAddress || ''
+        } : undefined,
+        financials: agreement.financials
+      };
+      
       navigate('/create-contract', {
         state: {
           agreementId: agreement._id,
-          agreement: agreement,
+          agreement: transformedAgreement,
           isDeveloperView: true
         }
       });
@@ -142,132 +211,44 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   React.useEffect(() => {
     // Handle myGigs separately (fetch gigs owned by the logged-in developer)
     if (activeTab === 'myGigs') {
-      const fetchGigs = async () => {
-        const reqId = ++requestRef.current;
+      if (gigsQuery.isLoading) {
         setLoading(true);
         setError(null);
-
-        try {
-          // determine developer id from prop or auth context
-          const loggedInId = developerId || auth.user?._id;
-          if (!loggedInId) {
-            setRows([]);
-            return;
-          }
-
-          // fetch gigs owned by the developer, include inactive so owner sees drafts
-          const response = await GigService.getAllGigs({ developer: loggedInId, page: 1, limit: 100, includeInactive: true });
-          if (requestRef.current !== reqId) return;
-
-          const gigs: Gig[] = response.data || [];
-
-          const displayRows = gigs.map(g => ({
-            id: g._id,
-            order: (g.gigId ? g.gigId.toString() : g._id.slice(-4).toUpperCase()),
-            title: g.title,
-            client: g.developer.profile?.name || g.developer.email,
-            date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-            status: (g.status || '').replace(/^(.)/, s => s.toUpperCase()),
-            amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
-          }));
-
-          setRows(displayRows);
-        } catch (err) {
-          if (requestRef.current !== reqId) return;
-          console.error('Error fetching gigs:', err);
-          setError('Failed to load gigs');
-          setRows([]);
-        } finally {
-          if (requestRef.current === reqId) setLoading(false);
-        }
-      };
-
-      fetchGigs();
-      return;
-    }
-
-    // Handle transactions tab separately: fetch agreements that have blockchain transaction hashes
-    if (activeTab === 'transactions') {
-      const fetchTxFromAgreements = async () => {
-        const reqId = ++requestRef.current;
-        setLoading(true);
-        setError(null);
-
-        try {
-          const resp = await AgreementService.getAllAgreements({ role: 'developer', limit: 200 });
-
-          if (requestRef.current !== reqId) return;
-
-          const allAgreements = resp.data || [];
-          const txAgreements = allAgreements.filter(a => (a as any).blockchain && (a as any).blockchain.transactionHash);
-          const displayRows = txAgreements.map(a => ({
-            ...agreementToRow(a),
-            transactionHash: (a as any).blockchain.transactionHash
-          }));
-
-          setAgreements(txAgreements as Agreement[]);
-          setRows(displayRows);
-        } catch (err) {
-          if (requestRef.current !== reqId) return;
-          console.error('Error fetching transactions from agreements:', err);
-          setError('Failed to load transactions');
-          setRows([]);
-        } finally {
-          if (requestRef.current === reqId) setLoading(false);
-        }
-      };
-
-      fetchTxFromAgreements();
-      return;
-    }
-
-    const fetchAgreements = async () => {
-      const reqId = ++requestRef.current;
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Get the statuses for the current tab
-        const statuses = getStatusesForTab(activeTab);
-        
-        // Fetch agreements for each status
-        const promises = statuses.map(status =>
-          AgreementService.getAllAgreements({ 
-            role: 'developer',
-            status,
-            limit: 100 
-          })
-        );
-
-        const responses = await Promise.all(promises);
-        
-        // only set state if this request is the latest
-        if (requestRef.current !== reqId) return;
-
-        // Combine all agreements from different statuses
-        const allAgreements = responses.flatMap(response => response.data || []);
-        
-        // Convert to display rows
-        const displayRows = allAgreements.map(agreementToRow);
-        
-        setAgreements(allAgreements);
-        setRows(displayRows);
-      } catch (err) {
-        if (requestRef.current !== reqId) return;
-        console.error('Error fetching agreements:', err);
-        setError('Failed to load contracts');
         setRows([]);
-      } finally {
-        if (requestRef.current === reqId) {
-          setLoading(false);
-        }
+        return;
       }
-    };
 
-    fetchAgreements();
+      if (gigsQuery.isError) {
+        setLoading(false);
+        setError('Failed to load gigs');
+        setRows([]);
+        return;
+      }
 
-    return () => { /* next call will bump requestRef.current */ };
-  }, [activeTab, developerId]);
+      const res = gigsQuery.data;
+      const gigsList = res?.gigs || [];
+
+      const displayRows = gigsList.map((g: any) => ({
+        id: g._id,
+        order: String(g.gigID || g._id?.slice(-4)?.toUpperCase() || ''),
+        title: g.title,
+        client: g.developer?.username || g.developer?.email || g.developer?.walletAddress || 'Unknown',
+        date: new Date(g.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: g.isActive ? 'Active' : 'Inactive',
+        amount: g.pricing ? `${g.pricing.amount} ${g.pricing.currency}` : '—'
+      }));
+
+      setRows(displayRows);
+      setLoading(false);
+      return;
+    }
+
+    // For agreement tabs, use filtered data from React Query
+    setAgreements(filteredAgreements);
+    setRows(agreementRows);
+    setLoading(agreementsLoading);
+    setError(apiError ? 'Failed to load agreements' : null);
+  }, [activeTab, gigsQuery.isLoading, gigsQuery.isError, gigsQuery.data, filteredAgreements, agreementRows, agreementsLoading, apiError]);
 
   return (
     <div className={styles.tableWrapper1}>

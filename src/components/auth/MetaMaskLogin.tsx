@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import authStyles from './AuthForm.module.css';
 import Button3B from '../button/Button3Black1/Button3Black1';
 import { showAlert } from './Alert';
-import { useAuth } from '../../context/AuthContext';
+import { connectWallet } from '../../services/ContractService';
+import { useWalletLogin } from '../../query/useAuth';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface MetaMaskLoginProps {
   onLoginSuccess?: () => void;
@@ -11,17 +12,37 @@ interface MetaMaskLoginProps {
 }
 
 const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }) => {
-  const { loginWithWallet, clearError } = useAuth();
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const navigate = useNavigate();
+  
+  const walletLoginMutation = useWalletLogin();
+  const { setUser, setToken } = useAuthContext();
 
   // Connect wallet and login
   const handleConnect = async () => {
     setIsConnecting(true);
-    clearError();
 
     try {
-      await loginWithWallet();
+      // Connect to MetaMask and get wallet address
+      const account = await connectWallet();
+      const walletAddress = account.address.toLowerCase();
+
+      // Call wallet login API
+      const response = await walletLoginMutation.mutateAsync({ walletAddress });
+      
+      // Extract data from response
+      const token = response?.token || response?.data?.token;
+      const user = response?.user || response?.data?.user;
+      const isNewUser = response?.isNewUser || response?.data?.isNewUser;
+      const profileComplete = response?.profileComplete || response?.data?.profileComplete;
+
+      // Update auth context
+      if (token) {
+        setToken(token);
+      }
+      if (user) {
+        setUser(user);
+      }
+      
       showAlert('Login successful!', 'success');
       
       // Call success callback if provided
@@ -29,42 +50,20 @@ const MetaMaskLogin: React.FC<MetaMaskLoginProps> = ({ onLoginSuccess, onClose }
         onLoginSuccess();
       }
 
-      // Close modal after short delay
+      // Close modal after short delay — do not navigate anywhere
       setTimeout(() => {
         if (onClose) {
           onClose();
         }
-
-        // Route based on user role
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          const role = userData.role || 'client';
-          
-          // Route to appropriate dashboard
-          if (role === 'developer') {
-            navigate('/developer');
-          } else if (role === 'client') {
-            navigate('/client');
-          } else {
-            // Default to client dashboard
-            navigate('/client');
-          }
-        }
-      }, 1500);
+      }, 500);
     } catch (err: any) {
       console.error('Login error:', err);
-      showAlert(err.message || 'Failed to connect wallet', 'error');
-      // clear context error so it doesn't linger
-      clearError();
+      const errorMessage = err.message || 'Failed to connect wallet';
+      showAlert(errorMessage, 'error');
     } finally {
       setIsConnecting(false);
     }
   };
-
-  // Show error from context if any
-  // Don't automatically show context error on every render here to avoid duplicate alerts.
-  // Errors are handled in the connect flow's catch block below.
 
   return (
     <div className={authStyles.metaMaskContainer}>

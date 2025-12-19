@@ -17,27 +17,42 @@ import partiesIcon from '../../../assets/contractSvg/parties.svg';
 import paymentIcon from '../../../assets/contractSvg/paymentTerms.svg';
 import filesIcon from '../../../assets/contractSvg/files & terms.svg';
 import reviewIcon from '../../../assets/contractSvg/Review.svg';
-import { useAgreement } from '../../../context/AgreementContext';
 import ChatWidget from '../../../components/chat/ChatWidget';
 import Footer from '../../../components/footer/Footer';
+import { useAgreementData } from '../../../context/AgreementDataContext';
+import { agreementsApi } from '../../../api/agreements.api';
+import { transactionsApi } from '../../../api/transactions.api';
+import { showAlert } from '../../../components/auth/Alert';
+import { useGig } from '../../../query/useGigs';
+import { useUpdateAgreement, useUpdateAgreementStatus } from '../../../query/useAgreements';
+import { useCreateAgreement } from '../../../query/useAgreements';
+import { createAgreement as createBlockchainAgreement, getTransactionDetails } from '../../../services/ContractService';
+
 
 const PageCotractD: React.FC = () => {
+  const { agreementData, setProjectDetails, setPartiesDetails, setFilesAndTerms, setPaymentDetails, setGigId: setContextGigId, setDeveloperReceivingAddress: setContextDeveloperAddress, resetAgreementData } = useAgreementData();
   const [step, setStep] = useState(1);
+  const [gigId, setGigId] = useState<string | undefined>(undefined);
+  const [packageId, setPackageId] = useState<string | undefined>(undefined);
+  const gigQuery = useGig(gigId || '');
+  const updateAgreementMutation = useUpdateAgreement();
+  const updateStatusMutation = useUpdateAgreementStatus();
+  const createAgreementMutation = useCreateAgreement();
   const [title, setTitle] = useState('Website Redesign Project');
   const [description, setDescription] = useState('Describe the project scope, deliverables, and requirement');
   // developerWallet: the developer's profile wallet (used to fetch developer info)
   const [developerWallet, setDeveloperWallet] = useState('');
   // developerReceivingAddress: the Ethereum address the client will send payments to
   const [developerReceivingAddress, setDeveloperReceivingAddress] = useState('');
-  // gigId: optional ID used to fetch the gig and obtain developer wallet
-  const [gigId, setGigId] = useState<string | undefined>(undefined);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   // Track if viewing as developer (from incoming agreement) - disables previous button
   const [isDeveloperView, setIsDeveloperView] = useState(false);
   // Track if viewing as client (from pending agreement) - shows review step
   const [isClientView, setIsClientView] = useState(false);
 
-  const { uploadFilesToIPFS, updateFormData, formData, createAgreement } = useAgreement();
+  // Mock form data
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFilesCids, setUploadedFilesCids] = useState<string[]>([]);
 
   // Parties
   const [clientName, setClientName] = useState('Devid kamron');
@@ -50,15 +65,10 @@ const PageCotractD: React.FC = () => {
   const [value, setValue] = useState('5000');
   const [currency, setCurrency] = useState('ETH');
   const [deadline, setDeadline] = useState('Sep 23, 2025');
-  const [milestones, setMilestones] = useState([{ title: 'Reasons', amount: '5000' }]);
+  const [milestones, setMilestones] = useState([{ title: 'Reasons' }]);
 
   // Files & terms
   const [filesNote, setFilesNote] = useState('Any additional terms, conditions, or special requirement ...');
-  // uploaded files - use context files
-  const uploadedFiles = formData.uploadedFiles;
-  const setUploadedFiles = (files: File[]) => {
-    updateFormData({ uploadedFiles: files });
-  };
   // payment confirmation (developer accepted contract)
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [isAcceptingAgreement, setIsAcceptingAgreement] = useState(false);
@@ -80,6 +90,15 @@ const PageCotractD: React.FC = () => {
 
   useEffect(() => {
     if (routeState) {
+      // Route state received; populate fields when present
+      // Extract gigId and packageId from route state
+      if (routeState.gigId) {
+        setGigId(routeState.gigId);
+      }
+      if (routeState.packageId) {
+        setPackageId(routeState.packageId);
+      }
+      
       // Check if this is a client viewing a pending agreement for review
       if (routeState.agreementId && routeState.isClientView) {
         setIsClientView(true);
@@ -88,23 +107,44 @@ const PageCotractD: React.FC = () => {
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          setTitle(agreement.project?.name || '');
-          setDescription(agreement.project?.description || '');
+          
+          // Set basic agreement info (direct fields)
+          setTitle(agreement.title || '');
+          setDescription(agreement.description || '');
           setValue(agreement.financials?.totalValue?.toString() || '0');
-          setCurrency(agreement.financials?.currency || 'ETH');
-          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
-          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
-          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
-          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
-          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
-          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
-          setFilesNote(agreement.terms?.additionalTerms || '');
+          setCurrency('ETH'); // Default currency
+          
+          // Format deadline
+          if (agreement.endDate) {
+            const endDate = new Date(agreement.endDate);
+            setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
+          }
+          
+          // Extract client info (populated User object)
+          if (typeof agreement.client === 'object' && agreement.client) {
+            setClientName(agreement.client.fullname || agreement.client.username || '');
+            setClientEmail(agreement.client.email || '');
+            setClientWallet(agreement.client.walletAddress || '');
+          }
+          
+          // Extract developer info (populated User object)
+          if (typeof agreement.developer === 'object' && agreement.developer) {
+            setDeveloperWallet(agreement.developer.walletAddress || '');
+            setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
+          }
+          
+          // Extract terms/notes (if available)
+          setFilesNote(agreement.terms || agreement.additionalTerms || '');
+          
+          // Extract project files IPFS hash (documents is array)
+          if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
+            setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
+          }
           
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
-              title: m.title || '',
-              amount: m.financials?.value?.toString() || m.amount?.toString() || '0'
+              title: m.title || m.name || ''
             }));
             setMilestones(loadedMilestones);
           }
@@ -118,29 +158,41 @@ const PageCotractD: React.FC = () => {
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          setTitle(agreement.project?.name || '');
-          setDescription(agreement.project?.description || '');
-          setValue(agreement.financials?.totalValue?.toString() || '0');
-          setCurrency(agreement.financials?.currency || 'ETH');
-          setDeadline(agreement.project?.expectedEndDate ? new Date(agreement.project.expectedEndDate).toLocaleDateString() : '');
-          setClientName(agreement.clientInfo?.name || agreement.client?.profile?.name || '');
-          setClientEmail(agreement.clientInfo?.email || agreement.client?.email || '');
-          setClientWallet(agreement.clientInfo?.walletAddress || agreement.client?.walletAddress || '');
-          setDeveloperWallet(agreement.developerInfo?.walletAddress || agreement.developer?.walletAddress || '');
-          setDeveloperReceivingAddress(agreement.developerInfo?.walletAddress || '');
           
-          // Extract project files IPFS hash for download functionality
-          if (agreement.documents?.projectFiles && agreement.documents.projectFiles.length > 0) {
-            setProjectFilesIpfsHash(agreement.documents.projectFiles[0].ipfsHash || '');
-          } else if (agreement.documents?.contractPdf?.ipfsHash) {
-            setProjectFilesIpfsHash(agreement.documents.contractPdf.ipfsHash);
+          // Set basic agreement info (direct fields)
+          setTitle(agreement.title || '');
+          setDescription(agreement.description || '');
+          setValue(agreement.financials?.totalValue?.toString() || '0');
+          setCurrency('ETH'); // Default currency
+          
+          // Format deadline
+          if (agreement.endDate) {
+            const endDate = new Date(agreement.endDate);
+            setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
+          }
+          
+          // Extract client info (populated User object)
+          if (typeof agreement.client === 'object' && agreement.client) {
+            setClientName(agreement.client.fullname || agreement.client.username || '');
+            setClientEmail(agreement.client.email || '');
+            setClientWallet(agreement.client.walletAddress || '');
+          }
+          
+          // Extract developer info (populated User object)
+          if (typeof agreement.developer === 'object' && agreement.developer) {
+            setDeveloperWallet(agreement.developer.walletAddress || '');
+            setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
+          }
+          
+          // Extract project files IPFS hash (documents is array)
+          if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
+            setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
           }
           
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
-              title: m.title || '',
-              amount: m.amount?.toString() || '0'
+              title: m.title || m.name || ''
             }));
             setMilestones(loadedMilestones);
           }
@@ -162,19 +214,6 @@ const PageCotractD: React.FC = () => {
         // do NOT auto-fill the receiving address from the developer profile; client must enter it
       }
     }
-    
-    // Sync context with route data
-    updateFormData({
-      projectName: routeState?.title || title,
-      projectDescription: routeState?.description 
-        ? (Array.isArray(routeState.description) ? routeState.description.join('\n') : routeState.description)
-        : description,
-      gigId: routeState?.gigId || gigId,
-      developerWallet: routeState?.developerWallet || routeState?.developerId || developerWallet,
-      clientWallet: routeState?.clientWallet || clientWallet,
-      clientName: routeState?.clientName || clientName,
-      clientEmail: routeState?.clientEmail || clientEmail
-    });
   }, [routeState]);
 
   const navigate = useNavigate();
@@ -183,15 +222,12 @@ const PageCotractD: React.FC = () => {
     // If moving from step 3 (FilesTermsStep) to step 4, upload files to IPFS first
     if (step === 3 && uploadedFiles.length > 0) {
       setIsUploadingFiles(true);
-      const result = await uploadFilesToIPFS();
+      // Mock file upload
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const mockCids = uploadedFiles.map((_, i) => `Qm${Math.random().toString(36).substring(7)}`);
+      setUploadedFilesCids(mockCids);
       setIsUploadingFiles(false);
-      
-      if (!result.success) {
-        alert(`File upload failed: ${result.error || 'Unknown error'}`);
-        return; // Don't proceed to next step
-      }
-      
-      console.log('Files uploaded to IPFS. CIDs:', result.cids);
+      console.log('Mock files uploaded to IPFS. CIDs:', mockCids);
     }
     
     setStep((s) => Math.min(5, s + 1));
@@ -206,58 +242,107 @@ const PageCotractD: React.FC = () => {
 
   const handleCreateContract = async () => {
     console.log('handleCreateContract called');
+    setIsUploadingFiles(true);
     
-    // Upload files to IPFS first if any files are present
-    let uploadedCids: string[] = [];
-    if (uploadedFiles.length > 0) {
-      console.log('Uploading files to IPFS...');
-      setIsUploadingFiles(true);
-      const result = await uploadFilesToIPFS();
-      setIsUploadingFiles(false);
+    try {
+      // Sync all data to context before creating agreement
+      setProjectDetails(title, description);
+      setPartiesDetails(clientName, clientEmail, clientWallet, developerWallet);
+      setFilesAndTerms(uploadedFiles, filesNote);
+      setPaymentDetails(value, currency, deadline, milestones);
+      if (gigId) setContextGigId(gigId);
+      if (developerReceivingAddress) setContextDeveloperAddress(developerReceivingAddress);
       
-      if (!result.success) {
-        alert(`File upload failed: ${result.error || 'Unknown error'}`);
-        return; // Don't proceed if upload failed
+      // Validate required data
+      if (!gigId) {
+        showAlert('Gig ID is required to create an agreement', 'error');
+        return;
+      }
+
+      if (!packageId) {
+        showAlert('Package ID is required to create an agreement', 'error');
+        return;
+      }
+
+      if (!gigQuery.data) {
+        showAlert('Gig data not loaded. Please wait and try again.', 'error');
+        return;
+      }
+
+      const gig = gigQuery.data as any;
+      const developerId = typeof gig.developer === 'object' ? gig.developer._id : gig.developer;
+      
+      console.log('🔍 Agreement Data Debug:');
+      console.log('  - Developer ID:', developerId);
+      console.log('  - Gig ID:', gigId);
+      console.log('  - Package ID:', packageId);
+      console.log('  - Title:', title);
+      console.log('  - Description:', description);
+      console.log('  - Milestones:', milestones);
+        // Agreement creation: prepare and send FormData
+      
+      // Prepare FormData for file upload
+      const formData = new FormData();
+      
+      // Required fields per server validation
+      formData.append('developer', developerId);
+      formData.append('gig', gigId);
+      formData.append('packageId', packageId);
+      formData.append('title', title);
+      formData.append('description', description);
+      
+      // Milestones (stringify as JSON)
+      formData.append('milestones', JSON.stringify(milestones));
+      
+      // Append documents (not projectFiles)
+      uploadedFiles.forEach((file) => {
+        formData.append('documents', file);
+      });
+      
+      console.log('📤 Creating agreement via API...');
+      console.log('📋 FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: [File] ${value.name}`);
+        } else {
+          console.log(`  ${key}:`, value);
+        }
+      }
+      // Call the API via mutation so React Query invalidates caches
+      const response = await createAgreementMutation.mutateAsync(formData as any);
+
+      console.log('✅ Agreement created successfully:', response);
+      // Show success message
+      showAlert(response.message || 'Agreement created successfully!', 'success');
+      
+      // Reset context and navigate
+      resetAgreementData();
+      
+      // Navigate to client profile after short delay
+      setTimeout(() => {
+        navigate('/client');
+      }, 1500);
+      
+    } catch (error: any) {
+      console.error('❌ Failed to create agreement:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to create agreement';
+      
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        // Validation errors
+        errorMessage = error.response.data.errors.map((e: any) => e.msg).join(', ');
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
-      console.log('Files uploaded to IPFS. CIDs:', result.cids);
-      uploadedCids = result.cids;
+      showAlert(errorMessage, 'error');
+    } finally {
+      setIsUploadingFiles(false);
     }
-    
-    // Update context with ALL form data including uploaded CIDs
-    updateFormData({
-      projectName: title,
-      projectDescription: description,
-      clientName,
-      clientEmail,
-      clientWallet,
-      developerReceivingAddress,
-      totalValue: value,
-      currency,
-      deadline,
-      milestones,
-      filesNote,
-      uploadedFilesCids: uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids
-    });
-    
-    // Wait for context to update
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // Create agreement via API with the uploaded CIDs
-    console.log('Creating agreement with CIDs:', uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
-    setIsUploadingFiles(true);
-    const result = await createAgreement(uploadedCids.length > 0 ? uploadedCids : formData.uploadedFilesCids);
-    setIsUploadingFiles(false);
-    
-    if (!result.success) {
-      alert(`Agreement creation failed: ${result.error || 'Unknown error'}`);
-      return;
-    }
-    
-    console.log('Agreement created successfully with ID:', result.agreementId);
-
-    // Navigate to client profile page after successful agreement creation
-    navigate('/client');
   };
 
   const handleFinish = () => {
@@ -275,7 +360,7 @@ const PageCotractD: React.FC = () => {
       deadline,
       milestones,
       filesNote,
-      files: uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+      files: uploadedFiles.map((f: any) => ({ name: f.name, size: f.size })),
     };
     // navigate to the contract rules page inside contractView
     navigate('/create-contract/rules', { state: payload });
@@ -287,35 +372,82 @@ const PageCotractD: React.FC = () => {
       return;
     }
 
+    if (!paymentConfirmed) {
+      setAcceptError('Please confirm payment terms and milestones');
+      return;
+    }
+
     setIsAcceptingAgreement(true);
     setAcceptError(null);
 
     try {
-      const { AgreementService } = await import('../../../api/agreementService');
-      
-      const result = await AgreementService.developerAcceptAgreement(
-        routeState.agreementId,
-        {
+      // Step 1: Update agreement with payment details
+      await updateAgreementMutation.mutateAsync({
+        id: routeState.agreementId,
+        data: {
           totalValue: parseFloat(value) || 0,
-          currency: currency
-        },
-        milestones
-      );
+          endDate: deadline,
+          milestones: milestones.map(m => ({
+            title: m.title,
+            description: '',
+            status: 'pending' as const,
+            previews: [],
+            completedAt: null
+          }))
+        }
+      });
 
-      if (result.success) {
-        console.log('✅ Developer accepted agreement successfully');
-        // Navigate to developer profile
+      // Step 2: Update status to "priced"
+      await updateStatusMutation.mutateAsync({
+        id: routeState.agreementId,
+        status: 'priced'
+      });
+
+      showAlert('Agreement pricing submitted successfully!', 'success');
+      
+      // Navigate to developer profile
+      setTimeout(() => {
         navigate('/developer');
-      } else {
-        setAcceptError('Failed to accept agreement');
-      }
+      }, 1500);
     } catch (error: any) {
       console.error('Error accepting agreement:', error);
-      setAcceptError(error.message || 'Failed to accept agreement');
+      const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to accept agreement';
+      setAcceptError(errorMessage);
+      showAlert(errorMessage, 'error');
     } finally {
       setIsAcceptingAgreement(false);
     }
   };
+
+  // Normalize various date inputs to UNIX seconds.
+  // Accepts: ISO date strings, numeric seconds, numeric milliseconds.
+  function parseToUnixSeconds(input?: any): number {
+    if (!input) return Math.floor(Date.now() / 1000);
+
+    // If it's already a number
+    if (typeof input === 'number') {
+      // If value looks like seconds (<= 1e11), convert to ms then to seconds
+      if (input < 1e11) {
+        return Math.floor(input);
+      }
+      // If it's milliseconds (>= 1e11), convert to seconds
+      return Math.floor(input / 1000);
+    }
+
+    // If numeric string
+    if (typeof input === 'string' && /^\d+$/.test(input)) {
+      const n = parseInt(input, 10);
+      if (n < 1e11) return Math.floor(n);
+      return Math.floor(n / 1000);
+    }
+
+    // Otherwise try to parse as date string
+    const t = Date.parse(input);
+    if (!isNaN(t)) return Math.floor(t / 1000);
+
+    // Fallback to now
+    return Math.floor(Date.now() / 1000);
+  }
 
   const handleClientApprove = async () => {
     if (!routeState?.agreementId) {
@@ -334,110 +466,153 @@ const PageCotractD: React.FC = () => {
     try {
       const agreement = routeState.agreement;
       
-      // Step 1: Create agreement on blockchain with developer-assigned payment terms
-      console.log('📝 Creating agreement on blockchain...');
+      // Extract agreement data
+      const developerWalletAddress = agreement?.developer?.walletAddress || developerReceivingAddress;
+      const projectName = agreement?.project?.name || title;
+      const documentsIpfsHash = agreement?.documents?.[0]?.ipfsHash || 'QmDefaultDocHash'; // Use first document's IPFS hash
+      const totalValue = agreement?.financials?.totalValue?.toString() || value;
       
-      // Import blockchain service
-      const { createAgreement: createBlockchainAgreement } = await import('../../../services/ContractService');
-      const { uploadFileToIPFS } = await import('../../../services/agreementCreationService');
-      
-      // Prepare agreement data for blockchain
-      const developerWalletAddr = (agreement.developerInfo?.walletAddress || '').toLowerCase().trim();
-      const projectName = agreement.project?.name || title;
-      const totalValueEth = agreement.financials?.totalValue?.toString() || value;
-      
-      // Upload metadata to IPFS if not already uploaded
-      let ipfsHash = agreement.documents?.contractPdf?.ipfsHash || '';
-      
-      if (!ipfsHash) {
-        console.log('No IPFS hash found, creating metadata document...');
-        const metadataJson = {
-          projectName: projectName,
-          projectDescription: agreement.project?.description || description,
-          clientName: agreement.clientInfo?.name || clientName,
-          clientEmail: agreement.clientInfo?.email || clientEmail,
-          developerName: agreement.developerInfo?.name || developerName,
-          developerEmail: agreement.developerInfo?.email || developerEmail,
-          totalValue: totalValueEth,
-          currency: agreement.financials?.currency || currency,
-          milestones: milestones,
-          createdAt: new Date().toISOString(),
-        };
-        
-        const metadataBlob = new Blob([JSON.stringify(metadataJson, null, 2)], {
-          type: 'application/json',
-        });
-        const metadataFile = new File([metadataBlob], 'agreement-metadata.json', {
-          type: 'application/json',
-        });
-        
-        const metadataUpload = await uploadFileToIPFS(metadataFile);
-        ipfsHash = metadataUpload.ipfsHash;
-        console.log('✅ Metadata uploaded to IPFS:', ipfsHash);
-      }
-      
-      // Set dates for blockchain
-      // Use 5-minute buffer to account for MetaMask confirmation time and transaction mining
-      const startDate = Math.floor(Date.now() / 1000) + 300; // Current + 5 min buffer
-      const endDate = agreement.project?.expectedEndDate 
-        ? Math.floor(new Date(agreement.project.expectedEndDate).getTime() / 1000)
-        : Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000); // Default 30 days
-      
-      console.log('Blockchain params:', {
-        developer: developerWalletAddr,
+      // Parse dates and ensure start date is in the future
+      const parsedStartDate = parseToUnixSeconds(agreement?.timeline?.startDate || agreement?.startDate || undefined);
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      // Add 60 seconds buffer to account for transaction mining time and ensure it's definitely in the future
+      const startDate = Math.max(parsedStartDate, currentTimestamp + 60);
+      const endDate = parseToUnixSeconds(agreement?.timeline?.endDate || agreement?.endDate || deadline);
+
+      console.log('🚀 Step 1: Creating blockchain agreement...');
+      console.log({
+        developerWalletAddress,
         projectName,
-        docCid: ipfsHash,
-        totalValue: totalValueEth,
+        documentsIpfsHash,
+        totalValue,
         startDate,
         endDate
       });
 
-      // Verify IPFS hash is present before sending to blockchain
-      if (!ipfsHash || ipfsHash.trim() === '') {
-        throw new Error('IPFS hash is required but missing. Please try again.');
-      }
-      
-      console.log('✅ IPFS Hash verified and ready to send to blockchain:', ipfsHash);
-      
-      // Create agreement on blockchain (this will charge ETH from client's wallet)
-      const blockchainTx = await createBlockchainAgreement(
-        developerWalletAddr,
+      // Step 1: Call smart contract createAgreement function
+      const txResult = await createBlockchainAgreement(
+        developerWalletAddress,
         projectName,
-        ipfsHash,
-        totalValueEth,
+        documentsIpfsHash,
+        totalValue,
         startDate,
         endDate
       );
-      
-      console.log('✅ Blockchain transaction submitted:', blockchainTx);
-      
-      if (!blockchainTx.transactionHash) {
-        throw new Error('Transaction hash not found in blockchain response');
-      }
-      
-      const blockchainTxHash = blockchainTx.transactionHash;
-      console.log('Transaction hash:', blockchainTxHash);
-      
-      // Step 2: Update agreement status on backend to 'active' with blockchain data
-      console.log('📝 Updating agreement status to active...');
-      
-      const { AgreementService } = await import('../../../api/agreementService');
-      const result = await AgreementService.clientApproveAgreement(
-        routeState.agreementId,
-        blockchainTxHash,
-        ipfsHash
-      );
 
-      if (result.success) {
-        console.log('✅ Agreement approved and activated successfully');
-        console.log('✅ ETH transferred to smart contract escrow');
-        // Navigate to client profile
-        navigate('/client');
-      } else {
-        setAcceptError('Failed to approve agreement');
+      const transactionHash = txResult.transactionHash;
+      const blockchainAgreementId = txResult.agreementId; // Now directly available from createAgreement return
+      
+      console.log('✅ Blockchain transaction successful:', transactionHash);
+      console.log('🔗 Transaction Hash:', transactionHash);
+      console.log('⛓️ Blockchain Agreement ID:', blockchainAgreementId);
+      console.log('📋 Agreement ID (database):', routeState.agreementId);
+
+      // Validate blockchain ID
+      if (!blockchainAgreementId || blockchainAgreementId <= 0) {
+        console.error('❌ Invalid blockchain agreement ID:', blockchainAgreementId);
+        showAlert('Error: Failed to get valid blockchain agreement ID. Transaction may have failed.', 'error');
+        setIsApprovingAgreement(false);
+        return;
       }
+
+      // Always try to save blockchain data (even if we don't have the ID yet)
+      try {
+        console.log('💾 Saving blockchain data to database...');
+        console.log('Blockchain data to save:', {
+          agreementId: blockchainAgreementId,
+          transactionHash: transactionHash,
+          contractAddress: import.meta.env.VITE_AGREEMENT_CONTRACT,
+        });
+        
+        const updatePayload = {
+          id: routeState.agreementId,
+          data: {
+            blockchain: {
+              agreementId: blockchainAgreementId,
+              transactionHash: transactionHash,
+              contractAddress: import.meta.env.VITE_AGREEMENT_CONTRACT,
+            }
+          }
+        };
+        
+        console.log('📤 Sending update request with payload:', JSON.stringify(updatePayload, null, 2));
+        
+        const updateResponse = await updateAgreementMutation.mutateAsync(updatePayload as any);
+        
+        console.log('✅ Blockchain data saved successfully!');
+        console.log('📋 Update response:', updateResponse);
+        
+        if (blockchainAgreementId) {
+          showAlert('Blockchain agreement created successfully!', 'success');
+        }
+      } catch (updateError: any) {
+        console.error('❌ Failed to save blockchain data to database:', updateError);
+        console.error('Error details:', updateError.response?.data);
+        showAlert('Warning: Failed to save blockchain data to database. Transaction was successful but data sync failed.', 'error');
+        // Continue with transaction recording even if blockchain data save failed
+      }
+
+      // Step 2: Create transaction record in database with retry logic
+      // Backend requires at least 1 confirmation before recording
+      console.log('💾 Step 2: Creating transaction record in database (waiting for confirmations)...');
+      const transactionData = {
+        type: 'creation' as const,
+        agreement: routeState.agreementId,
+        transactionHash: transactionHash,
+        network: 'sepolia' as const,
+      };
+
+      let txResponse;
+      let retries = 0;
+      const maxRetries = 30; // Wait up to ~90 seconds
+      
+      while (retries < maxRetries) {
+        try {
+          console.log('📋 Attempting to create transaction record... (attempt', retries + 1, '/', maxRetries, ')');
+          txResponse = await transactionsApi.create(transactionData);
+
+          console.log('✅ Transaction record created:', txResponse);
+          break;
+        } catch (error: any) {
+          const errorMsg = error.response?.data?.error?.message || '';
+          // Retry if transaction is not found yet or needs confirmations
+          const shouldRetry = errorMsg.includes('confirmation') || 
+                             errorMsg.includes('not found') || 
+                             errorMsg.includes('not been mined');
+          
+          if (shouldRetry) {
+            retries++;
+            if (retries >= maxRetries) {
+              throw new Error('Transaction confirmation timeout. Please check Sepolia block explorer and try again later.');
+            }
+            console.log(`⏳ Waiting for blockchain confirmation... (${retries}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+          } else {
+            // Different error, throw immediately
+            throw error;
+          }
+        }
+      }
+
+      // Step 3: Update agreement status to "active" (client has paid, work can begin)
+      console.log('📝 Step 3: Updating agreement status to active...');
+      await updateStatusMutation.mutateAsync({
+        id: routeState.agreementId,
+        status: 'active'
+      });
+      console.log('✅ Agreement status updated to active');
+
+      showAlert('Payment successful! Agreement is now active on blockchain.', 'success');
+      
+      // Navigate to client profile after short delay
+      setTimeout(() => {
+        navigate('/client');
+      }, 2000);
     } catch (error: any) {
-      console.error('Error approving agreement:', error);
+      console.error('❌ Error during approval process:', error);
+      console.error('Error response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error response status:', error.response?.status);
+      console.error('Error message from backend:', error.response?.data?.error?.message || error.response?.data?.message);
       
       // Provide user-friendly error messages
       let errorMessage = 'Failed to approve agreement';
@@ -455,6 +630,7 @@ const PageCotractD: React.FC = () => {
       }
       
       setAcceptError(errorMessage);
+      showAlert(errorMessage, 'error');
     } finally {
       setIsApprovingAgreement(false);
     }
@@ -547,8 +723,6 @@ const PageCotractD: React.FC = () => {
                 setTitle={setTitle}
                 description={description}
                 setDescription={setDescription}
-                developerReceivingAddress={developerReceivingAddress}
-                setDeveloperReceivingAddress={setDeveloperReceivingAddress}
               />
             )}
             {step === 2 && (

@@ -1,66 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styles from './gigview.module.css';
 import { useParams } from 'react-router-dom';
 import DeveloperHero from '../../components/hero/DeveloperHero/DeveloperHero';
 import GigDetails from '../../components/gigdetails/GigDetails';
 import PackageCard from '../../components/card/Package/Package';
 import Table from '../../components/table/customerTable/Table';
-import { GigService, type Gig } from '../../api/gigService';
+import { useGig } from '../../query/useGigs';
 import Footer from '../../components/footer/Footer';
 import BackgroundBasePlates2 from '../../components/BackgroundBasePlates/BackgroundBasePlates2';
 
 const GigView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [gig, setGig] = useState<Gig | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchGig = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        const gigData = await GigService.getGigById(id);
-        setGig(gigData);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch gig:', err);
-        setError('Failed to load gig details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGig();
-  }, [id]);
+  
+  // Fetch gig from API
+  const { data: gig, isLoading, error } = useGig(id || '');
 
   if (isLoading) {
-    return <div className={styles.container}><p>Loading gig details...</p></div>;
+    return <div className={styles.container}><p style={{textAlign: 'center', padding: '2rem'}}>Loading gig details...</p></div>;
   }
 
   if (error || !gig) {
-    return <div className={styles.container}><p>{error || 'Gig not found'}</p></div>;
+    return <div className={styles.container}><p style={{textAlign: 'center', padding: '2rem', color: '#ff4444'}}>{error instanceof Error ? error.message : 'Gig not found'}</p></div>;
   }
 
-  // Defensive checks for developer data
-  const developer = gig.developer || {};
-  const profile = developer.profile || {};
-  const reputation = developer.reputation || { rating: 0, reviewCount: 0 };
+  // Extract developer data from API response
+  const developer = typeof gig.developer === 'object' ? gig.developer : null;
+  const developerName = developer?.fullname || developer?.username || 'Anonymous';
+  const developerAvatar = developer?.avatar || undefined;
+  const developerSkills = Array.isArray(developer?.skills) ? developer.skills : [];
+  const developerBio = developer?.bio || gig.description || 'No bio available';
+  const developerWallet = developer?.walletAddress || 'N/A';
+  const developerId = developer?._id || '';
 
   return (
     <div className={styles.container}>
          <BackgroundBasePlates2 />
       <DeveloperHero 
-        userName={profile.name || 'Anonymous'}
-        userImage={profile.avatar || undefined}
-        rating={reputation.rating || 0}
-        reviewCount={reputation.reviewCount || 0}
+        userName={developerName}
+        userImage={developerAvatar}
+        rating={0}
+        reviewCount={0}
         userRole="Freelance Developer"
-        skills={Array.isArray(profile.skills) ? profile.skills : []}
-        bio={profile.bio || gig.description || 'No bio available'}
-        memberSince={developer.createdAt || new Date().toISOString()}
-        walletAddress={developer.walletAddress || 'N/A'}
+        skills={developerSkills}
+        bio={developerBio}
+        memberSince={gig.createdAt}
+        walletAddress={developerWallet}
       />
       <div className={styles.container2}>
        
@@ -79,8 +63,8 @@ const GigView: React.FC = () => {
       <div className={styles.detailsSection}>
         <h2>Gig Details</h2>
         <div className={styles.details}>
-          <GigDetails />
-        </div>
+            <GigDetails images={gig.images} />
+          </div>
       </div>
  <div className={styles.descriptionSection}>
         <div className={styles.titleSection}>
@@ -110,45 +94,24 @@ Best for businesses needing a full communication suite. Includes HD calling, scr
       <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', margin: '3rem 0' }}>
         {gig.packages && gig.packages.length > 0 && (
           gig.packages.map((pkg, index) => {
-            const name = (pkg.name || '').toString().toLowerCase();
-            let description = (pkg.features || []).slice(0, 5);
-            let priceStr = `${pkg.price || 0} ${pkg.currency || 'USD'}`;
-
-            if (name.includes('basic')) {
-              priceStr = '1800 USD';
-              description = [
-                'Perfect for startups needing a solid chat system.',
-                'Includes real-time messaging, authentication, and core chat features.',
-                'Fast delivery with essential functionalities.'
-              ];
-            } else if (name.includes('standard')) {
-              priceStr = '3500 USD';
-              description = [
-                'Ideal for growing communities and teams.',
-                'Adds group chats, file sharing, voice calling, and typing indicators.',
-                'A balanced upgrade with powerful communication tools.'
-              ];
-            } else if (name.includes('premium')) {
-              priceStr = '6000 USD';
-              description = [
-                'Best for businesses needing a full communication suite.',
-                'Includes HD calling, screen share, encryption, and conference features.',
-                'Packed with automation and advanced admin controls.'
-              ];
-            }
-
+            // Use actual package data from API
+            const packageFeatures = Array.isArray(pkg.features) ? pkg.features : [];
+            const packageDescription = pkg.description || '';
+            const displayDescription = packageFeatures.length > 0 ? packageFeatures : [packageDescription];
+            
             return (
               <PackageCard
-                key={index}
+                key={`${pkg.name || 'pkg'}-${index}`}
                 title={pkg.name || 'Package'}
-                description={description}
+                description={displayDescription}
                 gameId={index + 1}
-                price={priceStr}
-                delivery={`${pkg.deliveryTime || 0} Days`}
-                revisions={pkg.revisions || 0}
+                price={`${pkg.price || 0} ETH`}
+                delivery={`${pkg.deliveryTime || 0} days`}
+                revisions={0}
                 buttonLabel="Buy & Escrow"
                 gigId={gig._id}
-                developerWallet={developer.walletAddress}
+                packageId={pkg._id}
+                developerWallet={developerWallet}
               />
             );
           })
@@ -172,7 +135,7 @@ Best for businesses needing a full communication suite. Includes HD calling, scr
       {/* Customer Reviews Section */}
       <div style={{ margin: '3rem 0' }}>
         <h2>Customer Reviews section</h2>
-        {developer._id && <Table developerId={developer._id} />}
+        {developerId && <Table developerId={developerId} />}
       </div>
       </div>
       <Footer />

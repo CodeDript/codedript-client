@@ -457,6 +457,42 @@
 margin-left: -20px;
 
 }
+
+/* OTP Section Styles */
+.otpSection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.otpNote {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.resendBtn:hover {
+  color: #60a5fa;
+}
+
+.resendBtn:disabled {
+  color: #6b7280;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 /* Mobile Responsive */
 @media (max-width: 520px) {
   .authModal {

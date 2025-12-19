@@ -1,8 +1,7 @@
 import React from 'react';
 import styles from '../pageCotractD.module.css';
-import { useAgreement } from '../../../../context/AgreementContext';
 
-type Milestone = { title: string; amount: string };
+type Milestone = { title: string; amount?: string };
 
 type PackageSummary = {
   name: string;
@@ -26,22 +25,12 @@ type Props = {
   milestones: Milestone[];
   filesNote: string;
   files?: File[];
+  packages?: PackageSummary[];
   isClientView?: boolean;
 };
 
-const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, value, currency, filesNote, files, isClientView }) => {
+const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet, developerReceivingAddress, value, currency, filesNote, files, packages, isClientView }) => {
   const [approved, setApproved] = React.useState(false);
-  const { formData } = useAgreement();
-
-  // Try to source package data from context gigData if available
-  const packages: PackageSummary[] | undefined = formData?.gigData?.packages?.map((p: any) => ({
-    name: p.name,
-    price: p.price,
-    currency: p.currency,
-    deliveryTime: p.deliveryTime,
-    revisions: p.revisions,
-    features: p.features
-  }));
 
   React.useEffect(() => {
     if (isClientView && (window as any).__setClientApproved) {
@@ -55,7 +44,6 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
     if (s.length <= 10) return s;
     return `${s.slice(0,5)}...${s.slice(-5)}`;
   }
-
   return (
     <>
       <h4 className={styles.sectionTitle}>Publish</h4>
@@ -73,28 +61,11 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
             <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{description}</div>
           </div>
           <div className={styles.reviewRow}>
-            <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Value :</div>
-            <div className={styles.reviewValue}>
-              <span className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{value}</span>
-              <span style={{marginLeft:6, fontFamily: 'Jura'}}>{currency}</span>
-            </div>
-          </div>
-          {/* Category and Create Date replace Deadline */}
-          <div className={styles.reviewRow}>
-            <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Category :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formData?.gigData?.category || 'Uncategorized'}</div>
-          </div>
-          <div className={styles.reviewRow}>
             <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Created :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formData?.gigData?.id ? (formData.gigData as any).createdAt ? new Date((formData.gigData as any).createdAt).toLocaleString() : new Date().toLocaleString() : new Date().toLocaleString()}</div>
-          </div>
-
-          {/* Developer Receiving Address row (moved from Parties) */}
-          <div className={styles.reviewRow}>
-            <div className={styles.reviewKey} style={{fontFamily: 'Zen Dots', fontWeight: 100}}>Developer Receiving Ethereum Address :</div>
-            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{formatId(formData?.developerReceivingAddress || developerReceivingAddress || developerWallet || '') || 'No receiving address'}</div>
+            <div className={styles.reviewValue} style={{fontFamily: 'Jura'}}>{new Date().toLocaleString()}</div>
           </div>
         </div>
+
         {/* Packages summary - show if gigData packages exist, otherwise show N/A table */}
         <div className={styles.juraTitle} style={{paddingTop: '20px', fontFamily: 'Jura', fontWeight: 500}}>Packages</div>
         <div className={styles.reviewBox}>
@@ -105,7 +76,6 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
                   <th style={{textAlign:'left', padding:'8px 12px', fontFamily:'Zen Dots', fontWeight:100}}>Package</th>
                   <th style={{textAlign:'left', padding:'8px 12px', fontFamily:'Zen Dots', fontWeight:100}}>Price</th>
                   <th style={{textAlign:'left', padding:'8px 12px', fontFamily:'Zen Dots', fontWeight:100}}>Delivery</th>
-                  <th style={{textAlign:'left', padding:'8px 12px', fontFamily:'Zen Dots', fontWeight:100}}>Revisions</th>
                   <th style={{textAlign:'left', padding:'8px 12px', fontFamily:'Zen Dots', fontWeight:100}}>Features</th>
                 </tr>
               </thead>
@@ -115,7 +85,6 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
                     <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{p.name}</td>
                     <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{p.price ?? 'N/A'} {p.currency || currency}</td>
                     <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{p.deliveryTime ?? 'N/A'}</td>
-                    <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{p.revisions ?? 'N/A'}</td>
                     <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{p.features ? p.features.join('\n') : 'N/A'}</td>
                   </tr>
                 )) : (
@@ -123,7 +92,6 @@ const CreateReviewStep: React.FC<Props> = ({ title, description, developerWallet
                   ['Basic','Standard','Premium'].map((name)=> (
                     <tr key={name}>
                       <td style={{padding:'10px 12px', fontFamily:'Jura'}}>{name}</td>
-                      <td style={{padding:'10px 12px', fontFamily:'Jura'}}>N/A</td>
                       <td style={{padding:'10px 12px', fontFamily:'Jura'}}>N/A</td>
                       <td style={{padding:'10px 12px', fontFamily:'Jura'}}>N/A</td>
                       <td style={{padding:'10px 12px', fontFamily:'Jura'}}>N/A</td>

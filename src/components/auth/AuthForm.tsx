@@ -8,6 +8,8 @@ import metaMaskIcon from '../../assets/Login/MetaMask.svg';
 import emailIcon from '../../assets/Login/emailicon.svg';
 import heroOutlineup from '../../assets/Login/cardBackgroundup.svg';
 import heroOutlinedown from '../../assets/Login/cardBackgrounddown.svg';
+import { useRequestOTP, useVerifyOTP } from '../../query/useAuth';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface AuthFormProps {
   onClose: () => void;
@@ -15,7 +17,11 @@ interface AuthFormProps {
 
 const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const { mutate: requestOTP, isPending } = useRequestOTP();
+  const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOTP();
+  const { setUser, setToken } = useAuthContext();
 
   const handleEmailConnect = () => {
     if (!email) {
@@ -23,19 +29,73 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
       return;
     }
 
-    setLoading(true);
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showAlert('Please enter a valid email address', 'error');
+      return;
+    }
 
-    // Store email in localStorage
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    showAlert('Email connected successfully!', 'success');
-    
-    // Close modal after short delay
-    setTimeout(() => {
-      onClose();
-      setLoading(false);
-    }, 1000);
+    requestOTP(
+      { email },
+      {
+        onSuccess: (response) => {
+          showAlert(response.message || 'OTP sent successfully to your email!', 'success');
+          // Show OTP input field
+          setShowOtpInput(true);
+        },
+        onError: (error: any) => {
+          console.error('Request OTP Error:', error);
+          const errorMessage = 
+            error?.response?.data?.error?.message || 
+            error?.response?.data?.message || 
+            error?.message || 
+            'Failed to send OTP. Please try again.';
+          showAlert(errorMessage, 'error');
+        },
+      }
+    );
+  };
+
+  const handleVerifyOTP = () => {
+    if (!otp) {
+      showAlert('Please enter the OTP code', 'error');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      showAlert('OTP must be 6 digits', 'error');
+      return;
+    }
+
+    verifyOTP(
+      { email, otp },
+      {
+        onSuccess: (response) => {
+          showAlert(response.message || 'Email verified successfully!', 'success');
+          // Update auth context (AuthContext already syncs localStorage)
+          if (response.data?.user) {
+            setUser(response.data.user);
+          }
+          if (response.data?.token) {
+            setToken(response.data.token);
+          }
+          // Close modal but do NOT navigate or reload
+          setTimeout(() => {
+            onClose();
+          }, 500);
+        },
+        onError: (error: any) => {
+          console.error('Verify OTP Error:', error);
+          const errorMessage = 
+            error?.response?.data?.error?.message || 
+            error?.response?.data?.message || 
+            error?.message || 
+            'Invalid OTP. Please try again.';
+          showAlert(errorMessage, 'error');
+        },
+      }
+    );
   };
 
   const handleWalletSuccess = () => {
@@ -67,6 +127,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
 
           <div className={styles.authBody}>
             {/* Wallet section */}
+            {!showOtpInput && (
             <div className={styles.card}>
               <div className={styles.cardBadge}>
                 Wallet
@@ -105,8 +166,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Email section */}
+            {!showOtpInput && (
             <div className={styles.card}>
               <div className={styles.cardBadge}>
                 Email
@@ -133,11 +196,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={showOtpInput}
                       />
                     </div>
                     <div className={styles.buttonWrapper}>
                       <Button3B 
-                        text={loading ? 'Connecting…' : 'Connect'} 
+                        text={isPending ? 'Sending...' : 'Connect'} 
                         onClick={handleEmailConnect}
                       />
                     </div>
@@ -145,6 +209,61 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
                 </div>
               </div>
             </div>
+            )}
+
+            {/* OTP Verification section - shown after email OTP is sent */}
+            {showOtpInput && (
+              <div className={styles.card}>
+                <div className={styles.cardBadge}>
+                  Verify OTP
+                </div>
+                <div className={styles.cardInner}>
+                  <div className={styles.emailTop}>
+                    <div className={styles.emailLeft}>
+                      <img src={emailIcon} alt="verify" className={styles.emailIcon} />
+                      <div className={styles.emailInfo}>
+                        <h3 className={styles.emailTitle}>Verify Your Email</h3>
+                        <p className={styles.emailSub}>Enter the 6-digit code sent to {email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.emailForm}>
+                    <label htmlFor="otp-input" className={styles.emailLabel}>Enter OTP Code :</label>
+                    <div className={styles.emailInputRow}>
+                      <div className={styles.inputRow}>
+                        <input
+                          id="otp-input"
+                          type="text"
+                          placeholder="Enter 6-digit OTP"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          maxLength={6}
+                          required
+                          autoFocus
+                        />
+                      </div>
+                      <div className={styles.buttonWrapper}>
+                        <Button3B 
+                          text={isVerifying ? 'Verifying...' : 'Verify'} 
+                          onClick={handleVerifyOTP}
+                        />
+                      </div>
+                    </div>
+                    <p className={styles.otpNote}>
+                      Didn't receive the code?{' '}
+                      <button 
+                        className={styles.resendBtn}
+                        onClick={handleEmailConnect}
+                        disabled={isPending}
+                      >
+                        {isPending ? 'Sending...' : 'Resend OTP'}
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <p className={styles.termsText}>

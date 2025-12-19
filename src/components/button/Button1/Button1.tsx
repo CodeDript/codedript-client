@@ -23,6 +23,14 @@ const Button: React.FC<ButtonProps> = ({ text = "View more", onClick, className 
         };
     }, []);
 
+    // Keep internal displayText in sync when parent updates `text` prop
+    // but avoid clobbering an active hover animation.
+    useEffect(() => {
+        if (!isHovering) {
+            setDisplayText(text);
+        }
+    }, [text, isHovering]);
+
     const startScramble = () => {
         if (intervalRef.current) window.clearInterval(intervalRef.current);
         let progress = 0; // progress 0..1
