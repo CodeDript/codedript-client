@@ -43,10 +43,10 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
+            ${{ secrets.DOCKER_IMAGE }}:${{ secrets.DOCKER_TAG }}
+            ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_IMAGE }}:buildcache,mode=max
           platforms: linux/amd64
           build-args: |
             VITE_THIRDWEB_CLIENT_ID=${{ secrets.VITE_THIRDWEB_CLIENT_ID }}
