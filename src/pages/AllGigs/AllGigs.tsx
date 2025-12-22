@@ -44,40 +44,41 @@ const AllGigs: React.FC = () => {
   }, [gigs, searchQuery]);
 
   return (
- <div className={styles.homePage}>
-       <BackgroundBasePlates2 />
-       <HeroSecondary />  
+    <>
+      <div className={styles.homePage}>
+        <BackgroundBasePlates2 />
+        <HeroSecondary />  
      
-      <section className={styles.gameCardsSection}>
-        <div className={styles.gameCardsContainer}>
+        <section className={styles.gameCardsSection}>
+          <div className={styles.gameCardsContainer}>
           
-          {/* Search bar */}
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="Search gigs by title, description or skill..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
-            {/* single search input only; filtering runs automatically */}
-          </div>
+            {/* Search bar */}
+            <div className={styles.searchBar}>
+              <input
+                type="text"
+                placeholder="Search gigs by title, description or skill..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+              {/* single search input only; filtering runs automatically */}
+            </div>
 
-          <div className={styles.gigCardsGrid}>
-            {isLoading ? (
-              <p style={{textAlign: 'center', padding: '2rem', color: '#666'}}>Loading gigs...</p>
-            ) : error ? (
-              <div style={{textAlign: 'center', padding: '2rem', color: '#ff4444'}}>
-                <p>Failed to load gigs.</p>
-                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
-                  {error instanceof Error ? error.message : 'Unknown error'}
-                </p>
-                <p style={{fontSize: '0.8rem', color: '#999', marginTop: '0.5rem'}}>
-                  API URL: {import.meta.env.VITE_API_BASE_URL || 'Not configured'}
-                </p>
-              </div>
-            ) : filteredGigs.length > 0 ? (
-              filteredGigs.map((gig) => {
+            <div className={styles.gigCardsGrid}>
+              {isLoading ? (
+                <p style={{textAlign: 'center', padding: '2rem', color: '#666'}}>Loading gigs...</p>
+              ) : error ? (
+                <div style={{textAlign: 'center', padding: '2rem', color: '#ff4444'}}>
+                  <p>Failed to load gigs.</p>
+                  <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
+                    {error instanceof Error ? error.message : 'Unknown error'}
+                  </p>
+                  <p style={{fontSize: '0.8rem', color: '#999', marginTop: '0.5rem'}}>
+                    API URL: {import.meta.env.VITE_API_BASE_URL || 'Not configured'}
+                  </p>
+                </div>
+              ) : filteredGigs.length > 0 ? (
+                filteredGigs.map((gig) => {
                 // Extract developer info (API returns populated developer object)
                 const dev = typeof gig.developer === 'object' ? gig.developer : null;
                 const avatar = dev?.avatar || undefined;
@@ -133,8 +134,9 @@ const AllGigs: React.FC = () => {
           </div>
         </div>
       </section>
-     <Footer />
     </div>
+    <Footer />
+  </>
   );
 };
 

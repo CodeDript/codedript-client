@@ -146,25 +146,75 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ transactionHash, bl
 
   return (
     <div className={styles.backdrop} onClick={handleBackdropClick}>
-      <div className={styles.terminal}>
+      <div className={styles.modal}>
         <div className={styles.header}>
-          <div className={styles.buttons}>
-            <span className={styles.closeBtn} onClick={onClose}></span>
-            <span className={styles.minimizeBtn}></span>
-            <span className={styles.maximizeBtn}></span>
+          <div className={styles.headerContent}>
+            <h2 className={styles.title}>Transaction Details</h2>
+            <div className={styles.subtitle}>Blockchain Confirmation</div>
           </div>
-          <div className={styles.title}>Transaction Inspector v1.0</div>
+          <button className={styles.closeBtn} onClick={onClose}>&times;</button>
         </div>
         
         <div className={styles.body}>
-          <div className={styles.prompt}>root@blockchain:~$</div>
-          {displayText.map((line, index) => (
-            <div key={index} className={styles.line}>
-              {line}
+          {loading ? (
+            <div className={styles.loading}>
+              <div className={styles.spinner}></div>
+              <p>Fetching transaction data...</p>
             </div>
-          ))}
-          {loading && (
-            <div className={styles.cursor}>_</div>
+          ) : (
+            <div className={styles.content}>
+              {displayText.map((line, index) => {
+                const cleanLine = line.replace(/^>\s*/, '');
+                
+                // Skip Contract Call Information section and separators
+                if (cleanLine.includes('Contract Call Information') || 
+                    cleanLine.includes('===') || 
+                    cleanLine.includes('---') || 
+                    cleanLine === 'End of transaction details' || 
+                    cleanLine === 'Transaction Details Retrieved' ||
+                    !cleanLine) {
+                  return null;
+                }
+                
+                // Parse key-value pairs
+                if (cleanLine.includes(':')) {
+                  const [key, ...valueParts] = cleanLine.split(':');
+                  const value = valueParts.join(':').trim();
+                  const keyClean = key.trim();
+                  
+                  // Skip Selector and Input Data sections
+                  if (keyClean === 'Selector' || keyClean === 'Input Data') {
+                    return null;
+                  }
+                  
+                  // Special rendering for links
+                  if (keyClean === 'IPFS Link') {
+                    return (
+                      <div key={index} className={styles.dataRow}>
+                        <div className={styles.dataLabel}>{keyClean}</div>
+                        <a href={value} target="_blank" rel="noopener noreferrer" className={styles.dataLink}>
+                          View on IPFS →
+                        </a>
+                      </div>
+                    );
+                  }
+                  
+                  // Special styling for hash values
+                  const isHash = keyClean.includes('Hash') || keyClean.includes('From') || keyClean.includes('To') || keyClean.includes('Developer');
+                  
+                  return (
+                    <div key={index} className={styles.dataRow}>
+                      <div className={styles.dataLabel}>{keyClean}</div>
+                      <div className={isHash ? styles.dataValueHash : styles.dataValue}>
+                        {value}
+                      </div>
+                    </div>
+                  );
+                }
+                
+                return null;
+              })}
+            </div>
           )}
         </div>
       </div>

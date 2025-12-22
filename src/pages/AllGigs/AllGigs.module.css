@@ -113,7 +113,22 @@
 }
 .homePage {
   width: 100%;
-  min-height: 100vh;
+  min-height: calc(100vh - 400px); /* Account for footer height */
+  position: relative;
+  overflow: hidden; /* Clip the background */
+}
+
+.homePage > :not(:first-child) {
+  position: relative;
+  z-index: 1;
+}
+
+.gameCardsSection {
+  padding: 5rem 0;
+  background: transparent;
+  flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .buttonSection {
@@ -149,12 +164,6 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 3rem;
   align-items: stretch;
-}
-
-/* Game Cards Section */
-.gameCardsSection {
-  padding: 5rem 0;
-  background: transparent;
 }
 
 .gameCardsContainer {
@@ -207,6 +216,7 @@
   
   .gameCardsSection {
     padding: 3rem 0;
+    flex: 1;
   }
   
   .gameCardsContainer {

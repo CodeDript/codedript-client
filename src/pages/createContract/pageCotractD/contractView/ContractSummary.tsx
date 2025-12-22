@@ -295,22 +295,38 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
  <div className={styles.buttonWrapper}>
           <Button3Black1 
             text="Read Contract" 
-            onClick={() => navigate('/create-contract/terms', { state: { agreement } })}
+            onClick={() => navigate('/create-contract/terms', { 
+              state: { 
+                agreement: {
+                  ...agreement,
+                  title,
+                  description,
+                  value,
+                  currency,
+                  deadline,
+                  clientName,
+                  clientEmail,
+                  clientWallet,
+                  developerName,
+                  developerEmail,
+                  developerWallet
+                }
+              } 
+            })}
           />
         </div>
 
         <div className={styles.milestoneCard}>
-        <div className={styles.milestoneHeader}>Milestone Breakdown</div>
+          <div className={styles.milestoneHeader}>Milestone Breakdown</div>
           <div className={styles.milestoneList}>
-            {localMilestones.map((m: any, i: number) => (
-              <MilestoneCard
-                key={i}
-                index={i}
-                milestone={m}
-                editable={true}
-                onUpdateStatus={handleUpdateMilestoneStatus}
-              />
-            ))}
+            <div style={{ 
+              padding: '2rem', 
+              textAlign: 'center', 
+              color: '#666',
+              fontFamily: 'Jura, sans-serif'
+            }}>
+              Maintenance ...
+            </div>
           </div>
         </div>
       

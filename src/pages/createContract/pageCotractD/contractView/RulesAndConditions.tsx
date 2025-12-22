@@ -62,29 +62,39 @@ const RulesAndConditions: React.FC = () => {
                 <div className={styles.detailsGrid}>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Project Name:</span>
-                    <span className={styles.detailValue}>{agreement?.project?.name || 'N/A'}</span>
+                    <span className={styles.detailValue}>
+                      {agreement?.project?.name || agreement?.title || 'N/A'}
+                    </span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Description:</span>
-                    <span className={styles.detailValue}>{agreement?.project?.description || 'N/A'}</span>
+                    <span className={styles.detailValue}>
+                      {agreement?.project?.description || agreement?.description || 'N/A'}
+                    </span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Total Value:</span>
                     <span className={styles.detailValue}>
-                      {agreement?.financials?.totalValue || 'N/A'} {agreement?.financials?.currency || 'ETH'}
+                      {agreement?.financials?.totalValue || agreement?.value || 'N/A'} {agreement?.financials?.currency || agreement?.currency || 'ETH'}
                     </span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Deadline:</span>
-                    <span className={styles.detailValue}>{agreement?.deadline || 'N/A'}</span>
+                    <span className={styles.detailValue}>
+                      {agreement?.deadline ? new Date(agreement.deadline).toLocaleDateString() : 'N/A'}
+                    </span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Client:</span>
-                    <span className={styles.detailValue}>{agreement?.client?.profile?.name || 'N/A'}</span>
+                    <span className={styles.detailValue}>
+                      {agreement?.client?.profile?.name || agreement?.client?.name || agreement?.clientName || 'N/A'}
+                    </span>
                   </div>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Developer:</span>
-                    <span className={styles.detailValue}>{agreement?.developer?.profile?.name || 'N/A'}</span>
+                    <span className={styles.detailValue}>
+                      {agreement?.developer?.profile?.name || agreement?.developer?.name || agreement?.developerName || 'N/A'}
+                    </span>
                   </div>
                 </div>
               </div>

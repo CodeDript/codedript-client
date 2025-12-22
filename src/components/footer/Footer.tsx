@@ -73,7 +73,7 @@ security. Automated escrow, milestone tracking, and instant payments
           </div>
 
           <div className={styles['links-column']}>
-            <h4>Support Black Lives Matter</h4>
+            <h4>Contact Us</h4>
             <ul>
               <li><Link to="/coming-soon">FAQs</Link></li>
               <li><Link to="/coming-soon">Help Center</Link></li>

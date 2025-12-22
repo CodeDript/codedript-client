@@ -19,7 +19,7 @@
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
 }
 
-.customButton:hover .buttonBase path {
+.customButton:hover > .buttonBase path {
     fill: #1a1a1a !important;
     fill-opacity: 1;
 }
