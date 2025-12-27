@@ -1,114 +1,103 @@
-# Code Dript - Blockchain Web Application
+# CodeDript Client
 
-A modern, blockchain-powered web application built with React, TypeScript, and CSS Modules.
+Frontend application for the CodeDript platform. Built with React and TypeScript, this application provides the user interface for managing agreements, browsing gigs, and interacting with blockchain smart contracts.
 
-## 📁 Project Structure
+## Features
+
+- MetaMask wallet authentication
+- Gig marketplace browsing
+- Agreement creation and management
+- Milestone tracking
+- IPFS document viewing
+- Real-time transaction monitoring
+- Responsive design
+
+## Project Structure
 
 ```
 src/
-├── assets/          → Images, icons, and fonts
-├── components/      → Reusable UI components
-│   ├── hero/       → Hero section components
-│   ├── CardOne.tsx
-│   ├── CardTwo.tsx
-│   └── CardThree.tsx
-├── constants/       → Fixed values and configuration
-├── context/         → React Context Providers
-├── hooks/           → Custom React hooks (useWallet, etc.)
-├── pages/           → Full-page route components
-├── services/        → Blockchain integration logic
-├── styles/          → Global CSS and theme variables
-├── types/           → TypeScript type definitions
-├── utils/           → Helper functions
-├── App.tsx          → Main app component
-└── main.tsx         → Application entry point
+├── api/                 # API integration layer
+├── components/          # Reusable UI components
+├── pages/              # Application pages
+├── context/            # React Context providers
+├── services/           # Business logic
+├── types/              # TypeScript types
+├── utils/              # Helper functions
+└── assets/             # Images and static files
 ```
 
-## 🚀 Features
+## Installation
 
-- ✅ Three modern hero sections with gradient backgrounds
-- ✅ Three reusable card components with hover animations
-- ✅ Zoom control (75%-125% limit)
-- ✅ Blockchain wallet integration placeholder (MetaMask support)
-- ✅ TypeScript for type safety
-- ✅ CSS Modules for scoped styling
-- ✅ Responsive design
-- ✅ Modern React best practices
+1. Install dependencies:
 
-## 🎨 Components
+   ```bash
+   npm install
+   ```
 
-### Hero Sections
-- **HeroMain**: Full viewport height (100vh) main hero
-- **HeroSecondary**: 500px height secondary hero
-- **HeroTertiary**: 500px height tertiary hero
+2. Create `.env` file:
 
-### Cards
-- **CardOne**: Secure Transactions card
-- **CardTwo**: Decentralized Network card
-- **CardThree**: Smart Contracts card
+   ```bash
+   cp .env.example .env
+   ```
 
-## 🛠️ Tech Stack
+3. Configure environment variables:
 
-- React 18
-- TypeScript
-- Vite
-- CSS Modules
-- Ethers.js (ready for integration)
+   ```
+   VITE_API_URL=http://localhost:5000/api
+   VITE_CONTRACT_ADDRESS=your_contract_address
+   VITE_BLOCKCHAIN_NETWORK=sepolia
+   ```
 
-## 📦 Installation
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm install
-```
+The application will run on `http://localhost:5173`
 
-## 🏃‍♂️ Development
-
-```bash
-npm run dev
-```
-
-## 🏗️ Build
+## Build for Production
 
 ```bash
 npm run build
 ```
 
-## 🔐 Blockchain Integration
+Build output will be in the `dist/` directory.
 
-The application includes placeholder services for blockchain integration:
-- Wallet connection (MetaMask)
-- Transaction handling
-- Balance checking
-- Network detection
+## Technology Stack
 
-To integrate with a real blockchain:
-1. Install ethers.js: `npm install ethers`
-2. Update `src/services/blockchain.ts` with your RPC endpoints
-3. Configure networks in `src/constants/index.ts`
+- React 18
+- TypeScript
+- Vite
+- React Query
+- ethers.js
+- React Router
 
-## 🎯 Zoom Control
+## Key Components
 
-The application enforces zoom limits between 75% and 125%:
-- Viewport meta tag configuration
-- JavaScript-based zoom prevention
-- Keyboard shortcut blocking (Ctrl/Cmd + +/-)
-- Mouse wheel zoom prevention
+- **Authentication**: MetaMask wallet login
+- **Gig Marketplace**: Browse and filter gigs
+- **Agreement Flow**: Multi-step contract creation
+- **Dashboard**: Project and milestone tracking
+- **Notifications**: Real-time updates
 
-## 📱 Responsive Design
+## Development
 
-All components are fully responsive with breakpoints at:
-- Mobile: < 768px
-- Tablet: 768px - 1024px
-- Desktop: > 1024px
+```bash
+npm run dev      # Start dev server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run lint     # Lint code
+```
 
-## 🧩 Custom Hooks
+## Environment Variables
 
-- **useWallet**: Manage wallet connection state and MetaMask integration
+```
+VITE_API_URL              # Backend API URL
+VITE_CONTRACT_ADDRESS     # Smart contract address
+VITE_BLOCKCHAIN_NETWORK   # Network name (sepolia/mainnet)
+VITE_CHAIN_ID            # Chain ID
+```
 
-## 📄 License
+## License
 
 MIT
-
-## 👥 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
