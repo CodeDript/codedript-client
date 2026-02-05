@@ -45,22 +45,27 @@ const Settings: React.FC = () => {
         const form = new FormData();
         form.append('avatar', selectedFile, selectedFile.name);
         form.append('fullname', fullname);
-        form.append('email', email);
+        if (email && email.trim()) {
+          form.append('email', email.trim());
+        }
         form.append('bio', bio);
         form.append('skills', JSON.stringify(skills));
-        form.append('walletAddress', walletAddress || '');
+        // walletAddress is read-only, don't send to server
 
         response = await authApi.updateProfile(form as any);
       } else {
-        const updateData = {
+        const updateData: any = {
           fullname,
-          email,
           bio,
           skills,
-          walletAddress,
         };
+        // Only send email if it has a valid value
+        if (email && email.trim()) {
+          updateData.email = email.trim();
+        }
+        // walletAddress is read-only, don't send to server
 
-        response = await authApi.updateProfile(updateData as any);
+        response = await authApi.updateProfile(updateData);
       }
 
       if (response?.data?.user) {

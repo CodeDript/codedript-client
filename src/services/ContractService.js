@@ -21,11 +21,11 @@ import {
 // Lazily initialize Thirdweb client to avoid errors when env var is missing
 let client = null;
 try {
-  if (import.meta.env.VITE_THIRDWEB_CLIENT_ID) {
+  
     client = createThirdwebClient({
       clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
     });
-  }
+  
 } catch (e) {
   console.warn('Thirdweb client initialization failed:', e);
   client = null;
