@@ -232,7 +232,7 @@ export async function createAgreement(developer, projectName, docCid, totalValue
   // Wait for transaction to be mined and extract the returned agreement ID
   let agreementId = null;
   let retries = 0;
-  const maxRetries = 30; // 30 attempts * 3 seconds = 90 seconds max wait
+  const maxRetries = 150; // 30 attempts * 3 seconds = 90 seconds max wait
   
   while (retries < maxRetries && agreementId === null) {
     try {

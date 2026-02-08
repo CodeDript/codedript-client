@@ -165,19 +165,43 @@ const RequestChange: React.FC = () => {
     }
 
     const rawId = request.rawId || request.id;
-    
+
     // Get blockchain agreement ID from the agreement object
-    const blockchainAgreementId = agreementObj?.blockchain?.agreementId || 
-                                   agreementObj?.blockchainId || 
-                                   agreementObj?.agreementId;
-    
+    const blockchainAgreementId = agreementObj?.blockchain?.agreementId ||
+      agreementObj?.blockchainId ||
+      agreementObj?.agreementId;
+
     if (!blockchainAgreementId) {
       showAlert('Blockchain agreement ID not found. Cannot process payment.', 'error');
       return;
     }
 
+    console.log('Using blockchain agreement ID:', blockchainAgreementId);
+    console.log('Agreement object:', agreementObj);
+
     setPaymentProcessingId(rawId);
-    
+
+    // Step 0: Check agreement status on blockchain before attempting payment
+    try {
+      const { getAgreementSummary } = await import('../../../../services/ContractService');
+      const summary = await getAgreementSummary(blockchainAgreementId);
+      console.log('Agreement status on blockchain:', summary.status);
+
+      // Status enum: 0=Draft, 1=Active, 2=Completed, 3=Cancelled
+      if (summary.status !== 1) {
+        const statusNames = ['Draft', 'Active', 'Completed', 'Cancelled'];
+        const statusName = statusNames[summary.status] || 'Unknown';
+        showAlert(`Agreement is not active on blockchain. Current status: ${statusName}. Blockchain ID: ${blockchainAgreementId}`, 'error');
+        setPaymentProcessingId(null);
+        return;
+      }
+    } catch (statusErr: any) {
+      console.error('Failed to check agreement status:', statusErr);
+      showAlert(`Failed to verify agreement status: ${statusErr.message}`, 'error');
+      setPaymentProcessingId(null);
+      return;
+    }
+
     try {
       // Step 1: Call smart contract requestChange function
       const txResult = await requestChange(
@@ -189,7 +213,7 @@ const RequestChange: React.FC = () => {
       // Step 2: Record transaction with retry logic - keep button disabled until complete
       const recordTransaction = async (attempt = 1, maxAttempts = 24) => {
         const waitTime = attempt === 1 ? 20000 : 15000; // First wait 20s, then 15s between retries
-        
+
         setTimeout(async () => {
           try {
             await transactionsApi.create({
@@ -198,33 +222,33 @@ const RequestChange: React.FC = () => {
               transactionHash: txResult.transactionHash,
               network: 'sepolia'
             });
-            
+
             setPaymentProcessingId(null); // Clear processing state on success
             await loadRequests(); // Refresh list after transaction is recorded
             showAlert('Transaction recorded successfully!', 'success');
-              // Now mark the request change as paid in the server (status change after DB record)
-              try {
-                await requestChangesApi.updateStatus(rawId, 'paid');
-                await loadRequests();
-              } catch (statusErr) {
-              }
+            // Now mark the request change as paid in the server (status change after DB record)
+            try {
+              await requestChangesApi.updateStatus(rawId, 'paid');
+              await loadRequests();
+            } catch (statusErr) {
+            }
           } catch (recordErr: any) {
             const errorMsg = recordErr?.response?.data?.message || recordErr?.response?.data?.error?.message || recordErr?.message;
-            
+
             // Check if transaction hash already exists (which means it was already recorded)
             if (errorMsg?.includes('Transaction with this hash already exists')) {
               setPaymentProcessingId(null); // Clear processing state
               await loadRequests(); // Refresh list
               showAlert('Transaction already recorded!', 'success');
-                // Ensure request change status is 'paid' if transaction exists
-                try {
-                  await requestChangesApi.updateStatus(rawId, 'paid');
-                  await loadRequests();
-                } catch (statusErr) {
-                }
+              // Ensure request change status is 'paid' if transaction exists
+              try {
+                await requestChangesApi.updateStatus(rawId, 'paid');
+                await loadRequests();
+              } catch (statusErr) {
+              }
               return;
             }
-            
+
             // Check if it's a duplicate key error on transactionID (server-side auto-increment issue)
             if (errorMsg?.includes('E11000') && errorMsg?.includes('transactionID')) {
               setPaymentProcessingId(null); // Clear processing state
@@ -232,14 +256,14 @@ const RequestChange: React.FC = () => {
               showAlert('Payment completed but transaction recording failed. Please contact support.', 'error');
               return;
             }
-            
+
             // Retry if not mined yet OR not confirmed yet
             const shouldRetry = attempt < maxAttempts && (
-              errorMsg?.includes('not been mined') || 
+              errorMsg?.includes('not been mined') ||
               errorMsg?.includes('not found') ||
               errorMsg?.includes('confirmation')
             );
-            
+
             if (shouldRetry) {
               recordTransaction(attempt + 1, maxAttempts);
             } else if (attempt >= maxAttempts) {
@@ -254,11 +278,18 @@ const RequestChange: React.FC = () => {
           }
         }, waitTime);
       };
-      
+
       // Start transaction recording (keeps button disabled until complete)
       recordTransaction();
     } catch (err: any) {
-      const errorMsg = err?.reason || err?.message || 'Payment failed. Please try again.';
+      console.error('Blockchain transaction error:', err);
+      let errorMsg = err?.reason || err?.message || 'Payment failed. Please try again.';
+
+      // Check for specific blockchain errors
+      if (errorMsg.includes('Agreement must be active')) {
+        errorMsg = `Agreement is not active on blockchain (ID: ${blockchainAgreementId}). Please verify the agreement has been created on-chain.`;
+      }
+
       showAlert(errorMsg, 'error');
       setPaymentProcessingId(null); // Clear processing state on blockchain error
     }
@@ -306,40 +337,40 @@ const RequestChange: React.FC = () => {
 
     setIsSubmitting(true);
     requestChangesApi.create(formData)
-        .then((res) => {
-          const created = (res as any).data?.requestChange || (res as any).requestChange || null;
-          // Convert server response into local ChangeRequest shape for display
-          const serverFiles = Array.isArray(created?.files) ? created.files.map((f: any) => ({ name: f.url?.split('/').pop() || 'file', size: 0, url: f.url })) : [];
-          // Normalize status into the ChangeRequest union type
-          let normalizedStatus: ChangeRequest['status'];
-          if (created?.status === 'priced') normalizedStatus = 'priced';
-          else if (created?.status === 'paid') normalizedStatus = 'paid';
-          else normalizedStatus = 'pending';
+      .then((res) => {
+        const created = (res as any).data?.requestChange || (res as any).requestChange || null;
+        // Convert server response into local ChangeRequest shape for display
+        const serverFiles = Array.isArray(created?.files) ? created.files.map((f: any) => ({ name: f.url?.split('/').pop() || 'file', size: 0, url: f.url })) : [];
+        // Normalize status into the ChangeRequest union type
+        let normalizedStatus: ChangeRequest['status'];
+        if (created?.status === 'priced') normalizedStatus = 'priced';
+        else if (created?.status === 'paid') normalizedStatus = 'paid';
+        else normalizedStatus = 'pending';
 
-          const newRequest: ChangeRequest = {
-            id: created?.requestID || created?._id || `REQ${String(pendingRequests.length + 1 + confirmedRequests.length).padStart(3, '0')}`,
-            rawId: created?._id,
-            title: created?.title || newRequestTitle,
-            description: created?.description || newRequestDescription,
-            status: normalizedStatus,
-            createdBy: 'client',
-            attachedFiles: serverFiles.length ? serverFiles : undefined,
-          };
+        const newRequest: ChangeRequest = {
+          id: created?.requestID || created?._id || `REQ${String(pendingRequests.length + 1 + confirmedRequests.length).padStart(3, '0')}`,
+          rawId: created?._id,
+          title: created?.title || newRequestTitle,
+          description: created?.description || newRequestDescription,
+          status: normalizedStatus,
+          createdBy: 'client',
+          attachedFiles: serverFiles.length ? serverFiles : undefined,
+        };
 
-          setPendingRequests(prev => [...prev, newRequest]);
-          setNewRequestTitle('');
-          setNewRequestDescription('');
-          setAttachedFiles([]);
-          const successMsg = (res as any).message || 'Change request submitted successfully!';
-          showAlert(successMsg, 'success');
-          // refresh list from server
-          loadRequests();
-        })
-        .catch((err) => {
-          const msg = err?.response?.data?.message || err.message || 'Failed to create change request.';
-          showAlert(msg, 'error');
-        })
-        .finally(() => setIsSubmitting(false));
+        setPendingRequests(prev => [...prev, newRequest]);
+        setNewRequestTitle('');
+        setNewRequestDescription('');
+        setAttachedFiles([]);
+        const successMsg = (res as any).message || 'Change request submitted successfully!';
+        showAlert(successMsg, 'success');
+        // refresh list from server
+        loadRequests();
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.message || err.message || 'Failed to create change request.';
+        showAlert(msg, 'error');
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   // Load request changes for the agreement
@@ -449,323 +480,323 @@ const RequestChange: React.FC = () => {
 
           <div className={authStyles.authBody}>
 
-        {/* Client-only: New Change Request Form */}
-        {userRole === 'client' && (
-          <div className={styles.newRequestSection}>
-            <h2 className={styles.sectionTitle}>Submit New Change Request</h2>
-            <div className={styles.formGroup}>
-              <label htmlFor="requestTitle" className={styles.formLabel}>
-                Request Title
-              </label>
-              <input
-                id="requestTitle"
-                type="text"
-                className={styles.formInput}
-                placeholder="Enter request title..."
-                value={newRequestTitle}
-                onChange={(e) => setNewRequestTitle(e.target.value)}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="requestDescription" className={styles.formLabel}>
-                Description
-              </label>
-              <textarea
-                id="requestDescription"
-                className={styles.formTextarea}
-                placeholder="Describe the change request in detail..."
-                value={newRequestDescription}
-                onChange={(e) => setNewRequestDescription(e.target.value)}
-                rows={4}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="fileAttachment" className={styles.formLabel}>
-                File Attachment (optional)
-              </label>
-              <div className={styles.fileUploadWrapper}>
-                <input
-                  id="fileAttachment"
-                  type="file"
-                  className={styles.fileInput}
-                  onChange={handleFileChange}
-                  multiple
-                />
-                <label htmlFor="fileAttachment" className={styles.fileUploadBtn}>
-                  <span>📎 Choose Files</span>
-                </label>
-              </div>
-
-              {attachedFiles.length > 0 && (
-                <div className={styles.fileList}>
-                  {attachedFiles.map((file, index) => (
-                    <div key={index} className={styles.fileItem}>
-                      <span className={styles.fileName}>{file.name}</span>
-                      <span className={styles.fileSize}>
-                        ({(file.size / 1024).toFixed(2)} KB)
-                      </span>
-                      <button
-                        className={styles.fileRemoveBtn}
-                        onClick={() => handleRemoveFile(index)}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+            {/* Client-only: New Change Request Form */}
+            {userRole === 'client' && (
+              <div className={styles.newRequestSection}>
+                <h2 className={styles.sectionTitle}>Submit New Change Request</h2>
+                <div className={styles.formGroup}>
+                  <label htmlFor="requestTitle" className={styles.formLabel}>
+                    Request Title
+                  </label>
+                  <input
+                    id="requestTitle"
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="Enter request title..."
+                    value={newRequestTitle}
+                    onChange={(e) => setNewRequestTitle(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
 
-            <div className={styles.submitBtnWrapper}>
-              <Button3Black1
-                text={isSubmitting ? 'Submitting...' : 'Submit Request'}
-                onClick={isSubmitting ? undefined : handleSubmitNewRequest}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* All requests shown in single table */}
-        <div className={styles.tableWrap}>
-            <h2 className={styles.tableTitle}>Request Changes</h2>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Request Title</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Price</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoadingRequests ? (
-                  <tr>
-                    <td colSpan={5} className={styles.emptyState}>
-                      Loading requests...
-                    </td>
-                  </tr>
-                ) : pendingRequests.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className={styles.emptyState}>
-                      No pending requests
-                    </td>
-                  </tr>
-                ) : (
-                  pendingRequests.map(request => (
-                    <tr key={request.id} className={styles.clickableRow}>
-                      <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
-                      <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.description}</td>
-                      <td className={styles.statusCell} onClick={() => handleRowClick(request)}>
-                        <span className={styles[`status${request.status}`]}>{request.status}</span>
-                      </td>
-                      <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.amount ? `${request.amount} ETH` : '-'}</td>
-                      <td className={styles.actionsCell}>
-                        {request.status === 'pending' ? (
-                          <>
-                            {userRole !== 'client' && (
-                              <button
-                                className={styles.confirmBtn}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleConfirmClick(request);
-                                }}
-                              >
-                                Accept
-                              </button>
-                            )}
-                            <button
-                              className={styles.ignoreBtn}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleIgnore(request.id);
-                              }}
-                              disabled={updatingId === request.rawId}
-                            >
-                              {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
-                            </button>
-                          </>
-                        ) : (request.status === 'confirmed' || request.status === 'priced') ? (
-                          <>
-                            {userRole === 'client' && (
-                              <button
-                                className={styles.approveBtn}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleClientApprove(request.id);
-                                }}
-                                disabled={paymentProcessingId === request.rawId}
-                              >
-                                {paymentProcessingId === request.rawId ? 'Processing...' : 'Pay'}
-                              </button>
-                            )}
-                            <button
-                              className={styles.rejectBtn}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleClientReject(request.id);
-                              }}
-                              disabled={updatingId === request.rawId}
-                            >
-                              {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
-                            </button>
-                          </>
-                        ) : request.status === 'paid' ? (
-                          <span className={`${styles.statusBadge} ${styles.statuspaid}`}>Paid ✓</span>
-                        ) : request.status === 'rejected' ? (
-                          <span className={styles.statusBadge}>Rejected ✗</span>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-      {/* View Details Modal */}
-      {showDetailsModal && viewingRequest && (
-        <div className={styles.modalOverlay} onClick={() => setShowDetailsModal(false)}>
-          <div className={styles.detailsModalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.detailsModalHeader}>
-              <h3 className={styles.modalTitle}>Request Details</h3>
-              <button 
-                className={styles.closeBtn}
-                onClick={() => setShowDetailsModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className={styles.detailsBody}>
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Title:</span>
-                <span className={styles.detailValue}>{viewingRequest.title}</span>
-              </div>
-
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Description:</span>
-                <span className={styles.detailValue}>{viewingRequest.description}</span>
-              </div>
-
-              {viewingRequest.details && (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>Additional Details:</span>
-                  <span className={styles.detailValue}>{viewingRequest.details}</span>
+                <div className={styles.formGroup}>
+                  <label htmlFor="requestDescription" className={styles.formLabel}>
+                    Description
+                  </label>
+                  <textarea
+                    id="requestDescription"
+                    className={styles.formTextarea}
+                    placeholder="Describe the change request in detail..."
+                    value={newRequestDescription}
+                    onChange={(e) => setNewRequestDescription(e.target.value)}
+                    rows={4}
+                  />
                 </div>
-              )}
 
-              {viewingRequest.amount && (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>Amount:</span>
-                  <span className={styles.detailValue}>{viewingRequest.amount} ETH</span>
-                </div>
-              )}
+                <div className={styles.formGroup}>
+                  <label htmlFor="fileAttachment" className={styles.formLabel}>
+                    File Attachment (optional)
+                  </label>
+                  <div className={styles.fileUploadWrapper}>
+                    <input
+                      id="fileAttachment"
+                      type="file"
+                      className={styles.fileInput}
+                      onChange={handleFileChange}
+                      multiple
+                    />
+                    <label htmlFor="fileAttachment" className={styles.fileUploadBtn}>
+                      <span>📎 Choose Files</span>
+                    </label>
+                  </div>
 
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Status:</span>
-                <span className={`${styles.detailValue} ${styles[`status${viewingRequest.status}`]}`}>
-                  {viewingRequest.status}
-                </span>
-              </div>
-
-              {/* Created By removed per UI request */}
-
-              {/* Attached Files */}
-              {viewingRequest.attachedFiles && viewingRequest.attachedFiles.length > 0 && (
-                <div className={styles.detailSection}>
-                  <span className={styles.detailLabel}>Attached Files:</span>
-                  <div className={styles.attachedFilesList}>
-                    {viewingRequest.attachedFiles.map((file, index) => {
-                      const raw = file.name || '';
-                      const displayName = raw.length > 36 ? `${raw.slice(0, 20)}...${raw.slice(-12)}` : raw;
-                      return (
-                        <div key={index} className={styles.attachedFileItem}>
-                          <span className={styles.fileIcon}>{getFileIcon(raw)}</span>
-                          <span className={styles.attachedFileName} title={raw}>{displayName}</span>
-                          <span className={styles.attachedFileSize}>
+                  {attachedFiles.length > 0 && (
+                    <div className={styles.fileList}>
+                      {attachedFiles.map((file, index) => (
+                        <div key={index} className={styles.fileItem}>
+                          <span className={styles.fileName}>{file.name}</span>
+                          <span className={styles.fileSize}>
                             ({(file.size / 1024).toFixed(2)} KB)
                           </span>
                           <button
-                            className={styles.downloadFileBtn}
-                            onClick={() => handleFileDownload(file)}
-                            aria-label={`Download ${raw}`}
+                            className={styles.fileRemoveBtn}
+                            onClick={() => handleRemoveFile(index)}
                           >
-                            Download
+                            ✕
                           </button>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.submitBtnWrapper}>
+                  <Button3Black1
+                    text={isSubmitting ? 'Submitting...' : 'Submit Request'}
+                    onClick={isSubmitting ? undefined : handleSubmitNewRequest}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* All requests shown in single table */}
+            <div className={styles.tableWrap}>
+              <h2 className={styles.tableTitle}>Request Changes</h2>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Request Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoadingRequests ? (
+                    <tr>
+                      <td colSpan={5} className={styles.emptyState}>
+                        Loading requests...
+                      </td>
+                    </tr>
+                  ) : pendingRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className={styles.emptyState}>
+                        No pending requests
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingRequests.map(request => (
+                      <tr key={request.id} className={styles.clickableRow}>
+                        <td className={styles.titleCell} onClick={() => handleRowClick(request)}>{request.title}</td>
+                        <td className={styles.descCell} onClick={() => handleRowClick(request)}>{request.description}</td>
+                        <td className={styles.statusCell} onClick={() => handleRowClick(request)}>
+                          <span className={styles[`status${request.status}`]}>{request.status}</span>
+                        </td>
+                        <td className={styles.amountCell} onClick={() => handleRowClick(request)}>{request.amount ? `${request.amount} ETH` : '-'}</td>
+                        <td className={styles.actionsCell}>
+                          {request.status === 'pending' ? (
+                            <>
+                              {userRole !== 'client' && (
+                                <button
+                                  className={styles.confirmBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleConfirmClick(request);
+                                  }}
+                                >
+                                  Accept
+                                </button>
+                              )}
+                              <button
+                                className={styles.ignoreBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleIgnore(request.id);
+                                }}
+                                disabled={updatingId === request.rawId}
+                              >
+                                {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
+                              </button>
+                            </>
+                          ) : (request.status === 'confirmed' || request.status === 'priced') ? (
+                            <>
+                              {userRole === 'client' && (
+                                <button
+                                  className={styles.approveBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClientApprove(request.id);
+                                  }}
+                                  disabled={paymentProcessingId === request.rawId}
+                                >
+                                  {paymentProcessingId === request.rawId ? 'Processing...' : 'Pay'}
+                                </button>
+                              )}
+                              <button
+                                className={styles.rejectBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClientReject(request.id);
+                                }}
+                                disabled={updatingId === request.rawId}
+                              >
+                                {updatingId === request.rawId ? 'Processing...' : (userRole === 'client' ? 'Cancel' : 'Reject')}
+                              </button>
+                            </>
+                          ) : request.status === 'paid' ? (
+                            <span className={`${styles.statusBadge} ${styles.statuspaid}`}>Paid ✓</span>
+                          ) : request.status === 'rejected' ? (
+                            <span className={styles.statusBadge}>Rejected ✗</span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* View Details Modal */}
+            {showDetailsModal && viewingRequest && (
+              <div className={styles.modalOverlay} onClick={() => setShowDetailsModal(false)}>
+                <div className={styles.detailsModalContent} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.detailsModalHeader}>
+                    <h3 className={styles.modalTitle}>Request Details</h3>
+                    <button
+                      className={styles.closeBtn}
+                      onClick={() => setShowDetailsModal(false)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className={styles.detailsBody}>
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Title:</span>
+                      <span className={styles.detailValue}>{viewingRequest.title}</span>
+                    </div>
+
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Description:</span>
+                      <span className={styles.detailValue}>{viewingRequest.description}</span>
+                    </div>
+
+                    {viewingRequest.details && (
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Additional Details:</span>
+                        <span className={styles.detailValue}>{viewingRequest.details}</span>
+                      </div>
+                    )}
+
+                    {viewingRequest.amount && (
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Amount:</span>
+                        <span className={styles.detailValue}>{viewingRequest.amount} ETH</span>
+                      </div>
+                    )}
+
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Status:</span>
+                      <span className={`${styles.detailValue} ${styles[`status${viewingRequest.status}`]}`}>
+                        {viewingRequest.status}
+                      </span>
+                    </div>
+
+                    {/* Created By removed per UI request */}
+
+                    {/* Attached Files */}
+                    {viewingRequest.attachedFiles && viewingRequest.attachedFiles.length > 0 && (
+                      <div className={styles.detailSection}>
+                        <span className={styles.detailLabel}>Attached Files:</span>
+                        <div className={styles.attachedFilesList}>
+                          {viewingRequest.attachedFiles.map((file, index) => {
+                            const raw = file.name || '';
+                            const displayName = raw.length > 36 ? `${raw.slice(0, 20)}...${raw.slice(-12)}` : raw;
+                            return (
+                              <div key={index} className={styles.attachedFileItem}>
+                                <span className={styles.fileIcon}>{getFileIcon(raw)}</span>
+                                <span className={styles.attachedFileName} title={raw}>{displayName}</span>
+                                <span className={styles.attachedFileSize}>
+                                  ({(file.size / 1024).toFixed(2)} KB)
+                                </span>
+                                <button
+                                  className={styles.downloadFileBtn}
+                                  onClick={() => handleFileDownload(file)}
+                                  aria-label={`Download ${raw}`}
+                                >
+                                  Download
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+              </div>
+            )}
 
-      {/* Confirmation Modal */}
-      {showModal && selectedRequest && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Confirm Change Request</h3>
-            
-            <div className={styles.modalSection}>
-              <div className={styles.modalLabel}>Request ID:</div>
-              <div className={styles.modalValue}>{selectedRequest.id}</div>
-            </div>
+            {/* Confirmation Modal */}
+            {showModal && selectedRequest && (
+              <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+                <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                  <h3 className={styles.modalTitle}>Confirm Change Request</h3>
 
-            <div className={styles.modalSection}>
-              <div className={styles.modalLabel}>Title:</div>
-              <div className={styles.modalValue}>{selectedRequest.title}</div>
-            </div>
+                  <div className={styles.modalSection}>
+                    <div className={styles.modalLabel}>Request ID:</div>
+                    <div className={styles.modalValue}>{selectedRequest.id}</div>
+                  </div>
 
-            <div className={styles.modalSection}>
-              <div className={styles.modalLabel}>Description:</div>
-              <div className={styles.modalValue}>{selectedRequest.description}</div>
-            </div>
+                  <div className={styles.modalSection}>
+                    <div className={styles.modalLabel}>Title:</div>
+                    <div className={styles.modalValue}>{selectedRequest.title}</div>
+                  </div>
 
-            <div className={styles.modalFormGroup}>
-              <label htmlFor="modalDetails" className={styles.modalLabel}>
-                Additional Details:
-              </label>
-              <textarea
-                id="modalDetails"
-                className={styles.modalTextarea}
-                placeholder="Add implementation details..."
-                value={modalDetails}
-                onChange={(e) => setModalDetails(e.target.value)}
-                rows={4}
-              />
-            </div>
+                  <div className={styles.modalSection}>
+                    <div className={styles.modalLabel}>Description:</div>
+                    <div className={styles.modalValue}>{selectedRequest.description}</div>
+                  </div>
 
-            <div className={styles.modalFormGroup}>
-              <label htmlFor="modalAmount" className={styles.modalLabel}>
-                Amount of Change Request (ETH):
-              </label>
-              <input
-                id="modalAmount"
-                type="number"
-                step="0.01"
-                className={styles.modalInput}
-                placeholder="Enter amount in ETH"
-                value={modalAmount}
-                onChange={(e) => setModalAmount(e.target.value)}
-              />
-            </div>
+                  <div className={styles.modalFormGroup}>
+                    <label htmlFor="modalDetails" className={styles.modalLabel}>
+                      Additional Details:
+                    </label>
+                    <textarea
+                      id="modalDetails"
+                      className={styles.modalTextarea}
+                      placeholder="Add implementation details..."
+                      value={modalDetails}
+                      onChange={(e) => setModalDetails(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
 
-            <div className={styles.modalActions}>
-              <Button2 text="Cancel" onClick={() => setShowModal(false)} />
-              <Button3Black1 
-                text={modalProcessing ? 'Processing...' : 'Confirm'} 
-                onClick={modalProcessing ? undefined : handleModalConfirm}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+                  <div className={styles.modalFormGroup}>
+                    <label htmlFor="modalAmount" className={styles.modalLabel}>
+                      Amount of Change Request (ETH):
+                    </label>
+                    <input
+                      id="modalAmount"
+                      type="number"
+                      step="0.01"
+                      className={styles.modalInput}
+                      placeholder="Enter amount in ETH"
+                      value={modalAmount}
+                      onChange={(e) => setModalAmount(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.modalActions}>
+                    <Button2 text="Cancel" onClick={() => setShowModal(false)} />
+                    <Button3Black1
+                      text={modalProcessing ? 'Processing...' : 'Confirm'}
+                      onClick={modalProcessing ? undefined : handleModalConfirm}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
