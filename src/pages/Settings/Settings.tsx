@@ -20,7 +20,7 @@ const Settings: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.avatar || null);
   const [newSkill, setNewSkill] = useState('');
-  
+
   // UI state
   const [isSaving, setIsSaving] = useState(false);
 
@@ -71,26 +71,27 @@ const Settings: React.FC = () => {
       if (response?.data?.user) {
         const updatedUser = response.data.user;
         setUser(updatedUser);
-        
+
         // Update all form states with server response
         setFullname(updatedUser.fullname || '');
         setEmail(updatedUser.email || '');
         setBio(updatedUser.bio || '');
         setSkills(updatedUser.skills || []);
         setWalletAddress(updatedUser.walletAddress || '');
-        
+
         if (updatedUser.avatar) {
           setAvatar(updatedUser.avatar);
           setPreviewUrl(updatedUser.avatar);
         }
-        
+
         // Clear selected file after successful upload
         setSelectedFile(null);
-        
+
         showAlert(response.message || 'Profile updated successfully!', 'success');
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 'Failed to update profile. Please try again.';
+      const errorMessage = error?.response.data.error.message;
+      console.log("This is the error message:", errorMessage);
       showAlert(errorMessage, 'error');
     } finally {
       setIsSaving(false);

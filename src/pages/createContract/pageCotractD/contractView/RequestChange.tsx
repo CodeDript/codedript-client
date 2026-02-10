@@ -166,12 +166,14 @@ const RequestChange: React.FC = () => {
 
     const rawId = request.rawId || request.id;
 
-    // Get blockchain agreement ID from the agreement object
-    const blockchainAgreementId = agreementObj?.blockchain?.agreementId ||
-      agreementObj?.blockchainId ||
-      agreementObj?.agreementId;
+    // Get blockchain agreement ID from the agreement object (0 is valid!)
+    const blockchainAgreementId = agreementObj?.blockchain?.agreementId ??
+      agreementObj?.blockchainId ??
+      agreementObj?.agreementId ??
+      null;
 
-    if (!blockchainAgreementId) {
+    if (blockchainAgreementId === null || blockchainAgreementId === undefined) {
+      console.error('Agreement object missing blockchain ID:', agreementObj);
       showAlert('Blockchain agreement ID not found. Cannot process payment.', 'error');
       return;
     }
@@ -211,8 +213,8 @@ const RequestChange: React.FC = () => {
       );
 
       // Step 2: Record transaction with retry logic - keep button disabled until complete
-      const recordTransaction = async (attempt = 1, maxAttempts = 24) => {
-        const waitTime = attempt === 1 ? 20000 : 15000; // First wait 20s, then 15s between retries
+      const recordTransaction = async (attempt = 1, maxAttempts = 10) => {
+        const waitTime = 1000; // Wait 1s between retries
 
         setTimeout(async () => {
           try {

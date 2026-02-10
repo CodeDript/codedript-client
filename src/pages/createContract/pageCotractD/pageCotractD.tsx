@@ -97,49 +97,49 @@ const PageCotractD: React.FC = () => {
       if (routeState.packageId) {
         setPackageId(routeState.packageId);
       }
-      
+
       // Check if this is a client viewing a pending agreement for review
       if (routeState.agreementId && routeState.isClientView) {
         setIsClientView(true);
         setStep(5); // Go directly to review step
-        
+
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          
+
           // Set basic agreement info (direct fields)
           setTitle(agreement.title || '');
           setDescription(agreement.description || '');
           setValue(agreement.financials?.totalValue?.toString() || '0');
           setCurrency('ETH'); // Default currency
-          
+
           // Format deadline
           if (agreement.endDate) {
             const endDate = new Date(agreement.endDate);
             setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
           }
-          
+
           // Extract client info (populated User object)
           if (typeof agreement.client === 'object' && agreement.client) {
             setClientName(agreement.client.fullname || agreement.client.username || '');
             setClientEmail(agreement.client.email || '');
             setClientWallet(agreement.client.walletAddress || '');
           }
-          
+
           // Extract developer info (populated User object)
           if (typeof agreement.developer === 'object' && agreement.developer) {
             setDeveloperWallet(agreement.developer.walletAddress || '');
             setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
           }
-          
+
           // Extract terms/notes (if available)
           setFilesNote(agreement.terms || agreement.additionalTerms || '');
-          
+
           // Extract project files IPFS hash (documents is array)
           if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
             setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
           }
-          
+
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
@@ -153,41 +153,41 @@ const PageCotractD: React.FC = () => {
       else if (routeState.agreementId && routeState.isDeveloperView) {
         setIsDeveloperView(true);
         setStep(4); // Go directly to payment step
-        
+
         // Load agreement details from route state
         if (routeState.agreement) {
           const agreement = routeState.agreement;
-          
+
           // Set basic agreement info (direct fields)
           setTitle(agreement.title || '');
           setDescription(agreement.description || '');
           setValue(agreement.financials?.totalValue?.toString() || '0');
           setCurrency('ETH'); // Default currency
-          
+
           // Format deadline
           if (agreement.endDate) {
             const endDate = new Date(agreement.endDate);
             setDeadline(endDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD for date input
           }
-          
+
           // Extract client info (populated User object)
           if (typeof agreement.client === 'object' && agreement.client) {
             setClientName(agreement.client.fullname || agreement.client.username || '');
             setClientEmail(agreement.client.email || '');
             setClientWallet(agreement.client.walletAddress || '');
           }
-          
+
           // Extract developer info (populated User object)
           if (typeof agreement.developer === 'object' && agreement.developer) {
             setDeveloperWallet(agreement.developer.walletAddress || '');
             setDeveloperReceivingAddress(agreement.developer.walletAddress || '');
           }
-          
+
           // Extract project files IPFS hash (documents is array)
           if (Array.isArray(agreement.documents) && agreement.documents.length > 0) {
             setProjectFilesIpfsHash(agreement.documents[0].ipfsHash || '');
           }
-          
+
           // Load milestones if available
           if (agreement.milestones && agreement.milestones.length > 0) {
             const loadedMilestones = agreement.milestones.map((m: any) => ({
@@ -227,10 +227,10 @@ const PageCotractD: React.FC = () => {
       setUploadedFilesCids(mockCids);
       setIsUploadingFiles(false);
     }
-    
+
     setStep((s) => Math.min(5, s + 1));
   };
-  
+
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
   const navigateBack = () => {
@@ -240,7 +240,7 @@ const PageCotractD: React.FC = () => {
 
   const handleCreateContract = async () => {
     setIsUploadingFiles(true);
-    
+
     try {
       // Sync all data to context before creating agreement
       setProjectDetails(title, description);
@@ -249,7 +249,7 @@ const PageCotractD: React.FC = () => {
       setPaymentDetails(value, currency, deadline, milestones);
       if (gigId) setContextGigId(gigId);
       if (developerReceivingAddress) setContextDeveloperAddress(developerReceivingAddress);
-      
+
       // Validate required data
       if (!gigId) {
         showAlert('Gig ID is required to create an agreement', 'error');
@@ -268,44 +268,44 @@ const PageCotractD: React.FC = () => {
 
       const gig = gigQuery.data as any;
       const developerId = typeof gig.developer === 'object' ? gig.developer._id : gig.developer;
-      
+
       // Agreement creation: prepare and send FormData
-      
+
       // Prepare FormData for file upload
       const formData = new FormData();
-      
+
       // Required fields per server validation
       formData.append('developer', developerId);
       formData.append('gig', gigId);
       formData.append('packageId', packageId);
       formData.append('title', title);
       formData.append('description', description);
-      
+
       // Milestones (stringify as JSON)
       formData.append('milestones', JSON.stringify(milestones));
-      
+
       // Append documents (not projectFiles)
       uploadedFiles.forEach((file) => {
         formData.append('documents', file);
       });
-      
+
       // Call the API via mutation so React Query invalidates caches
       const response = await createAgreementMutation.mutateAsync(formData as any);
       // Show success message
       showAlert(response.message || 'Agreement created successfully!', 'success');
-      
+
       // Reset context and navigate
       resetAgreementData();
-      
+
       // Navigate to client profile after short delay
       setTimeout(() => {
         navigate('/client');
-      }, 1500);
-      
+      }, 500);
+
     } catch (error: any) {
       // Extract detailed error message
       let errorMessage = 'Failed to create agreement';
-      
+
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
         // Validation errors
         errorMessage = error.response.data.errors.map((e: any) => e.msg).join(', ');
@@ -314,7 +314,7 @@ const PageCotractD: React.FC = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       showAlert(errorMessage, 'error');
     } finally {
       setIsUploadingFiles(false);
@@ -380,11 +380,11 @@ const PageCotractD: React.FC = () => {
       });
 
       showAlert('Agreement pricing submitted successfully!', 'success');
-      
+
       // Navigate to developer profile
       setTimeout(() => {
         navigate('/developer');
-      }, 1500);
+      }, 500);
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to accept agreement';
       setAcceptError(errorMessage);
@@ -440,13 +440,13 @@ const PageCotractD: React.FC = () => {
 
     try {
       const agreement = routeState.agreement;
-      
+
       // Extract agreement data
       const developerWalletAddress = agreement?.developer?.walletAddress || developerReceivingAddress;
       const projectName = agreement?.project?.name || title;
       const documentsIpfsHash = agreement?.documents?.[0]?.ipfsHash || 'QmDefaultDocHash'; // Use first document's IPFS hash
       const totalValue = agreement?.financials?.totalValue?.toString() || value;
-      
+
       // Parse dates and ensure start date is in the future
       const parsedStartDate = parseToUnixSeconds(agreement?.timeline?.startDate || agreement?.startDate || undefined);
       const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -466,9 +466,12 @@ const PageCotractD: React.FC = () => {
 
       const transactionHash = txResult.transactionHash;
       const blockchainAgreementId = txResult.agreementId; // Now directly available from createAgreement return
-      
-      // Validate blockchain ID
-      if (!blockchainAgreementId || blockchainAgreementId <= 0) {
+
+      console.log('Transaction result:', { transactionHash, blockchainAgreementId });
+
+      // Validate blockchain ID (0 is valid for first agreement)
+      if (blockchainAgreementId === undefined || blockchainAgreementId === null || blockchainAgreementId < 0) {
+        console.error('Invalid agreement ID:', blockchainAgreementId);
         showAlert('Error: Failed to get valid blockchain agreement ID. Transaction may have failed.', 'error');
         setIsApprovingAgreement(false);
         return;
@@ -486,9 +489,9 @@ const PageCotractD: React.FC = () => {
             }
           }
         };
-        
+
         const updateResponse = await updateAgreementMutation.mutateAsync(updatePayload as any);
-        
+
         if (blockchainAgreementId) {
           showAlert('Blockchain agreement created successfully!', 'success');
         }
@@ -508,26 +511,31 @@ const PageCotractD: React.FC = () => {
 
       let txResponse;
       let retries = 0;
-      const maxRetries = 30; // Wait up to ~90 seconds
-      
+      const maxRetries = 15; // Wait up to ~30 seconds (Sepolia block time is ~12s)
+
       while (retries < maxRetries) {
         try {
           txResponse = await transactionsApi.create(transactionData);
 
           break;
         } catch (error: any) {
-          const errorMsg = error.response?.data?.error?.message || '';
+          const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || '';
+          console.log(`Transaction record attempt ${retries + 1} failed:`, errorMsg);
+
           // Retry if transaction is not found yet or needs confirmations
-          const shouldRetry = errorMsg.includes('confirmation') || 
-                             errorMsg.includes('not found') || 
-                             errorMsg.includes('not been mined');
-          
+          const shouldRetry = errorMsg.includes('confirmation') ||
+            errorMsg.includes('not found') ||
+            errorMsg.includes('not been mined') ||
+            errorMsg.includes('Transaction not found') ||
+            errorMsg.includes('not mined') ||
+            error.response?.status === 400; // Retry all 400 errors related to transaction timing
+
           if (shouldRetry) {
             retries++;
             if (retries >= maxRetries) {
               throw new Error('Transaction confirmation timeout. Please check Sepolia block explorer and try again later.');
             }
-            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
           } else {
             // Different error, throw immediately
             throw error;
@@ -542,15 +550,15 @@ const PageCotractD: React.FC = () => {
       });
 
       showAlert('Payment successful! Agreement is now active on blockchain.', 'success');
-      
+
       // Navigate to client profile after short delay
       setTimeout(() => {
         navigate('/client');
-      }, 2000);
+      }, 500);
     } catch (error: any) {
       // Provide user-friendly error messages
       let errorMessage = 'Failed to approve agreement';
-      
+
       if (error.message) {
         if (error.message.includes('user rejected') || error.message.includes('User denied')) {
           errorMessage = 'Transaction was rejected in MetaMask';
@@ -562,7 +570,7 @@ const PageCotractD: React.FC = () => {
           errorMessage = error.message;
         }
       }
-      
+
       setAcceptError(errorMessage);
       showAlert(errorMessage, 'error');
     } finally {
@@ -573,174 +581,174 @@ const PageCotractD: React.FC = () => {
   // handlers used by UI of the action buttons
   const leftButtonText = step === 1 ? '← Previous' : '← Previous';
   const leftIsDisabled = isDeveloperView || isClientView; // Disable previous button for developer/client view
-  const leftHandler = leftIsDisabled ? () => {} : (step === 1 ? navigateBack : prev);
+  const leftHandler = leftIsDisabled ? () => { } : (step === 1 ? navigateBack : prev);
 
   const rightIsCreate = step === 3 && !isDeveloperView && !isClientView; // files & terms (client flow only)
   const rightIsDeveloperAccept = step === 4 && isDeveloperView; // developer accepting (enabled when paymentConfirmed)
   const rightIsClientApprove = step === 5 && isClientView; // client approving (enabled when clientApproved)
   const rightIsDisabled = (step === 4 && !paymentConfirmed && isDeveloperView) || (step === 4 && !paymentConfirmed && !isDeveloperView) || (step === 5 && !clientApproved && isClientView); // disabled until checkbox confirmed
-  
+
   // when on the final review step (5), finish should navigate to rules page
-  const rightHandler = rightIsCreate 
-    ? handleCreateContract 
+  const rightHandler = rightIsCreate
+    ? handleCreateContract
     : (rightIsDeveloperAccept && paymentConfirmed
-      ? handleDeveloperAccept 
+      ? handleDeveloperAccept
       : (rightIsClientApprove && clientApproved
         ? handleClientApprove
-        : (rightIsDisabled ? () => {} : (step === 5 && !isClientView ? handleFinish : next))));
-  
+        : (rightIsDisabled ? () => { } : (step === 5 && !isClientView ? handleFinish : next))));
+
   const rightText = isUploadingFiles || isAcceptingAgreement || isApprovingAgreement
     ? (rightIsCreate ? 'Creating Agreement...' : (isAcceptingAgreement ? 'Accepting Agreement...' : (isApprovingAgreement ? 'Processing Payment...' : 'Uploading Files...')))
     : (rightIsCreate ? 'Create Contract' : (rightIsDeveloperAccept ? 'Accept & Submit to Client' : (rightIsClientApprove ? 'Approve & Pay' : (step < 5 ? 'Next' : 'Finish'))));
 
   return (
     <div className={styles.container1}>
-    <div className={styles.container}>
-      <div className={styles.inner}>
-        {/* reuse AuthForm card layout */}
-        <div className={authStyles.formOuter}>
-          <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
-          <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
+      <div className={styles.container}>
+        <div className={styles.inner}>
+          {/* reuse AuthForm card layout */}
+          <div className={authStyles.formOuter}>
+            <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
+            <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
 
-          <div className={authStyles.authHeader}>
-            <div className={authStyles.headerLeft}>
-              <img src={securityIcon} alt="security" className={authStyles.securitySvg} />
-              <div>
-                <h1 className={authStyles.formTitle}>Contract Processing</h1>
+            <div className={authStyles.authHeader}>
+              <div className={authStyles.headerLeft}>
+                <img src={securityIcon} alt="security" className={authStyles.securitySvg} />
+                <div>
+                  <h1 className={authStyles.formTitle}>Contract Processing</h1>
+                </div>
               </div>
-            </div>
-            <p className={authStyles.formSubtext}>Discuss project requirements with developers for seamless execution</p>
-          </div>
-
-          <div className={authStyles.authBody}>
-            <nav className={styles.stepsBar} aria-hidden>
-          <div className={styles.stepIcons}>
-            <div className={`${styles.stepItem} ${step===1?styles.active:''}`}>
-              <img src={projectIcon} alt="Project details" className={styles.stepIconImg} />
-              Project Details
-            </div>
-            <div className={`${styles.stepItem} ${step===2?styles.active:''}`}>
-              <img src={partiesIcon} alt="Parties" className={styles.stepIconImg} />
-              Parties
-            </div>
-            <div className={`${styles.stepItem} ${step===3?styles.active:''}`}>
-              <img src={filesIcon} alt="Files and terms" className={styles.stepIconImg} />
-              Files & Terms
-            </div>
-            <div className={`${styles.stepItem} ${step===4?styles.active:''}`}>
-              <img src={paymentIcon} alt="processing state" className={styles.stepIconImg} />
-              processing state
-            </div>
-            <div className={`${styles.stepItem} ${step===5?styles.active:''}`}>
-              <img src={reviewIcon} alt="Review" className={styles.stepIconImg} />
-              Review
-            </div>
-          </div>
-          <div className={styles.progress}><div style={{width: `${((step-1)/4)*100}%`}} className={styles.progressFill}></div></div>
-        </nav>
-
-        <section className={styles.cardArea}>
-          {/* decorative card badge (re-using auth form badge styles) */}
-
-          <div className={authStyles.cardBadge} aria-hidden>Create Project</div>
-          
-          {acceptError && (
-            <div style={{padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00'}}>
-              {acceptError}
-            </div>
-          )}
-          
-          <div className={styles.cardBody}>
-            {step === 1 && (
-              <DetailsStep
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-              />
-            )}
-            {step === 2 && (
-              <PartiesStep
-                clientName={clientName}
-                setClientName={setClientName}
-                clientEmail={clientEmail}
-                setClientEmail={setClientEmail}
-                clientWallet={clientWallet}
-                setClientWallet={setClientWallet}
-                developerName={developerName}
-                developerEmail={developerEmail}
-                developerWallet={developerWallet}
-                gigId={gigId}
-                developerReceivingAddress={developerReceivingAddress}
-              />
-            )}
-            {step === 3 && (
-              <FilesTermsStep filesNote={filesNote} setFilesNote={setFilesNote} files={uploadedFiles} setFiles={setUploadedFiles} />
-            )}
-            {step === 4 && (
-              <PaymentStep
-                title={title}
-                description={description}
-                developerWallet={developerWallet}
-                developerReceivingAddress={developerReceivingAddress}
-                clientName={clientName}
-                clientEmail={clientEmail}
-                value={value}
-                setValue={setValue}
-                currency={currency}
-                setCurrency={setCurrency}
-                deadline={deadline}
-                setDeadline={setDeadline}
-                milestones={milestones}
-                setMilestones={setMilestones}
-                paymentConfirmed={paymentConfirmed}
-                setPaymentConfirmed={setPaymentConfirmed}
-                isDeveloperView={isDeveloperView}
-                projectFilesIpfsHash={projectFilesIpfsHash}
-              />
-            )}
-            
-            {step === 5 && (
-              <ReviewStep
-                title={title}
-                description={description}
-                developerWallet={developerWallet}
-                developerReceivingAddress={developerReceivingAddress}
-                clientName={clientName}
-                clientEmail={clientEmail}
-                value={value}
-                currency={currency}
-                deadline={deadline}
-                milestones={milestones}
-                filesNote={filesNote}
-                isClientView={isClientView}
-              />
-            )}
-            <div className={styles.actions}>
-              <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
-                <Button2 text={leftButtonText} onClick={() => leftHandler()} />
-              </div>
-              <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isUploadingFiles ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isUploadingFiles}>
-                <Button3Black1 
-                  text={isUploadingFiles ? 'Uploading Files...' : rightText} 
-                  onClick={() => rightHandler()} 
-                />
-              </div>
+              <p className={authStyles.formSubtext}>Discuss project requirements with developers for seamless execution</p>
             </div>
 
-     
+            <div className={authStyles.authBody}>
+              <nav className={styles.stepsBar} aria-hidden>
+                <div className={styles.stepIcons}>
+                  <div className={`${styles.stepItem} ${step === 1 ? styles.active : ''}`}>
+                    <img src={projectIcon} alt="Project details" className={styles.stepIconImg} />
+                    Project Details
+                  </div>
+                  <div className={`${styles.stepItem} ${step === 2 ? styles.active : ''}`}>
+                    <img src={partiesIcon} alt="Parties" className={styles.stepIconImg} />
+                    Parties
+                  </div>
+                  <div className={`${styles.stepItem} ${step === 3 ? styles.active : ''}`}>
+                    <img src={filesIcon} alt="Files and terms" className={styles.stepIconImg} />
+                    Files & Terms
+                  </div>
+                  <div className={`${styles.stepItem} ${step === 4 ? styles.active : ''}`}>
+                    <img src={paymentIcon} alt="processing state" className={styles.stepIconImg} />
+                    processing state
+                  </div>
+                  <div className={`${styles.stepItem} ${step === 5 ? styles.active : ''}`}>
+                    <img src={reviewIcon} alt="Review" className={styles.stepIconImg} />
+                    Review
+                  </div>
+                </div>
+                <div className={styles.progress}><div style={{ width: `${((step - 1) / 4) * 100}%` }} className={styles.progressFill}></div></div>
+              </nav>
+
+              <section className={styles.cardArea}>
+                {/* decorative card badge (re-using auth form badge styles) */}
+
+                <div className={authStyles.cardBadge} aria-hidden>Create Project</div>
+
+                {acceptError && (
+                  <div style={{ padding: '12px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '12px', color: '#c00' }}>
+                    {acceptError}
+                  </div>
+                )}
+
+                <div className={styles.cardBody}>
+                  {step === 1 && (
+                    <DetailsStep
+                      title={title}
+                      setTitle={setTitle}
+                      description={description}
+                      setDescription={setDescription}
+                    />
+                  )}
+                  {step === 2 && (
+                    <PartiesStep
+                      clientName={clientName}
+                      setClientName={setClientName}
+                      clientEmail={clientEmail}
+                      setClientEmail={setClientEmail}
+                      clientWallet={clientWallet}
+                      setClientWallet={setClientWallet}
+                      developerName={developerName}
+                      developerEmail={developerEmail}
+                      developerWallet={developerWallet}
+                      gigId={gigId}
+                      developerReceivingAddress={developerReceivingAddress}
+                    />
+                  )}
+                  {step === 3 && (
+                    <FilesTermsStep filesNote={filesNote} setFilesNote={setFilesNote} files={uploadedFiles} setFiles={setUploadedFiles} />
+                  )}
+                  {step === 4 && (
+                    <PaymentStep
+                      title={title}
+                      description={description}
+                      developerWallet={developerWallet}
+                      developerReceivingAddress={developerReceivingAddress}
+                      clientName={clientName}
+                      clientEmail={clientEmail}
+                      value={value}
+                      setValue={setValue}
+                      currency={currency}
+                      setCurrency={setCurrency}
+                      deadline={deadline}
+                      setDeadline={setDeadline}
+                      milestones={milestones}
+                      setMilestones={setMilestones}
+                      paymentConfirmed={paymentConfirmed}
+                      setPaymentConfirmed={setPaymentConfirmed}
+                      isDeveloperView={isDeveloperView}
+                      projectFilesIpfsHash={projectFilesIpfsHash}
+                    />
+                  )}
+
+                  {step === 5 && (
+                    <ReviewStep
+                      title={title}
+                      description={description}
+                      developerWallet={developerWallet}
+                      developerReceivingAddress={developerReceivingAddress}
+                      clientName={clientName}
+                      clientEmail={clientEmail}
+                      value={value}
+                      currency={currency}
+                      deadline={deadline}
+                      milestones={milestones}
+                      filesNote={filesNote}
+                      isClientView={isClientView}
+                    />
+                  )}
+                  <div className={styles.actions}>
+                    <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
+                      <Button2 text={leftButtonText} onClick={() => leftHandler()} />
+                    </div>
+                    <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isUploadingFiles ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isUploadingFiles}>
+                      <Button3Black1
+                        text={isUploadingFiles ? 'Uploading Files...' : rightText}
+                        onClick={() => rightHandler()}
+                      />
+                    </div>
+                  </div>
+
+
+                </div>
+              </section>
+            </div>
           </div>
-            </section>
-          </div>
+          <ChatWidget />
+
         </div>
-        <ChatWidget />
-        
+
       </div>
-      
+      <Footer />
+
     </div>
-    <Footer />
-    
- </div>
   );
 };
 

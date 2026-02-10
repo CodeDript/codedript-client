@@ -229,59 +229,41 @@ export async function createAgreement(developer, projectName, docCid, totalValue
 
   const txResult = await sendTransaction({ account, transaction });
   
-  // Wait for transaction to be mined and extract the returned agreement ID
-  let agreementId = null;
-  let retries = 0;
-  const maxRetries = 150; // 30 attempts * 3 seconds = 90 seconds max wait
+  console.log('Transaction sent:', txResult.transactionHash);
   
-  while (retries < maxRetries && agreementId === null) {
+  // Extract agreement ID from transaction receipt
+  // Sepolia block time is ~12s, so we wait up to ~30s for the receipt
+  const rpcClient = getRpcClient({ client, chain: sepolia });
+  
+  for (let attempt = 0; attempt < 15; attempt++) {
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds between attempts
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s between attempts
       
-      // Get transaction receipt
-      const rpcClient = getRpcClient({ client, chain: sepolia });
       const receipt = await eth_getTransactionReceipt(rpcClient, {
         hash: txResult.transactionHash,
       });
       
-      if (receipt && receipt.status === 'success') {
-        // Parse logs to extract the agreement ID from the contract's return value
-        // The createAgreement function returns uint256 agreementId
-        // We need to get it from the transaction simulation or use getNextId() - 1 as fallback
+      if (receipt && receipt.status === 'success' && receipt.logs && receipt.logs.length > 0) {
+        const agreementCreatedTopic = '0x334df434acada574ce79823ea9b91553b91717cbaa5b64d94af7508b69845752';
+        const eventLog = receipt.logs.find(log => log.topics && log.topics[0] === agreementCreatedTopic);
         
-        // For now, use getNextId() - 1 as a reliable fallback since the transaction is confirmed
-        const nextId = await getNextId();
-        agreementId = nextId - 1;
-        
-        if (agreementId <= 0) {
-          agreementId = null;
-          retries++;
-          continue;
+        if (eventLog && eventLog.topics && eventLog.topics.length > 1) {
+          const agreementId = parseInt(eventLog.topics[1], 16);
+          console.log('Extracted agreement ID from logs:', agreementId);
+          return { ...txResult, agreementId };
         }
-        
-        break;
-      } else if (receipt && receipt.status === 'reverted') {
-        throw new Error('Transaction reverted on blockchain');
       }
-      
-      retries++;
     } catch (error) {
-      retries++;
-      
-      if (retries >= maxRetries) {
-        throw new Error('Failed to extract agreement ID from transaction. Transaction may still be pending.');
-      }
+      // Receipt not available yet, keep retrying
+      console.log('Waiting for receipt... attempt', attempt + 1);
     }
   }
   
-  if (agreementId === null) {
-    throw new Error('Failed to extract agreement ID from transaction after maximum retries');
-  }
-  
-  return {
-    ...txResult,
-    agreementId: agreementId
-  };
+  // Fallback: use getNextId() - 1
+  const nextId = await getNextId();
+  const agreementId = nextId - 1;
+  console.log('Fallback agreement ID:', agreementId);
+  return { ...txResult, agreementId };
 }
 
 /**

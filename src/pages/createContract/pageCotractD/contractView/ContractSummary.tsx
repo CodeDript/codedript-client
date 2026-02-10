@@ -30,8 +30,8 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const navigate = useNavigate();
   const location = useLocation();
   const agreement = location.state?.agreement;
-    const { user } = useAuthContext();
-    const userRole = user?.role || 'guest';
+  const { user } = useAuthContext();
+  const userRole = user?.role || 'guest';
   const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : []);
   const [isReleasingPayment, setIsReleasingPayment] = useState(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -72,17 +72,19 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
     }
 
     // Get client wallet address from agreement
-    const clientWalletFromAgreement = agreement.client?.walletAddress || 
-                                     agreement.client?.wallet || 
-                                     clientWallet;
-    
+    const clientWalletFromAgreement = agreement.client?.walletAddress ||
+      agreement.client?.wallet ||
+      clientWallet;
+
     // Get blockchain agreement ID from the agreement object
     // Prefer blockchain.agreementId (numeric), then fallback to string versions
-    const blockchainId = agreement.blockchain?.agreementId || 
-                         agreement.blockchainId || 
-                         agreement.agreementId;
-    
-    if (!blockchainId) {
+    // Use nullish coalescing (??) to properly handle agreement ID 0
+    const blockchainId = agreement.blockchain?.agreementId ??
+      agreement.blockchainId ??
+      agreement.agreementId ??
+      null;
+
+    if (blockchainId === null || blockchainId === undefined) {
       showAlert('Blockchain agreement ID is missing. This agreement may not have been created on the blockchain yet. Please ensure you completed the "Approve & Pay" step.', 'error');
       return;
     }
@@ -95,7 +97,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
         if ((window as any).ethereum) {
           const accounts = await (window as any).ethereum.request({ method: 'eth_accounts' });
           connectedWallet = accounts[0] || 'No account selected';
-          
+
           // Compare addresses (case insensitive)
           if (connectedWallet && clientWalletFromAgreement) {
             const match = connectedWallet.toLowerCase() === clientWalletFromAgreement.toLowerCase();
@@ -109,32 +111,32 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
       try {
         const { getAgreementSummary } = await import('../../../../services/ContractService');
         const contractAgreement = await getAgreementSummary(blockchainId);
-        
+
         // Check status: 0=Pending, 1=Active, 2=Completed
         const statusNames = ['Pending', 'Active', 'Completed'];
         const statusName = statusNames[contractAgreement.status] || `Unknown (${contractAgreement.status})`;
-        
+
         if (contractAgreement.status === 2) {
           showAlert(`This agreement (blockchain ID: ${blockchainId}) is already completed on the blockchain. Escrow balance: ${contractAgreement.escrowBalance}. Please select an active agreement or create a new one.`, 'error');
           setIsReleasingPayment(false);
           return;
         }
-        
+
         if (contractAgreement.status === 0) {
           showAlert('Agreement is still pending. Please wait for it to become active before releasing payment.', 'error');
           setIsReleasingPayment(false);
           return;
         }
-        
+
         if (contractAgreement.status !== 1) {
           showAlert(`Agreement status is "${statusName}". To release payment, the agreement must be "Active" (status 1).`, 'error');
           setIsReleasingPayment(false);
           return;
         }
-        
+
         if (connectedWallet && contractAgreement.client) {
           const matchesContract = connectedWallet.toLowerCase() === contractAgreement.client.toLowerCase();
-          
+
           if (!matchesContract) {
             const shortExpected = `${contractAgreement.client.substring(0, 6)}...${contractAgreement.client.substring(38)}`;
             const shortConnected = `${connectedWallet.substring(0, 6)}...${connectedWallet.substring(38)}`;
@@ -149,48 +151,42 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
 
       // Call completeAgreement smart contract function
       const txResult = await completeAgreement(blockchainId);
-      
+
       if (!txResult || !txResult.transactionHash) {
         throw new Error('Transaction hash not received from smart contract');
       }
 
       const txHash = txResult.transactionHash;
 
-      // Wait for transaction to be mined and confirmed before recording
-      // Do not show an immediate alert here; wait until transaction is recorded in DB before notifying the user
-      
-      // Wait for 30 seconds to allow transaction to be mined and confirmed on Sepolia
-      await new Promise(resolve => setTimeout(resolve, 30000));
-
       // Try recording transaction with retry logic
       let recordingSuccess = false;
       let retryCount = 0;
-      const maxRetries = 3;
-      
+      const maxRetries = 15;
+
       while (!recordingSuccess && retryCount < maxRetries) {
         try {
           // keep user informed via console and button loading state; avoid popping transient alerts while confirmations are pending
-          
+
           await transactionsApi.create({
             type: 'completion',
             agreement: agreement._id,
             transactionHash: txHash,
             network: 'sepolia',
           });
-          
+
           // Mark completed in UI before showing success
           setIsCompleted(true);
           showAlert('Payment released successfully! Transaction recorded.', 'success');
           recordingSuccess = true;
-          
+
         } catch (dbError: any) {
           const errorMessage = dbError.response?.data?.error?.message || dbError.response?.data?.message || '';
-          const needsMoreTime = errorMessage.includes('confirmation') || 
-                                errorMessage.includes('not been mined');
-          
-            if (needsMoreTime && retryCount < maxRetries - 1) {
+          const needsMoreTime = errorMessage.includes('confirmation') ||
+            errorMessage.includes('not been mined');
+
+          if (needsMoreTime && retryCount < maxRetries - 1) {
             retryCount++;
-            const waitTime = 15000; // 15 seconds
+            const waitTime = 1000; // 1 second
             // avoid showing repeated alerts while waiting for confirmations
             await new Promise(resolve => setTimeout(resolve, waitTime));
           } else {
@@ -202,7 +198,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
           }
         }
       }
-      
+
       // No automatic page reload — keep UI state intact (button shows Completed)
     } catch (error: any) {
       // Extract meaningful error message
@@ -216,7 +212,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      
+
       // Handle specific error cases
       if (errorMessage.includes('Agreement must be active')) {
         errorMessage = 'Agreement must be in Active status to release payment. Check if the agreement is already completed or still pending.';
@@ -229,7 +225,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
       } else if (errorMessage.includes('MetaMask')) {
         errorMessage = 'Please make sure MetaMask is installed and unlocked';
       }
-      
+
       showAlert(errorMessage, 'error');
     } finally {
       setIsReleasingPayment(false);
@@ -280,23 +276,23 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
               <div className={styles.partiesSub}>{developerEmail || agreement?.developer?.profile?.email || agreement?.developer?.email || 'Loading...'}</div>
               <div className={styles.partiesSub}>{developerWallet || agreement?.developer?.walletAddress || agreement?.developer?.wallet || 'Loading...'}</div>
             </div>
-            
+
           </div>
         </div>
 
-      
+
 
         <div className={styles.milestoneFooter}>
           <div className={styles.totalLabel}>Total</div>
           <div className={styles.totalValue}>{displayTotal} {currency}</div>
         </div>
 
-       
- <div className={styles.buttonWrapper}>
-          <Button3Black1 
-            text="Read Contract" 
-            onClick={() => navigate('/create-contract/terms', { 
-              state: { 
+
+        <div className={styles.buttonWrapper}>
+          <Button3Black1
+            text="Read Contract"
+            onClick={() => navigate('/create-contract/terms', {
+              state: {
                 agreement: {
                   ...agreement,
                   title,
@@ -311,7 +307,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
                   developerEmail,
                   developerWallet
                 }
-              } 
+              }
             })}
           />
         </div>
@@ -319,9 +315,9 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
         <div className={styles.milestoneCard}>
           <div className={styles.milestoneHeader}>Milestone Breakdown</div>
           <div className={styles.milestoneList}>
-            <div style={{ 
-              padding: '2rem', 
-              textAlign: 'center', 
+            <div style={{
+              padding: '2rem',
+              textAlign: 'center',
               color: '#666',
               fontFamily: 'Jura, sans-serif'
             }}>
@@ -329,8 +325,8 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
             </div>
           </div>
         </div>
-      
-        
+
+
         <div className={styles.actionsRow}>
           <div className={styles.prevBtn}>
             <Button2 text="← Previous" onClick={() => { window.history.back(); }} />
@@ -342,11 +338,11 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
                   ? isCompleted
                     ? 'Completed'
                     : isReleasingPayment
-                    ? 'Processing...'
-                    : 'Release Payment'
+                      ? 'Processing...'
+                      : 'Release Payment'
                   : userRole === 'developer'
-                  ? 'Deliver Project'
-                  : 'View payment'
+                    ? 'Deliver Project'
+                    : 'View payment'
               }
               onClick={
                 userRole === 'client'
@@ -354,14 +350,14 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
                     ? undefined
                     : handleReleasePayment
                   : () => {
-                      /* TODO: Implement deliver project logic */
-                    }
+                    /* TODO: Implement deliver project logic */
+                  }
               }
               disabled={userRole === 'client' ? isCompleted : false}
             />
-            <Button3Black1 
-              text={userRole === 'developer' ? 'Incoming Requests' : 'Request Change'} 
-              onClick={() => navigate('/create-contract/request-change', { state: { agreement, isDeveloperView: userRole === 'developer', isClientView: userRole === 'client' ? true : false } })} 
+            <Button3Black1
+              text={userRole === 'developer' ? 'Incoming Requests' : 'Request Change'}
+              onClick={() => navigate('/create-contract/request-change', { state: { agreement, isDeveloperView: userRole === 'developer', isClientView: userRole === 'client' ? true : false } })}
             />
           </div>
         </div>
