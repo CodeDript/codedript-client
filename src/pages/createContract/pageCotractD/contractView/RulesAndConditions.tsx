@@ -50,7 +50,7 @@ const RulesAndConditions: React.FC = () => {
           <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
 
           <div className={styles.header}>
-          
+
             <h1 className={styles.title}>Contract Terms & Conditions</h1>
           </div>
 
@@ -96,6 +96,21 @@ const RulesAndConditions: React.FC = () => {
                       {agreement?.developer?.profile?.name || agreement?.developer?.name || agreement?.developerName || 'N/A'}
                     </span>
                   </div>
+                  {agreement?.documents?.[0]?.ipfsHash && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Project Files (IPFS):</span>
+                      <span className={styles.detailValue}>
+                        <a
+                          href={`https://ipfs.io/ipfs/${agreement.documents[0].ipfsHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: '#0066cc', textDecoration: 'underline', wordBreak: 'break-all' }}
+                        >
+                          {agreement.documents[0].ipfsHash}
+                        </a>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

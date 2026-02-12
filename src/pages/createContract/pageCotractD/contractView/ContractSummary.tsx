@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import styles from './contractsViewBase.module.css';
 import Button3Black1 from '../../../../components/button/Button3Black1/Button3Black1';
 import Button2 from '../../../../components/button/Button2/Button2';
@@ -31,6 +32,7 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
   const location = useLocation();
   const agreement = location.state?.agreement;
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
   const userRole = user?.role || 'guest';
   const [localMilestones, setLocalMilestones] = useState(milestones && milestones.length ? milestones : []);
   const [isReleasingPayment, setIsReleasingPayment] = useState(false);
@@ -176,6 +178,11 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
 
           // Mark completed in UI before showing success
           setIsCompleted(true);
+
+          // Invalidate React Query caches to refresh data everywhere
+          queryClient.invalidateQueries({ queryKey: ['agreements'] });
+          queryClient.invalidateQueries({ queryKey: ['transactions'] });
+
           showAlert('Payment released successfully! Transaction recorded.', 'success');
           recordingSuccess = true;
 

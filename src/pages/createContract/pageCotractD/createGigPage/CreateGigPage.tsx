@@ -24,7 +24,7 @@ const CreateGigPage: React.FC = () => {
 
   // Use TempData context for gig data
   const { gigData, setGigTitle, setGigDescription, setGigPackages, setGigFiles, setGigFilesNote, resetGigData } = useTempData();
-  
+
   // Use mutation hook for creating gig
   const { mutate: createGig, isPending: isCreatingGig } = useCreateGig();
 
@@ -83,7 +83,7 @@ const CreateGigPage: React.FC = () => {
     formData.append('title', gigData.title);
     formData.append('description', gigData.description);
     formData.append('packages', JSON.stringify(gigData.packages));
-    
+
     // Add files if any
     gigData.files.forEach((file) => {
       formData.append('images', file);
@@ -94,8 +94,8 @@ const CreateGigPage: React.FC = () => {
         if (response?.success && response?.data) {
           showAlert(response.message || 'Gig created', 'success');
           resetGigData();
-          // Navigate to developer page after showing the success snackbar
-          setTimeout(() => navigate('/developer'), 1500);
+          // Navigate immediately to prevent showing cleared data
+          navigate('/developer');
         } else {
           const msg = response?.message || 'Failed to create gig';
           showAlert(msg, 'error');
@@ -103,9 +103,9 @@ const CreateGigPage: React.FC = () => {
       },
       onError: (error: any) => {
         const errorMessage = error?.response?.data?.error?.message ||
-                              error?.response?.data?.message ||
-                              error?.message ||
-                              'Failed to create gig';
+          error?.response?.data?.message ||
+          error?.message ||
+          'Failed to create gig';
         showAlert(errorMessage, 'error');
       },
     });
@@ -113,120 +113,120 @@ const CreateGigPage: React.FC = () => {
 
   const leftButtonText = '← Previous';
   const leftIsDisabled = false;
-  const leftHandler = leftIsDisabled ? () => {} : (step === 1 ? navigateBack : prev);
+  const leftHandler = leftIsDisabled ? () => { } : (step === 1 ? navigateBack : prev);
 
   // On step 4 (Publish), right button should publish the gig
   const rightIsPublish = step === 4;
   const rightIsDisabled = (step === 2 && !priceingAgreed) || isCreatingGig;
 
-  const rightHandler = rightIsPublish 
-    ? handlePublishGig 
-    : (rightIsDisabled ? () => {} : next);
+  const rightHandler = rightIsPublish
+    ? handlePublishGig
+    : (rightIsDisabled ? () => { } : next);
 
-  const rightText = isCreatingGig 
-    ? 'Publishing...' 
+  const rightText = isCreatingGig
+    ? 'Publishing...'
     : (rightIsPublish ? 'Publish Gig' : (step < 4 ? 'Next' : 'Finish'));
 
   return (
     <div className={styles.container1}>
-       <div className={styles.container}>
-      <div className={styles.inner}>
-        <div className={authStyles.formOuter}>
-          <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
-          <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
+      <div className={styles.container}>
+        <div className={styles.inner}>
+          <div className={authStyles.formOuter}>
+            <img src={heroOutlineup} alt="outline" className={`${authStyles.outline} ${authStyles.outlineTop}`} />
+            <img src={heroOutlinedown} alt="outline" className={`${authStyles.outline} ${authStyles.outlineBottom}`} />
 
-          <div className={authStyles.authHeader}>
-            <div className={authStyles.headerLeft}>
-              <div>
-                <h1 className={authStyles.formTitle}>Create Gig</h1>
-              </div>
-            </div>
-            <p className={authStyles.formSubtext}>Create a gig using the stepped flow</p>
-          </div>
-
-          <div className={authStyles.authBody}>
-            <nav className={styles.stepsBar} aria-hidden>
-              <div className={styles.stepIcons}>
-                {[
-                  {n:1,label:'Overview'},
-                  {n:2,label:'Priceing'},
-                  {n:3,label:'Requirements'},
-                  {n:4,label:'Publish'}
-                ].map(({n,label}) => (
-                  <div key={n} className={`${styles.stepItem} ${step===n?styles.active:''}`} aria-current={step===n? 'step' : undefined}>
-                    <div className={styles.stepNumber} aria-hidden>{n}</div>
-                    <div className={styles.stepLabel}>{label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.progress}><div style={{width: `${((step-1)/3)*100}%`}} className={styles.progressFill}></div></div>
-            </nav>
-
-            <section className={styles.cardArea}>
-              <div className={authStyles.cardBadge} aria-hidden>Create Gig</div>
-
-              <div className={styles.cardBody}>
-                {step === 1 && (
-                  <CreateDetailsStep
-                    title={gigData.title}
-                    setTitle={setGigTitle}
-                    description={gigData.description}
-                    setDescription={setGigDescription}
-                  />
-                )}
-                {step === 2 && (
-                  <CreatePriceing 
-                    onAgreeChange={setPriceingAgreed} 
-                    onPackagesChange={setGigPackages}
-                  />
-                )}
-                {step === 3 && (
-                  <CreateFilesTermsStep 
-                    filesNote={gigData.filesNote} 
-                    setFilesNote={setGigFilesNote} 
-                    files={gigData.files} 
-                    setFiles={setGigFiles} 
-                  />
-                )}
-                {step === 4 && (
-                  <CreateReviewStep
-                    title={gigData.title}
-                    description={gigData.description}
-                    developerWallet={developerWallet}
-                    clientName={clientName}
-                    clientEmail={clientEmail}
-                    value={value}
-                    currency={currency}
-                    deadline={deadline}
-                    milestones={milestones}
-                    filesNote={gigData.filesNote}
-                    files={gigData.files}
-                    packages={gigData.packages}
-                    isClientView={isClientView}
-                  />
-                )}
-
-                <div className={styles.actions}>
-                  <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
-                    <Button2 text={leftButtonText} onClick={() => leftHandler()} />
-                  </div>
-                  <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isCreatingGig ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isCreatingGig}>
-                    <Button3Black1 
-                      text={rightText} 
-                      onClick={() => rightHandler()} 
-                    />
-                  </div>
+            <div className={authStyles.authHeader}>
+              <div className={authStyles.headerLeft}>
+                <div>
+                  <h1 className={authStyles.formTitle}>Create Gig</h1>
                 </div>
-
               </div>
-            </section>
+              <p className={authStyles.formSubtext}>Create a gig using the stepped flow</p>
+            </div>
+
+            <div className={authStyles.authBody}>
+              <nav className={styles.stepsBar} aria-hidden>
+                <div className={styles.stepIcons}>
+                  {[
+                    { n: 1, label: 'Overview' },
+                    { n: 2, label: 'Priceing' },
+                    { n: 3, label: 'Requirements' },
+                    { n: 4, label: 'Publish' }
+                  ].map(({ n, label }) => (
+                    <div key={n} className={`${styles.stepItem} ${step === n ? styles.active : ''}`} aria-current={step === n ? 'step' : undefined}>
+                      <div className={styles.stepNumber} aria-hidden>{n}</div>
+                      <div className={styles.stepLabel}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.progress}><div style={{ width: `${((step - 1) / 3) * 100}%` }} className={styles.progressFill}></div></div>
+              </nav>
+
+              <section className={styles.cardArea}>
+                <div className={authStyles.cardBadge} aria-hidden>Create Gig</div>
+
+                <div className={styles.cardBody}>
+                  {step === 1 && (
+                    <CreateDetailsStep
+                      title={gigData.title}
+                      setTitle={setGigTitle}
+                      description={gigData.description}
+                      setDescription={setGigDescription}
+                    />
+                  )}
+                  {step === 2 && (
+                    <CreatePriceing
+                      onAgreeChange={setPriceingAgreed}
+                      onPackagesChange={setGigPackages}
+                    />
+                  )}
+                  {step === 3 && (
+                    <CreateFilesTermsStep
+                      filesNote={gigData.filesNote}
+                      setFilesNote={setGigFilesNote}
+                      files={gigData.files}
+                      setFiles={setGigFiles}
+                    />
+                  )}
+                  {step === 4 && (
+                    <CreateReviewStep
+                      title={gigData.title}
+                      description={gigData.description}
+                      developerWallet={developerWallet}
+                      clientName={clientName}
+                      clientEmail={clientEmail}
+                      value={value}
+                      currency={currency}
+                      deadline={deadline}
+                      milestones={milestones}
+                      filesNote={gigData.filesNote}
+                      files={gigData.files}
+                      packages={gigData.packages}
+                      isClientView={isClientView}
+                    />
+                  )}
+
+                  <div className={styles.actions}>
+                    <div className={styles.leftBtn} style={{ opacity: leftIsDisabled ? 0.6 : 1 }} aria-disabled={leftIsDisabled}>
+                      <Button2 text={leftButtonText} onClick={() => leftHandler()} />
+                    </div>
+                    <div className={styles.rightBtn} style={{ opacity: rightIsDisabled || isCreatingGig ? 0.6 : 1 }} aria-disabled={rightIsDisabled || isCreatingGig}>
+                      <Button3Black1
+                        text={rightText}
+                        onClick={() => rightHandler()}
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+            </div>
           </div>
         </div>
+
       </div>
-      
+
     </div>
-    
-        </div>
   );
 };
 

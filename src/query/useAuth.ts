@@ -72,7 +72,14 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: (data: Partial<any>) => authApi.updateProfile(data),
     onSuccess: () => {
+      // Invalidate auth queries to refetch user data
       queryClient.invalidateQueries({ queryKey: ["auth"] });
+      // Invalidate gigs queries (contains user/developer data)
+      queryClient.invalidateQueries({ queryKey: ["gigs"] });
+      // Invalidate agreements queries (contains user data)
+      queryClient.invalidateQueries({ queryKey: ["agreements"] });
+      // Invalidate transactions queries (contains user data)
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
   });
 };

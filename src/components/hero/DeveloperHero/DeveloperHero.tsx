@@ -18,6 +18,7 @@ interface DeveloperHeroProps {
   bio?: string;
   memberSince?: string;
   walletAddress?: string;
+  email?: string;
 }
 
 const DeveloperHero: React.FC<DeveloperHeroProps> = ({
@@ -29,7 +30,8 @@ const DeveloperHero: React.FC<DeveloperHeroProps> = ({
   skills = ['React', 'Smart Contract', 'Node.js', 'TypeScript'],
   bio = 'Full Stack Developer with 5+ years experience in React, Node.js, and Blockchain development.',
   memberSince,
-  walletAddress
+  walletAddress,
+  email
 }) => {
   const formatMemberSince = (dateString?: string) => {
     if (!dateString) return 'Member since 2024';
@@ -56,7 +58,7 @@ const DeveloperHero: React.FC<DeveloperHeroProps> = ({
             return 'Client';
           })()
         }</p>
-        
+
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
             <div className={styles.avatarFrame}>
@@ -83,24 +85,24 @@ const DeveloperHero: React.FC<DeveloperHeroProps> = ({
                   <span className={styles.metaText}>{formatMemberSince(memberSince)}</span>
                 </div>
               </div>
-              <p className={styles.title}>{userRole}</p>
+              {email && <p className={styles.title}>{email}</p>}
               <p className={styles.earnings}>{formatWalletAddress(walletAddress)}</p>
               <p className={styles.bio}>
                 {bio}
               </p>
             </div>
           </div>
-          
-     
+
+
         </div>
-         <div className={styles.skillsBase}>
-            <div className={styles.skills}>
-             {skills.slice(0, 4).map((skill, index) => (
-               <Button4Black2 key={index} text={skill} className={styles.skillButton} />
-             ))}
-             
+        <div className={styles.skillsBase}>
+          <div className={styles.skills}>
+            {skills.slice(0, 4).map((skill, index) => (
+              <Button4Black2 key={index} text={skill} className={styles.skillButton} />
+            ))}
+
           </div>
-      </div>
+        </div>
       </div>
     </section>
   );

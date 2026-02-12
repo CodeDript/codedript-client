@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './DeveloperTable.module.css';
 import { useUserAgreements } from '../../../query/useAgreements';
 import { useGigsByDeveloper } from '../../../query/useGigs';
+import { useTransactionsByUser } from '../../../query/useTransactions';
 import type { Agreement } from '../../../types';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
@@ -71,7 +72,7 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   });
 
   // Get client name from populated field
-  const clientName = (agreement.client && typeof agreement.client === 'object') 
+  const clientName = (agreement.client && typeof agreement.client === 'object')
     ? (agreement.client.fullname || agreement.client.email || 'Unknown')
     : 'Unknown';
 
@@ -86,8 +87,6 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   };
 };
 
-// (Using agreements with blockchain.transactionHash for Transactions tab)
-
 const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('myGigs');
   const [rows, setRows] = useState<DevRow[]>([]);
@@ -97,7 +96,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
-  
+
   // Mock user from localStorage
   const storedUser = localStorage.getItem('user');
   const mockUser = storedUser ? JSON.parse(storedUser) : null;
@@ -108,6 +107,8 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
 
   // Fetch agreements using React Query
   const { data: agreementsData, isLoading: agreementsLoading, error: apiError } = useUserAgreements();
+  // Fetch actual transactions for the transactions tab
+  const { data: transactionsData, isLoading: txLoading, error: txError } = useTransactionsByUser();
 
   // Filter and transform agreements based on active tab
   const { filteredAgreements, displayRows: agreementRows } = useMemo(() => {
@@ -116,28 +117,33 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
     }
 
     const allAgreements = agreementsData.data.agreements;
-
-    // Handle transactions tab separately
-    if (activeTab === 'transactions') {
-      const txAgreements = allAgreements.filter(a => (a as any).blockchain?.transactionHash);
-      const rows = txAgreements.map(a => ({
-        ...agreementToRow(a),
-        transactionHash: (a as any).blockchain.transactionHash
-      }));
-      return { filteredAgreements: txAgreements, displayRows: rows };
-    }
-
-    // Get the statuses for the current tab
     const statuses = getStatusesForTab(activeTab);
-    
-    // Filter agreements by status
     const filtered = allAgreements.filter(a => statuses.includes(a.status));
-    
-    // Convert to display rows
     const rows = filtered.map(agreementToRow);
-    
     return { filteredAgreements: filtered, displayRows: rows };
   }, [agreementsData, activeTab]);
+
+  // Build rows for the transactions tab from real transaction data
+  const transactionRows: DevRow[] = useMemo(() => {
+    if (activeTab !== 'transactions') return [];
+    const txList = transactionsData?.data?.transactions;
+    if (!txList || !Array.isArray(txList)) return [];
+
+    return txList.map((tx: any) => {
+      const agrmt = tx.agreement && typeof tx.agreement === 'object' ? tx.agreement : null;
+      const partnerEmail = agrmt?.developer?.email || agrmt?.client?.email || '';
+      return {
+        id: tx._id,
+        order: tx.transactionID || tx._id.slice(-4).toUpperCase(),
+        title: agrmt?.title || 'Untitled',
+        client: partnerEmail,
+        date: tx.timestamp || new Date(tx.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: tx.type.charAt(0).toUpperCase() + tx.type.slice(1),
+        amount: `${tx.price} ETH`,
+        transactionHash: tx.transactionHash,
+      } as DevRow;
+    });
+  }, [transactionsData, activeTab]);
 
   const handleAgreementClick = (rowId: string) => {
     // Navigate to gig view when clicking a gig in 'My Gigs' tab
@@ -146,16 +152,16 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       return;
     }
 
-    // Handle transactions tab separately - open modal
+    // Handle transactions tab separately - open modal with the tx hash
     if (activeTab === 'transactions') {
-      const agreement = filteredAgreements.find(a => a._id === rowId);
-      if (agreement && (agreement as any).blockchain?.transactionHash) {
-        setSelectedTxHash((agreement as any).blockchain.transactionHash);
-        setSelectedBlockchainId((agreement as any).blockchain?.agreementId);
+      const txRow = transactionRows.find(r => r.id === rowId);
+      if (txRow?.transactionHash) {
+        setSelectedTxHash(txRow.transactionHash);
+        setSelectedBlockchainId(undefined);
       }
       return;
     }
-    
+
     // Use filteredAgreements instead of agreements state for more reliable data
     const agreement = filteredAgreements.find(a => a._id === rowId);
     if (!agreement) {
@@ -184,7 +190,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
         } : undefined,
         financials: agreement.financials
       };
-      
+
       navigate('/create-contract', {
         state: {
           agreementId: agreement._id,
@@ -243,12 +249,21 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
       return;
     }
 
-    // For agreement tabs, use filtered data from React Query
+    // Handle transactions tab
+    if (activeTab === 'transactions') {
+      setAgreements([]);
+      setRows(transactionRows);
+      setLoading(txLoading);
+      setError(txError ? 'Failed to load transactions' : null);
+      return;
+    }
+
+    // For other agreement tabs, use filtered data from React Query
     setAgreements(filteredAgreements);
     setRows(agreementRows);
     setLoading(agreementsLoading);
     setError(apiError ? 'Failed to load agreements' : null);
-  }, [activeTab, gigsQuery.isLoading, gigsQuery.isError, gigsQuery.data, filteredAgreements, agreementRows, agreementsLoading, apiError]);
+  }, [activeTab, gigsQuery.isLoading, gigsQuery.isError, gigsQuery.data, filteredAgreements, agreementRows, agreementsLoading, apiError, transactionRows, txLoading, txError]);
 
   return (
     <div className={styles.tableWrapper1}>
@@ -276,8 +291,8 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
           )}
 
           {!loading && !error && rows.map((r) => (
-            <div 
-              className={styles.row} 
+            <div
+              className={styles.row}
               key={r.id}
               onClick={() => handleAgreementClick(r.id)}
               style={{
@@ -285,21 +300,22 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
               }}
             >
               {activeTab === 'transactions' ? (
-                // Transactions tab: keep same cell structure as Active Contract
-                // but show truncated Tx hash in the title and hide status visually
+                // Transactions tab: show transaction hash, date, type, and amount
                 <>
                   <div className={styles.orderCell}>
-                    <span className={styles.orderNumber}>Tx</span>
+                    <span className={styles.orderNumber}>{r.order}</span>
                   </div>
                   <div className={styles.titleCell}>
                     <div className={styles.titleMain}>
                       {r.transactionHash ? `${r.transactionHash.slice(0, 6)}...${r.transactionHash.slice(-4)}` : 'N/A'}
                     </div>
-                    <div className={styles.reviewer}></div>
+                    <div className={styles.reviewer}>{r.title}</div>
                   </div>
-                  <div className={styles.dateCell}>Created {r.date}</div>
+                  <div className={styles.dateCell}>{r.date}</div>
                   <div className={styles.statusCell}>
-                    <span className={styles.pill} style={{ visibility: 'hidden' }}>hidden</span>
+                    <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                      {r.status}
+                    </span>
                   </div>
                   <div className={styles.amountCell}>{r.amount}</div>
                 </>
@@ -326,7 +342,7 @@ const DeveloperTable: React.FC<DeveloperTableProps> = ({ developerId }) => {
           ))}
         </div>
       </div>
-      
+
       {selectedTxHash && (
         <TransactionModal
           transactionHash={selectedTxHash}

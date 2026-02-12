@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import styles from './Settings.module.css';
 import Footer from '../../components/footer/Footer';
 import { useAuthContext } from '../../context/AuthContext';
@@ -9,6 +10,7 @@ import { showAlert } from '../../components/auth/Alert';
 
 const Settings: React.FC = () => {
   const { user, setUser } = useAuthContext();
+  const queryClient = useQueryClient();
 
   // Form state
   const [fullname, setFullname] = useState(user?.fullname || '');
@@ -87,10 +89,16 @@ const Settings: React.FC = () => {
         // Clear selected file after successful upload
         setSelectedFile(null);
 
+        // Invalidate React Query caches to refresh data everywhere
+        queryClient.invalidateQueries({ queryKey: ['auth'] });
+        queryClient.invalidateQueries({ queryKey: ['gigs'] });
+        queryClient.invalidateQueries({ queryKey: ['agreements'] });
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+
         showAlert(response.message || 'Profile updated successfully!', 'success');
       }
     } catch (error: any) {
-      const errorMessage = error?.response.data.error.message;
+      const errorMessage = error?.response?.data?.error?.message || error?.message || 'Update failed';
       console.log("This is the error message:", errorMessage);
       showAlert(errorMessage, 'error');
     } finally {
@@ -157,9 +165,10 @@ const Settings: React.FC = () => {
                 type="email"
                 className={styles.input}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
+                readOnly
               />
+              <p className={styles.hint}>Verified email (read-only)</p>
             </div>
 
             <div className={styles.formGroup}>

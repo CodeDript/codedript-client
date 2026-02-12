@@ -25,7 +25,8 @@ const Developer: React.FC = () => {
   const walletAddress = user.walletAddress;
   const rating = (user as any).reputation?.rating || 0;
   const reviewCount = (user as any).reputation?.reviewCount || 0;
-  const userRoleLabel = user.role ;
+  const userRoleLabel = user.role;
+  const email = user.email;
 
   return (
     <div className={styles.container}>
@@ -39,6 +40,7 @@ const Developer: React.FC = () => {
         bio={bio}
         memberSince={memberSince}
         walletAddress={walletAddress}
+        email={email}
       />
       {/* removed top-level create title/desc — moved under Developer Dashboard below */}
       {/* Developer Dashboard Section */}
@@ -46,13 +48,13 @@ const Developer: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h2 className={styles.dashboardTitle}>Developer Dashboard</h2>
-             <h3 className={styles.createGigTitle}>Create a new gig:</h3>
-                <p className={styles.createGigDesc}>
-                  Describe your offering clearly and concisely so clients understand value. Set pricing and milestones that reflect the work required. Optimize title, tags and delivery details to improve discoverability.
-                </p>
+            <h3 className={styles.createGigTitle}>Create a new gig:</h3>
+            <p className={styles.createGigDesc}>
+              Describe your offering clearly and concisely so clients understand value. Set pricing and milestones that reflect the work required. Optimize title, tags and delivery details to improve discoverability.
+            </p>
             {(user.role === 'developer') && (
               <div className={styles.createGigBlock}>
-               
+
                 <div className={styles.createGigButtonWrapper}>
                   <Button1 text="Create Gig" onClick={() => navigate('/create-gig')} />
                 </div>
@@ -67,4 +69,4 @@ const Developer: React.FC = () => {
   );
 };
 
-export default Developer;
+export default Developer;

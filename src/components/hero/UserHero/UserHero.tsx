@@ -30,7 +30,7 @@ const UserHero: React.FC = () => {
         <p className={styles.overline}>
           {user?.role === 'developer' ? 'Developer' : 'Client'}
         </p>
-        
+
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
             <div className={styles.avatarFrame}>
@@ -46,7 +46,7 @@ const UserHero: React.FC = () => {
                 {user?.fullname || 'Pending'}
               </h2>
               <div className={styles.profileMeta}>
-                
+
                 <div className={styles.metaItem}>
                   <img src={calenderIcon} alt="member since" className={styles.metaIcon} />
                   <span className={styles.metaText}>
@@ -54,9 +54,7 @@ const UserHero: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <p className={styles.title}>
-                {user?.role === 'developer' ? 'Developer' : 'Client'}
-              </p>
+              {user?.email && <p className={styles.title}>{user.email}</p>}
               <p className={styles.earnings}>
                 {formatWalletAddress(user?.walletAddress)}
               </p>
@@ -65,10 +63,10 @@ const UserHero: React.FC = () => {
               </p>
             </div>
           </div>
-          
-     
+
+
         </div>
-     
+
       </div>
     </section>
   );
