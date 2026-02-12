@@ -212,11 +212,14 @@ const RequestChange: React.FC = () => {
         request.amount
       );
 
-      // Step 2: Record transaction with retry logic - keep button disabled until complete
-      const recordTransaction = async (attempt = 1, maxAttempts = 10) => {
-        const waitTime = 1000; // Wait 1s between retries
+      // Step 2: Record transaction with time-based retry logic
+      // Sepolia block time is ~12s; we retry within a 60-second window with 3s intervals
+      const RETRY_DURATION_MS = 60_000; // Total time window to keep retrying
+      const RETRY_INTERVAL_MS = 3_000;  // Interval between retries
+      const startTime = Date.now();
 
-        setTimeout(async () => {
+      const recordTransaction = async () => {
+        while (Date.now() - startTime < RETRY_DURATION_MS) {
           try {
             await transactionsApi.create({
               type: 'modification',
@@ -225,64 +228,72 @@ const RequestChange: React.FC = () => {
               network: 'sepolia'
             });
 
-            setPaymentProcessingId(null); // Clear processing state on success
-            await loadRequests(); // Refresh list after transaction is recorded
+            // Success — clear state and refresh
+            setPaymentProcessingId(null);
+            await loadRequests();
             showAlert('Transaction recorded successfully!', 'success');
-            // Now mark the request change as paid in the server (status change after DB record)
+            // Mark the request change as paid on the server
             try {
               await requestChangesApi.updateStatus(rawId, 'paid');
               await loadRequests();
-            } catch (statusErr) {
+            } catch (_statusErr) {
+              // Non-critical; transaction is already recorded
             }
+            return; // Done
           } catch (recordErr: any) {
             const errorMsg = recordErr?.response?.data?.message || recordErr?.response?.data?.error?.message || recordErr?.message;
 
-            // Check if transaction hash already exists (which means it was already recorded)
+            // Already recorded — treat as success
             if (errorMsg?.includes('Transaction with this hash already exists')) {
-              setPaymentProcessingId(null); // Clear processing state
-              await loadRequests(); // Refresh list
+              setPaymentProcessingId(null);
+              await loadRequests();
               showAlert('Transaction already recorded!', 'success');
-              // Ensure request change status is 'paid' if transaction exists
               try {
                 await requestChangesApi.updateStatus(rawId, 'paid');
                 await loadRequests();
-              } catch (statusErr) {
+              } catch (_statusErr) {
+                // Non-critical
               }
               return;
             }
 
-            // Check if it's a duplicate key error on transactionID (server-side auto-increment issue)
+            // Duplicate key on transactionID — unrecoverable server issue
             if (errorMsg?.includes('E11000') && errorMsg?.includes('transactionID')) {
-              setPaymentProcessingId(null); // Clear processing state
-              await loadRequests(); // Refresh list to show paid status
+              setPaymentProcessingId(null);
+              await loadRequests();
               showAlert('Payment completed but transaction recording failed. Please contact support.', 'error');
               return;
             }
 
-            // Retry if not mined yet OR not confirmed yet
-            const shouldRetry = attempt < maxAttempts && (
+            // Retryable: not mined, not found, or awaiting confirmation
+            const isRetryable =
               errorMsg?.includes('not been mined') ||
               errorMsg?.includes('not found') ||
-              errorMsg?.includes('confirmation')
-            );
+              errorMsg?.includes('confirmation') ||
+              errorMsg?.includes('Transaction not found') ||
+              errorMsg?.includes('not mined');
 
-            if (shouldRetry) {
-              recordTransaction(attempt + 1, maxAttempts);
-            } else if (attempt >= maxAttempts) {
-              setPaymentProcessingId(null); // Clear processing state even on failure
-              await loadRequests(); // Refresh list to show paid status
-              showAlert('Payment completed but transaction recording timed out.', 'error');
-            } else {
-              setPaymentProcessingId(null); // Clear processing state
-              await loadRequests(); // Refresh list to show paid status
+            if (!isRetryable) {
+              // Non-retryable error — stop immediately
+              setPaymentProcessingId(null);
+              await loadRequests();
               showAlert('Payment completed but transaction recording failed.', 'error');
+              return;
             }
+
+            // Wait before next retry
+            await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL_MS));
           }
-        }, waitTime);
+        }
+
+        // Exhausted the time window without success
+        setPaymentProcessingId(null);
+        await loadRequests();
+        showAlert('Payment completed but transaction recording timed out. Please refresh the page.', 'error');
       };
 
-      // Start transaction recording (keeps button disabled until complete)
-      recordTransaction();
+      // Start recording (awaited so the button stays disabled throughout)
+      await recordTransaction();
     } catch (err: any) {
       console.error('Blockchain transaction error:', err);
       let errorMsg = err?.reason || err?.message || 'Payment failed. Please try again.';

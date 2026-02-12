@@ -36,13 +36,13 @@ export const useTransactionsByAgreement = (agreementId: string) => {
 };
 
 /**
- * Query hook to get transactions by user ID
+ * Query hook to get transactions for the authenticated user
  */
-export const useTransactionsByUser = (userId: string) => {
+export const useTransactionsByUser = () => {
   return useQuery({
-    queryKey: ["transactions", "user", userId],
-    queryFn: () => transactionsApi.getByUser(userId),
-    enabled: !!userId,
+    queryKey: ["transactions", "user"],
+    queryFn: transactionsApi.getByUser,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserTable.module.css';
 import { useUserAgreements } from '../../../query/useAgreements';
+import { useTransactionsByUser } from '../../../query/useTransactions';
 import type { Agreement } from '../../../types';
 import TransactionModal from '../../modal/TransactionModal/TransactionModal';
 
@@ -66,7 +67,7 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   });
 
   // Get developer name from populated field
-  const partnerName = (agreement.developer && typeof agreement.developer === 'object') 
+  const partnerName = (agreement.developer && typeof agreement.developer === 'object')
     ? (agreement.developer.fullname || agreement.developer.email || 'Unknown')
     : 'Unknown';
 
@@ -81,66 +82,67 @@ const agreementToRow = (agreement: Agreement): DevRow => {
   };
 };
 
-// (Using agreements with blockchain.transactionHash for Transactions tab)
-
 const UserTable: React.FC<UserTableProps> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('activeContract');
-  const [rows, setRows] = useState<DevRow[]>([]);
-  const [agreements, setAgreements] = useState<Agreement[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedTxHash, setSelectedTxHash] = useState<string | null>(null);
   const [selectedBlockchainId, setSelectedBlockchainId] = useState<number | undefined>(undefined);
   const navigate = useNavigate();
 
   // Fetch agreements using React Query
   const { data: agreementsData, isLoading, error: apiError } = useUserAgreements();
+  // Fetch actual transactions for the transactions tab
+  const { data: transactionsData, isLoading: txLoading, error: txError } = useTransactionsByUser();
 
-  // Filter and transform agreements based on active tab
-  const { filteredAgreements, displayRows } = useMemo(() => {
+  // Build rows for agreement tabs (Active / Ongoing)
+  const { filteredAgreements, agreementRows } = useMemo(() => {
     if (!agreementsData?.data?.agreements || !Array.isArray(agreementsData.data.agreements)) {
-      return { filteredAgreements: [], displayRows: [] };
+      return { filteredAgreements: [], agreementRows: [] };
     }
 
     const allAgreements = agreementsData.data.agreements;
-
-    // Handle transactions tab separately
-    if (activeTab === 'transactions') {
-      const txAgreements = allAgreements.filter(a => (a as any).blockchain?.transactionHash);
-      const rows = txAgreements.map(a => ({
-        ...agreementToRow(a),
-        transactionHash: (a as any).blockchain.transactionHash
-      }));
-      return { filteredAgreements: txAgreements, displayRows: rows };
-    }
-
-    // Get the statuses for the current tab
     const statuses = getStatusesForTab(activeTab);
-    
-    // Filter agreements by status
     const filtered = allAgreements.filter(a => statuses.includes(a.status));
-    
-    // Convert to display rows
     const rows = filtered.map(agreementToRow);
-    
-    return { filteredAgreements: filtered, displayRows: rows };
+    return { filteredAgreements: filtered, agreementRows: rows };
   }, [agreementsData, activeTab]);
 
-  // Update state when filtered data changes
-  React.useEffect(() => {
-    setAgreements(filteredAgreements);
-    setRows(displayRows);
-    setLoading(isLoading);
-    setError(apiError ? 'Failed to load agreements' : null);
-  }, [filteredAgreements, displayRows, apiError, isLoading]);
+  // Build rows for the transactions tab from real transaction data
+  const transactionRows: DevRow[] = useMemo(() => {
+    if (activeTab !== 'transactions') return [];
+    const txList = transactionsData?.data?.transactions;
+    if (!txList || !Array.isArray(txList)) return [];
+
+    return txList.map((tx: any) => {
+      const agrmt = tx.agreement && typeof tx.agreement === 'object' ? tx.agreement : null;
+      const partnerEmail = agrmt?.developer?.email || agrmt?.client?.email || '';
+      return {
+        id: tx._id,
+        order: tx.transactionID || tx._id.slice(-4).toUpperCase(),
+        title: agrmt?.title || 'Untitled',
+        client: partnerEmail,
+        date: tx.timestamp || new Date(tx.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: tx.type.charAt(0).toUpperCase() + tx.type.slice(1),
+        amount: `${tx.price} ETH`,
+        transactionHash: tx.transactionHash,
+      } as DevRow;
+    });
+  }, [transactionsData, activeTab]);
+
+  // Derive final display values based on active tab
+  const rows = activeTab === 'transactions' ? transactionRows : agreementRows;
+  const agreements = filteredAgreements;
+  const loading = activeTab === 'transactions' ? txLoading : isLoading;
+  const error = activeTab === 'transactions'
+    ? (txError ? 'Failed to load transactions' : null)
+    : (apiError ? 'Failed to load agreements' : null);
 
   const handleAgreementClick = (rowId: string) => {
-    // Handle transactions tab separately - open modal
+    // Handle transactions tab separately - open modal with the tx hash
     if (activeTab === 'transactions') {
-      const agreement = agreements.find(a => a._id === rowId);
-      if (agreement && (agreement as any).blockchain?.transactionHash) {
-        setSelectedTxHash((agreement as any).blockchain.transactionHash);
-        setSelectedBlockchainId((agreement as any).blockchain?.agreementId);
+      const txRow = transactionRows.find(r => r.id === rowId);
+      if (txRow?.transactionHash) {
+        setSelectedTxHash(txRow.transactionHash);
+        setSelectedBlockchainId(undefined);
       }
       return;
     }
@@ -186,9 +188,9 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
           {Object.keys(TabLabel).map(k => {
             const key = k as TabKey;
             return (
-              <button 
-                key={key} 
-                className={`${styles.tabButton} ${activeTab === key ? styles.tabActive : ''}`} 
+              <button
+                key={key}
+                className={`${styles.tabButton} ${activeTab === key ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab(key)}
               >
                 {TabLabel[key]}
@@ -207,10 +209,10 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
           {!loading && !error && rows.map(r => {
             const agreement = agreements.find(a => a._id === r.id);
             const isClickable = activeTab === 'transactions' || activeTab === 'activeContract' || (activeTab === 'ongoingContract' && agreement?.status === 'priced');
-            
+
             return (
-              <div 
-                className={styles.row} 
+              <div
+                className={styles.row}
                 key={r.id}
                 onClick={() => handleAgreementClick(r.id)}
                 style={{
@@ -218,21 +220,22 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
                 }}
               >
                 {activeTab === 'transactions' ? (
-                  // Transactions tab: keep same cell structure as Active Contract
-                  // but show truncated Tx hash in the title and hide status visually
+                  // Transactions tab: show transaction hash, date, type, and amount
                   <>
                     <div className={styles.orderCell}>
-                      <span className={styles.orderNumber}>Tx</span>
+                      <span className={styles.orderNumber}>{r.order}</span>
                     </div>
                     <div className={styles.titleCell}>
                       <div className={styles.titleMain}>
                         {r.transactionHash ? `${r.transactionHash.slice(0, 6)}...${r.transactionHash.slice(-4)}` : 'N/A'}
                       </div>
-                      <div className={styles.reviewer}></div>
+                      <div className={styles.reviewer}>{r.title}</div>
                     </div>
-                    <div className={styles.dateCell}>Created {r.date}</div>
+                    <div className={styles.dateCell}>{r.date}</div>
                     <div className={styles.statusCell}>
-                      <span className={styles.pill} style={{ visibility: 'hidden' }}>hidden</span>
+                      <span className={`${styles.pill} ${styles['pill-' + (r.status || '').toLowerCase()]}`}>
+                        {r.status}
+                      </span>
                     </div>
                     <div className={styles.amountCell}>{r.amount}</div>
                   </>
@@ -260,7 +263,7 @@ const UserTable: React.FC<UserTableProps> = ({ userId }) => {
           })}
         </div>
       </div>
-      
+
       {selectedTxHash && (
         <TransactionModal
           transactionHash={selectedTxHash}

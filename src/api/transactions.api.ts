@@ -38,8 +38,8 @@ export const transactionsApi = {
     api.get<{ transactions: Transaction[] }>(`/transactions/agreement/${agreementId}`).then((r) => r.data),
 
   /**
-   * Get transactions by user ID
+   * Get transactions for the authenticated user
    */
-  getByUser: (userId: string) =>
-    api.get<{ transactions: Transaction[] }>(`/transactions/user/${userId}`).then((r) => r.data),
+  getByUser: () =>
+    api.get<{ success: boolean; message: string; data: { transactions: Transaction[]; count: number; total: number; page: number; totalPages: number } }>("/transactions/user").then((r) => r.data),
 };
