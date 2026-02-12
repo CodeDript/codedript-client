@@ -319,21 +319,6 @@ const ContractSummary: React.FC<Props> = ({ title, description, value, currency,
           />
         </div>
 
-        <div className={styles.milestoneCard}>
-          <div className={styles.milestoneHeader}>Milestone Breakdown</div>
-          <div className={styles.milestoneList}>
-            <div style={{
-              padding: '2rem',
-              textAlign: 'center',
-              color: '#666',
-              fontFamily: 'Jura, sans-serif'
-            }}>
-              Maintenance ...
-            </div>
-          </div>
-        </div>
-
-
         <div className={styles.actionsRow}>
           <div className={styles.prevBtn}>
             <Button2 text="← Previous" onClick={() => { window.history.back(); }} />

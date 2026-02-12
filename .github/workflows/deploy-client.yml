@@ -4,15 +4,15 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package*.json'
-      - 'vite.config.ts'
-      - 'index.html'
-      - 'Dockerfile'
-      - '.dockerignore'
-      - '.github/workflows/deploy-client.yml'
-  workflow_dispatch:  # Allow manual trigger
+      - "src/**"
+      - "public/**"
+      - "package*.json"
+      - "vite.config.ts"
+      - "index.html"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/deploy-client.yml"
+  workflow_dispatch: # Allow manual trigger
 
 env:
   DOCKER_IMAGE: yujiro2hanma/codedript-client
@@ -22,7 +22,7 @@ jobs:
   build-and-deploy:
     name: Build Docker Image and Deploy to EC2
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -61,7 +61,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd ~/src/codedript-infra || exit 1
             docker compose pull client
             docker compose up -d
             docker image prune -f
